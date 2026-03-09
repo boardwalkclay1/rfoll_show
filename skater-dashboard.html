@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Skater Dashboard – Roll Show</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<header class="header">
+  <div class="logo">ROLL SHOW</div>
+  <nav>
+    <a href="create-show.html">Create Show</a>
+    <a href="video-studio.html">Video Studio</a>
+    <a href="branding-studio.html">Branding Studio</a>
+    <button id="themeToggle">Theme</button>
+  </nav>
+</header>
+
+<main class="dashboard">
+  <section class="stats">
+    <div class="stat-box">
+      <h3>Total Shows</h3>
+      <p id="statShows">0</p>
+    </div>
+    <div class="stat-box">
+      <h3>Tickets Sold</h3>
+      <p id="statTickets">0</p>
+    </div>
+    <div class="stat-box">
+      <h3>Revenue</h3>
+      <p id="statRevenue">$0</p>
+    </div>
+  </section>
+
+  <section class="shows-list">
+    <h2>Your Shows</h2>
+    <div id="skaterShows" class="show-grid"></div>
+  </section>
+</main>
+</body>
+</html>
