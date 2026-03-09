@@ -3,23 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <title>Show – Roll Show</title>
-  <link rel="stylesheet" href="styles.css">
+
+  <!-- Correct folder path -->
+  <link rel="stylesheet" href="styles/styles.css">
 </head>
 
 <body>
+
 <header class="header">
   <div class="logo">ROLL SHOW</div>
+
+  <nav class="nav">
+    <a href="index.html">Explore</a>
+    <a href="buyer-profile.html">My Tickets</a>
+    <button id="themeToggle">Theme</button>
+  </nav>
 </header>
 
 <main class="show-page">
-  <div id="showHeader" class="show-header"></div>
-  <div id="showVideoPreview" class="video-preview"></div>
 
+  <!-- Hero Section -->
+  <section class="show-hero">
+    <div id="showHeader" class="show-header">
+      <!-- JS injects: title, skater, discipline, tagline -->
+    </div>
+  </section>
+
+  <!-- Video Preview -->
+  <section class="show-video-section">
+    <div id="showVideoPreview" class="video-preview">
+      <!-- JS injects preview or thumbnail -->
+    </div>
+
+    <div class="show-meta">
+      <p><strong>Discipline:</strong> <span id="metaDiscipline">—</span></p>
+      <p><strong>Duration:</strong> <span id="metaDuration">20 minutes</span></p>
+      <p><strong>Premiere:</strong> <span id="metaPremiere">—</span></p>
+    </div>
+  </section>
+
+  <!-- Ticket Box -->
   <section class="ticket-box">
     <h2>Buy Ticket</h2>
-    <p id="ticketPriceDisplay"></p>
-    <button id="buyTicketBtn">Buy Ticket</button>
+
+    <div class="ticket-price-line">
+      <p class="price-label">Ticket Price</p>
+      <p id="ticketPriceDisplay" class="price-value">$0</p>
+    </div>
+
+    <button id="buyTicketBtn" class="btn-primary">Buy Ticket</button>
+
+    <p class="note">
+      Your ticket will include a skater‑verified stamp and a unique QR code.
+    </p>
   </section>
+
+  <!-- Show Description -->
+  <section class="show-description">
+    <h2>About This Show</h2>
+    <p id="showDescriptionText">
+      <!-- JS injects description -->
+    </p>
+  </section>
+
 </main>
+
+<!-- Correct JS path -->
+<script src="js/app.js" defer></script>
+
 </body>
 </html>
