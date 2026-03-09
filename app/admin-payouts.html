@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Payouts – Roll Show</title>
+
+  <!-- Correct folder path -->
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+
+<body>
+
+<header class="header admin-header">
+  <div class="logo">ROLL SHOW</div>
+
+  <nav class="admin-nav">
+    <a href="skater-dashboard.html">Dashboard</a>
+    <a href="admin-payouts.html" class="active">Payouts</a>
+    <button id="themeToggle">Theme</button>
+  </nav>
+</header>
+
+<main class="admin payouts-page">
+
+  <section class="page-header">
+    <h1>Payout Management</h1>
+    <p class="subtitle">Track pending and completed payouts for all skaters.</p>
+  </section>
+
+  <section class="payout-summary">
+    <div class="summary-card">
+      <h3>Total Pending</h3>
+      <p id="summaryPending">$0</p>
+    </div>
+
+    <div class="summary-card">
+      <h3>Total Paid</h3>
+      <p id="summaryPaid">$0</p>
+    </div>
+
+    <div class="summary-card">
+      <h3>Skaters Awaiting Payout</h3>
+      <p id="summarySkaters">0</p>
+    </div>
+  </section>
+
+  <section class="payout-table-section">
+    <h2>Payouts</h2>
+
+    <div class="payout-table-header">
+      <span>Skater</span>
+      <span>Amount</span>
+      <span>Status</span>
+      <span>Date</span>
+      <span>Action</span>
+    </div>
+
+    <div id="payoutList" class="payout-table"></div>
+  </section>
+
+</main>
+
+<!-- Correct JS path -->
+<script src="js/app.js" defer></script>
+
+</body>
+</html>
