@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Branding Studio – Roll Show</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<header class="header">
+  <div class="logo">ROLL SHOW</div>
+</header>
+
+<main class="branding">
+  <h1>Branding Studio</h1>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="ticketTab">Ticket Layout</button>
+    <button class="tab" data-tab="stampTab">Stamp</button>
+    <button class="tab" data-tab="flyerTab">Flyers</button>
+  </div>
+
+  <!-- Ticket Layout -->
+  <section id="ticketTab" class="tab-content active">
+    <div id="ticketCanvas" class="canvas"></div>
+    <div class="controls">
+      <input type="color" id="ticketBg">
+      <input type="text" id="ticketHeader" placeholder="Header Text">
+      <input type="text" id="ticketFooter" placeholder="Footer Text">
+    </div>
+  </section>
+
+  <!-- Stamp -->
+  <section id="stampTab" class="tab-content">
+    <div id="stampCanvas" class="canvas"></div>
+    <div class="controls">
+      <input type="file" id="stampUpload" accept="image/*">
+      <input type="text" id="stampText" placeholder="Stamp Text">
+      <input type="color" id="stampColor">
+    </div>
+  </section>
+
+  <!-- Flyers -->
+  <section id="flyerTab" class="tab-content">
+    <div id="flyerCanvas" class="canvas"></div>
+    <div class="controls">
+      <input type="file" id="flyerImage" accept="image/*">
+      <input type="text" id="flyerTitle" placeholder="Flyer Title">
+      <input type="text" id="flyerDate" placeholder="Date/Time">
+      <button id="exportFlyer">Export Flyer</button>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
