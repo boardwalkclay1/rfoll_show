@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Show – Roll Show</title>
+
+  <!-- Correct folder path -->
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+
+<body>
+
+<header class="header">
+  <div class="logo">ROLL SHOW</div>
+
+  <nav class="nav">
+    <a href="skater-dashboard.html">Dashboard</a>
+    <a href="video-studio.html">Video Studio</a>
+    <a href="branding-studio.html">Branding Studio</a>
+    <button id="themeToggle">Theme</button>
+  </nav>
+</header>
+
+<main class="create-show-page">
+
+  <!-- Page Title -->
+  <section class="page-header">
+    <h1>Create a New Show</h1>
+    <p class="subtitle">Craft your performance, set your price, and publish your 20‑minute masterpiece.</p>
+  </section>
+
+  <!-- Show Builder Container -->
+  <section class="show-builder">
+
+    <!-- Left Column: Form -->
+    <div class="show-form">
+
+      <h2>Show Details</h2>
+
+      <form id="createShowForm">
+
+        <label>Show Title</label>
+        <input type="text" id="showTitle" placeholder="Ex: Neon Groove Jam" required>
+
+        <label>Tagline</label>
+        <input type="text" id="showTagline" placeholder="Ex: 20 minutes of pure rhythm">
+
+        <label>Description</label>
+        <textarea id="showDescription" placeholder="Describe your show, style, theme, and what viewers can expect..." rows="5"></textarea>
+
+        <label>Discipline</label>
+        <select id="showDiscipline">
+          <option value="Jam">Jam</option>
+          <option value="Park">Park</option>
+          <option value="Street">Street</option>
+          <option value="Dance">Dance</option>
+          <option value="Derby">Derby</option>
+          <option value="Artistic">Artistic</option>
+        </select>
+
+        <label>Ticket Price ($)</label>
+        <input type="number" id="ticketPrice" min="0" placeholder="10" required>
+
+        <label>Premiere Date & Time</label>
+        <input type="datetime-local" id="premiereDate" required>
+
+        <label>Video Source</label>
+        <select id="videoSource">
+          <option value="">Select from Video Studio</option>
+        </select>
+
+        <label>Ticket & Branding</label>
+        <p class="note">Customize your ticket layout, stamp, and flyers in the Branding Studio.</p>
+
+        <button type="submit" class="btn-primary">Create Show</button>
+      </form>
+    </div>
+
+    <!-- Right Column: Live Preview -->
+    <div class="show-preview">
+
+      <h2>Live Preview</h2>
+
+      <div class="preview-card">
+        <h3 id="previewTitle">Show Title</h3>
+        <p id="previewTagline">Your tagline will appear here</p>
+
+        <div class="preview-meta">
+          <span id="previewDiscipline">Discipline</span>
+          <span id="previewPrice">$0</span>
+        </div>
+
+        <div class="preview-date">
+          <p id="previewDate">Premiere Date</p>
+        </div>
+
+        <div class="preview-video">
+          <div class="video-placeholder">Video Preview</div>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<!-- Correct JS path -->
+<script src="js/app.js" defer></script>
+
+</body>
+</html>
