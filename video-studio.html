@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Studio – Roll Show</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+<header class="header">
+  <div class="logo">ROLL SHOW</div>
+</header>
+
+<main class="studio">
+  <h1>Video Studio</h1>
+
+  <section class="record-section">
+    <h2>Record Video</h2>
+    <video id="recordPreview" autoplay muted></video>
+    <div class="controls">
+      <button id="startRecord">Start</button>
+      <button id="stopRecord">Stop</button>
+      <button id="saveRecord">Save Clip</button>
+    </div>
+  </section>
+
+  <section class="upload-section">
+    <h2>Upload Clips</h2>
+    <input type="file" id="clipUpload" accept="video/*" multiple>
+    <div id="clipList" class="clip-list"></div>
+  </section>
+
+  <section class="timeline-section">
+    <h2>Timeline</h2>
+    <div id="timeline" class="timeline"></div>
+    <button id="renderVideo">Render Final Show</button>
+  </section>
+</main>
+</body>
+</html>
