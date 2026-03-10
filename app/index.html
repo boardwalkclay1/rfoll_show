@@ -6,6 +6,23 @@
 
   <!-- Correct folder path -->
   <link rel="stylesheet" href="styles/styles.css">
+  <link rel="icon" href="favicon.ico">
+
+  <style>
+    /* Full-page cinematic background */
+    body {
+      background: url("images/roll-index.jpg") no-repeat center center fixed;
+      background-size: cover;
+      background-color: #000; /* fallback */
+    }
+
+    /* Add a subtle overlay for readability */
+    .landing-page {
+      backdrop-filter: blur(2px);
+      background: rgba(0, 0, 0, 0.35);
+      padding-bottom: 80px;
+    }
+  </style>
 </head>
 
 <body>
@@ -14,7 +31,7 @@
   <div class="logo">ROLL SHOW</div>
 
   <nav class="nav">
-    <a href="auth.html">Login</a>
+    <a href="auth-login.html">Login</a>
     <a href="buyer-profile.html">My Tickets</a>
     <button id="themeToggle">Theme</button>
   </nav>
@@ -27,7 +44,7 @@
     <div class="hero-content">
       <h1>Skate Performances From Every Discipline</h1>
       <p class="subtitle">Buy tickets, watch shows, support skaters, and experience the culture.</p>
-      <a class="cta" href="auth.html">Become a Skater</a>
+      <a class="cta" href="auth-signup.html">Become a Skater</a>
     </div>
 
     <div class="hero-art">
