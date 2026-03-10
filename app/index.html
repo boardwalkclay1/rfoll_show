@@ -3,30 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <title>Roll Show – Skate Performances</title>
-
   <link rel="stylesheet" href="styles/styles.css">
   <link rel="icon" href="favicon.ico">
 </head>
 
-<body style="background:black !important;">
+<body style="background:black;">
 
-  <!-- FULL BACKGROUND IMAGE — YOU CONTROL IT -->
+  <!-- FULL BACKGROUND IMAGE -->
   <img 
     src="images/roll-index.jpg"
     alt="Background"
     style="
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100vw;
       height: 100vh;
       object-fit: cover;
-      z-index: -1;
+      z-index: 0;
     "
   >
 
   <!-- HEADER -->
-  <header class="header">
+  <header class="header" style="position:relative; z-index:5;">
     <div class="logo">ROLL SHOW</div>
 
     <nav class="nav">
