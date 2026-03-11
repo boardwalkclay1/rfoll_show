@@ -4,109 +4,193 @@
   <meta charset="UTF-8">
   <title>Create Show – Roll Show</title>
 
-  <!-- Correct folder path -->
   <link rel="stylesheet" href="styles/styles.css">
 </head>
 
-<body>
+<body style="background:black;">
 
-<header class="header">
-  <div class="logo">ROLL SHOW</div>
+  <!-- FULL BACKGROUND IMAGE -->
+  <img 
+    src="images/all-eyes.jpg"
+    alt="Background"
+    style="
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      object-position: center 85%; /* ← adjust this */
+      z-index: 0;
+    "
+  >
 
-  <nav class="nav">
-    <a href="skater-dashboard.html">Dashboard</a>
-    <a href="video-studio.html">Video Studio</a>
-    <a href="branding-studio.html">Branding Studio</a>
-    <button id="themeToggle">Theme</button>
-  </nav>
-</header>
+  <!-- TOP-RIGHT NAV -->
+  <header style="
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 5;
+      display: flex;
+      gap: 30px;
+      font-size: 18px;
+    ">
+    <a href="skater-dashboard.html" style="color:white;">Dashboard</a>
+    <a href="video-studio.html" style="color:white;">Video Studio</a>
+    <a href="branding-studio.html" style="color:white;">Branding Studio</a>
+  </header>
 
-<main class="create-show-page">
+  <!-- MAIN CONTENT -->
+  <main style="
+      position: relative;
+      z-index: 5;
+      padding: 120px 5% 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 60px;
+    ">
 
-  <!-- Page Title -->
-  <section class="page-header">
-    <h1>Create a New Show</h1>
-    <p class="subtitle">Craft your performance, set your price, and publish your 20‑minute masterpiece.</p>
-  </section>
+    <!-- PAGE HEADER -->
+    <section style="text-align:center; color:white;">
+      <h1 style="font-size:48px; margin-bottom:10px;">Create a New Show</h1>
+      <p style="font-size:20px; opacity:0.85;">
+        Craft your performance, set your price, and publish your 20‑minute masterpiece.
+      </p>
+    </section>
 
-  <!-- Show Builder Container -->
-  <section class="show-builder">
+    <!-- BUILDER GRID -->
+    <section style="
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: start;
+      ">
 
-    <!-- Left Column: Form -->
-    <div class="show-form">
+      <!-- LEFT: FORM -->
+      <div style="
+          background: rgba(0,0,0,0.65);
+          padding: 30px;
+          border-radius: 12px;
+          backdrop-filter: blur(6px);
+          color: white;
+        ">
 
-      <h2>Show Details</h2>
+        <h2 style="margin-bottom:20px;">Show Details</h2>
 
-      <form id="createShowForm">
+        <form id="createShowForm" style="display:flex; flex-direction:column; gap:20px;">
 
-        <label>Show Title</label>
-        <input type="text" id="showTitle" placeholder="Ex: Neon Groove Jam" required>
+          <div>
+            <label>Show Title</label>
+            <input type="text" id="showTitle" placeholder="Ex: Neon Groove Jam" required>
+          </div>
 
-        <label>Tagline</label>
-        <input type="text" id="showTagline" placeholder="Ex: 20 minutes of pure rhythm">
+          <div>
+            <label>Tagline</label>
+            <input type="text" id="showTagline" placeholder="Ex: 20 minutes of pure rhythm">
+          </div>
 
-        <label>Description</label>
-        <textarea id="showDescription" placeholder="Describe your show, style, theme, and what viewers can expect..." rows="5"></textarea>
+          <div>
+            <label>Description</label>
+            <textarea id="showDescription" rows="5"
+              placeholder="Describe your show, style, theme, and what viewers can expect..."></textarea>
+          </div>
 
-        <label>Discipline</label>
-        <select id="showDiscipline">
-          <option value="Jam">Jam</option>
-          <option value="Park">Park</option>
-          <option value="Street">Street</option>
-          <option value="Dance">Dance</option>
-          <option value="Derby">Derby</option>
-          <option value="Artistic">Artistic</option>
-        </select>
+          <div>
+            <label>Discipline</label>
+            <select id="showDiscipline">
+              <option value="Jam">Jam</option>
+              <option value="Park">Park</option>
+              <option value="Street">Street</option>
+              <option value="Dance">Dance</option>
+              <option value="Derby">Derby</option>
+              <option value="Artistic">Artistic</option>
+            </select>
+          </div>
 
-        <label>Ticket Price ($)</label>
-        <input type="number" id="ticketPrice" min="0" placeholder="10" required>
+          <div>
+            <label>Ticket Price ($)</label>
+            <input type="number" id="showPrice" min="0" placeholder="10" required>
+          </div>
 
-        <label>Premiere Date & Time</label>
-        <input type="datetime-local" id="premiereDate" required>
+          <div>
+            <label>Premiere Date & Time</label>
+            <input type="datetime-local" id="showPremiereDate" required>
+          </div>
 
-        <label>Video Source</label>
-        <select id="videoSource">
-          <option value="">Select from Video Studio</option>
-        </select>
+          <div>
+            <label>Video Source</label>
+            <select id="showVideoSource">
+              <option value="">Select from Video Studio</option>
+            </select>
+          </div>
 
-        <label>Ticket & Branding</label>
-        <p class="note">Customize your ticket layout, stamp, and flyers in the Branding Studio.</p>
+          <div>
+            <label>Ticket & Branding</label>
+            <p style="opacity:0.7; font-size:14px;">
+              Customize your ticket layout, stamp, and flyers in the Branding Studio.
+            </p>
+          </div>
 
-        <button type="submit" class="btn-primary">Create Show</button>
-      </form>
-    </div>
-
-    <!-- Right Column: Live Preview -->
-    <div class="show-preview">
-
-      <h2>Live Preview</h2>
-
-      <div class="preview-card">
-        <h3 id="previewTitle">Show Title</h3>
-        <p id="previewTagline">Your tagline will appear here</p>
-
-        <div class="preview-meta">
-          <span id="previewDiscipline">Discipline</span>
-          <span id="previewPrice">$0</span>
-        </div>
-
-        <div class="preview-date">
-          <p id="previewDate">Premiere Date</p>
-        </div>
-
-        <div class="preview-video">
-          <div class="video-placeholder">Video Preview</div>
-        </div>
+          <button type="submit" class="btn-primary">Create Show</button>
+        </form>
       </div>
 
-    </div>
+      <!-- RIGHT: LIVE PREVIEW -->
+      <div style="
+          background: rgba(0,0,0,0.55);
+          padding: 30px;
+          border-radius: 12px;
+          backdrop-filter: blur(6px);
+          color: white;
+        ">
 
-  </section>
+        <h2 style="margin-bottom:20px;">Live Preview</h2>
 
-</main>
+        <div style="
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+          ">
 
-<!-- Correct JS path -->
-<script src="js/app.js" defer></script>
+          <h3 id="previewTitle" style="font-size:28px;">Show Title</h3>
+          <p id="previewTagline" style="opacity:0.8;">Your tagline will appear here</p>
+
+          <div style="
+              display:flex;
+              justify-content:space-between;
+              margin:20px 0;
+              font-size:18px;
+            ">
+            <span id="previewDiscipline">Discipline</span>
+            <span id="previewPrice">$0</span>
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <p id="previewDate" style="opacity:0.8;">Premiere Date</p>
+          </div>
+
+          <div style="
+              background: rgba(255,255,255,0.08);
+              height: 200px;
+              border-radius: 10px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              font-size:18px;
+              opacity:0.7;
+            ">
+            Video Preview
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="js/app.js" defer></script>
 
 </body>
 </html>
