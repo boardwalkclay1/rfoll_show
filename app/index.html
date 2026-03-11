@@ -9,7 +9,7 @@
 
 <body style="background:black;">
 
-  <!-- FULL BACKGROUND IMAGE (MATCHES UPLOADED IMAGE) -->
+  <!-- FULL BACKGROUND IMAGE, FULL SCREEN, LOWER FRAMING -->
   <img 
     src="images/roll-index.jpg"
     alt="Background"
@@ -18,14 +18,12 @@
       inset: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: contain;
+      object-fit: cover;
       object-position: center bottom;
       z-index: 0;
-      background:black;
     "
   >
 
-  <!-- HEADER -->
   <header class="header" style="position:relative; z-index:5;">
     <div class="logo">ROLL SHOW</div>
 
@@ -36,7 +34,6 @@
     </nav>
   </header>
 
-  <!-- MAIN CONTENT -->
   <main class="landing-page" style="position:relative; z-index:5;">
 
     <section class="hero">
@@ -71,6 +68,5 @@
   </footer>
 
   <script src="js/app.js" defer></script>
-
 </body>
 </html>
