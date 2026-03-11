@@ -2,8 +2,8 @@ name = "rollshow"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
-# Serve your frontend from /app
-site = { bucket = "./app" }
+# Serve your frontend from /app (Worker mode)
+assets = { directory = "./app" }
 
 # Bind your D1 database
 [[d1_databases]]
@@ -11,7 +11,7 @@ binding = "DB"
 database_name = "roll_show"
 database_id = "fe6c6c63-9a89-4dfc-ad2f-0d69c8365bf2"
 
-# Observability (correct TOML format)
+# Observability
 [observability]
 enabled = false
 
