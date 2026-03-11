@@ -7,7 +7,7 @@ export default {
     // CORS + OPTIONS SUPPORT
     // -----------------------------
     const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": "https://roll-show.pages.dev",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type"
     };
@@ -20,35 +20,30 @@ export default {
     // AUTH ROUTES
     // -----------------------------
     if (path === "/api/signup" && request.method === "POST") {
-      const res = await signup(request, env);
-      return addCors(res, corsHeaders);
+      return addCors(await signup(request, env), corsHeaders);
     }
 
     if (path === "/api/login" && request.method === "POST") {
-      const res = await login(request, env);
-      return addCors(res, corsHeaders);
+      return addCors(await login(request, env), corsHeaders);
     }
 
     // -----------------------------
     // SHOW ROUTES
     // -----------------------------
     if (path === "/api/create-show" && request.method === "POST") {
-      const res = await createShow(request, env);
-      return addCors(res, corsHeaders);
+      return addCors(await createShow(request, env), corsHeaders);
     }
 
     if (path === "/api/get-shows" && request.method === "GET") {
-      const res = await getShows(env);
-      return addCors(res, corsHeaders);
+      return addCors(await getShows(env), corsHeaders);
     }
 
     if (path === "/api/buy-ticket" && request.method === "POST") {
-      const res = await buyTicket(request, env);
-      return addCors(res, corsHeaders);
+      return addCors(await buyTicket(request, env), corsHeaders);
     }
 
     // -----------------------------
-    // STATIC FALLBACK (for Worker mode)
+    // STATIC FALLBACK
     // -----------------------------
     if (env.ASSETS) {
       const assetResponse = await env.ASSETS.fetch(request);
