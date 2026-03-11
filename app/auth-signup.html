@@ -9,7 +9,7 @@
 
 <body style="background:black;">
 
-  <!-- FULL BACKGROUND IMAGE -->
+  <!-- FULL BACKGROUND IMAGE (ZOOMED OUT) -->
   <img 
     src="images/roll-show.jpg"
     alt="Background"
@@ -18,15 +18,17 @@
       inset: 0;
       width: 100vw;
       height: 100vh;
-      object-fit: cover;
+      object-fit: contain;
+      object-position: center top;
       z-index: 0;
+      background:black;
     "
   >
 
-  <!-- PAGE CONTENT (FLOATS ABOVE IMAGE) -->
-  <main style="position: relative; z-index: 5; display: flex; justify-content: center; padding: 100px 20px;">
+  <!-- SIGNUP CONTENT -->
+  <main style="position:relative; z-index:5; display:flex; justify-content:center; padding:100px 20px;">
 
-    <div style="width: 100%; max-width: 420px; background: transparent; border: none; box-shadow: none;">
+    <div style="width:100%; max-width:420px; background:transparent; border:none; box-shadow:none;">
 
       <h1>Create Your Account</h1>
 
@@ -43,7 +45,7 @@
         <button type="submit" class="btn-primary">Create Account</button>
       </form>
 
-      <p style="margin-top: 20px;">
+      <p style="margin-top:20px;">
         Already have an account?
         <a href="auth-login.html">Login</a>
       </p>
@@ -55,3 +57,4 @@
   <script src="js/app.js" defer></script>
 </body>
 </html>
+
