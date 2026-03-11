@@ -3,46 +3,86 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // -----------------------------
+    // CORS + OPTIONS SUPPORT
+    // -----------------------------
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // -----------------------------
     // AUTH ROUTES
+    // -----------------------------
     if (path === "/api/signup" && request.method === "POST") {
-      return signup(request, env);
+      const res = await signup(request, env);
+      return addCors(res, corsHeaders);
     }
 
     if (path === "/api/login" && request.method === "POST") {
-      return login(request, env);
+      const res = await login(request, env);
+      return addCors(res, corsHeaders);
     }
 
+    // -----------------------------
     // SHOW ROUTES
+    // -----------------------------
     if (path === "/api/create-show" && request.method === "POST") {
-      return createShow(request, env);
+      const res = await createShow(request, env);
+      return addCors(res, corsHeaders);
     }
 
     if (path === "/api/get-shows" && request.method === "GET") {
-      return getShows(env);
+      const res = await getShows(env);
+      return addCors(res, corsHeaders);
     }
 
     if (path === "/api/buy-ticket" && request.method === "POST") {
-      return buyTicket(request, env);
+      const res = await buyTicket(request, env);
+      return addCors(res, corsHeaders);
     }
 
-    // STATIC FALLBACK
+    // -----------------------------
+    // STATIC FALLBACK (for Worker mode)
+    // -----------------------------
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      const assetResponse = await env.ASSETS.fetch(request);
+      return addCors(assetResponse, corsHeaders);
     }
 
-    return new Response("Not found", { status: 404 });
+    return new Response("Not found", { status: 404, headers: corsHeaders });
   }
 };
 
 // -----------------------------
+// CORS WRAPPER
+// -----------------------------
+function addCors(response, corsHeaders) {
+  const newHeaders = new Headers(response.headers);
+  for (const [k, v] of Object.entries(corsHeaders)) {
+    newHeaders.set(k, v);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    headers: newHeaders
+  });
+}
+
+// -----------------------------
 // AUTH HELPERS
 // -----------------------------
-
 async function hashPassword(password) {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
   const hash = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("");
+  return [...new Uint8Array(hash)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 // -----------------------------
@@ -53,7 +93,6 @@ async function signup(request, env) {
     const data = await request.json();
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
-
     const passwordHash = await hashPassword(data.password);
 
     await env.DB.prepare(`
@@ -111,7 +150,7 @@ async function login(request, env) {
 }
 
 // -----------------------------
-// EXISTING ROUTES (unchanged)
+// CREATE SHOW
 // -----------------------------
 async function createShow(request, env) {
   try {
@@ -147,6 +186,9 @@ async function createShow(request, env) {
   }
 }
 
+// -----------------------------
+// GET SHOWS
+// -----------------------------
 async function getShows(env) {
   try {
     const shows = await env.DB
@@ -160,6 +202,9 @@ async function getShows(env) {
   }
 }
 
+// -----------------------------
+// BUY TICKET
+// -----------------------------
 async function buyTicket(request, env) {
   try {
     const data = await request.json();
