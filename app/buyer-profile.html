@@ -1,51 +1,81 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Tickets – Roll Show</title>
-
-  <!-- Correct folder path -->
+  <title>Roll Show – Buyer Profile</title>
   <link rel="stylesheet" href="styles/styles.css">
 </head>
 
-<body>
+<body style="background:black;">
 
-<header class="header">
-  <div class="logo">ROLL SHOW</div>
+  <!-- BACKGROUND IMAGE -->
+  <img 
+    src="images/roll-show.jpg"
+    alt="Background"
+    style="
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      object-position: center 88%;
+      z-index: 0;
+    "
+  >
 
-  <nav class="nav">
-    <a href="index.html">Explore</a>
-    <a href="buyer-profile.html" class="active">My Tickets</a>
-    <button id="themeToggle">Theme</button>
-  </nav>
-</header>
+  <main style="
+      position:relative;
+      z-index:5;
+      display:flex;
+      justify-content:center;
+      padding:120px 20px;
+    ">
 
-<main class="buyer-profile-page">
+    <div style="
+        width:100%;
+        max-width:480px;
+        background:rgba(0,0,0,0.55);
+        padding:40px;
+        border-radius:12px;
+        backdrop-filter:blur(6px);
+        color:white;
+      ">
 
-  <!-- Page Title -->
-  <section class="page-header">
-    <h1>My Tickets</h1>
-    <p class="subtitle">Your purchased shows, ready to watch anytime within their access window.</p>
-  </section>
+      <h1 style="margin-bottom:10px;">Complete Your Profile</h1>
+      <p style="opacity:0.8; margin-bottom:25px;">
+        We need a few details to set up your ticket wallet and keep your purchases secure.
+      </p>
 
-  <!-- Ticket List -->
-  <section class="ticket-wallet">
+      <form id="buyerProfileForm" style="display:flex; flex-direction:column; gap:15px;">
 
-    <div class="ticket-wallet-header">
-      <h2>Your Ticket Wallet</h2>
-      <p id="ticketCount" class="ticket-count">0 tickets</p>
+        <label>Phone Number</label>
+        <input type="text" id="phone" placeholder="(555) 555‑5555" required>
+
+        <label>City</label>
+        <input type="text" id="city" placeholder="Your city" required>
+
+        <label>State</label>
+        <input type="text" id="state" placeholder="Your state" required>
+
+        <label>Preferred Payment Method</label>
+        <select id="paymentMethod" required>
+          <option value="card">Card on File</option>
+          <option value="cashapp">Cash App</option>
+          <option value="paypal">PayPal</option>
+        </select>
+
+        <label style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+          <input type="checkbox" id="agreeTerms" required>
+          <span>I agree to the Roll Show ticket terms and purchase policies.</span>
+        </label>
+
+        <button type="submit" class="btn-primary">Save Profile</button>
+      </form>
+
     </div>
 
-    <div id="ticketList" class="ticket-list">
-      <!-- JS will inject ticket cards here -->
-    </div>
+  </main>
 
-  </section>
-
-</main>
-
-<!-- Correct JS path -->
-<script src="js/app.js" defer></script>
-
+  <script src="js/buyer-profile.js" defer></script>
 </body>
 </html>
