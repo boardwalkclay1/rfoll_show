@@ -4,8 +4,37 @@
   <meta charset="UTF-8">
   <title>Show – Roll Show</title>
 
-  <!-- Correct folder path -->
+  <!-- MOBILE + PWA -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+
+  <!-- SOCIAL SHARE / LINK PREVIEW -->
+  <meta property="og:title" content="Roll Show – Show">
+  <meta property="og:description" content="Watch skate performances, buy tickets, and support skaters.">
+  <meta property="og:image" content="/app/images/jammin.jpg">
+  <meta property="og:type" content="website">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Roll Show – Show">
+  <meta name="twitter:description" content="Watch skate performances, buy tickets, and support skaters.">
+  <meta name="twitter:image" content="/app/images/jammin.jpg">
+
+  <!-- ICONS -->
+  <link rel="icon" href="/app/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
+
+  <!-- MANIFEST -->
+  <link rel="manifest" href="/manifest.webmanifest">
+
+  <!-- STYLES (PATH PRESERVED) -->
   <link rel="stylesheet" href="styles/styles.css">
+
+  <!-- SERVICE WORKER -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+  </script>
 </head>
 
 <body>
@@ -68,7 +97,7 @@
 
 </main>
 
-<!-- Correct JS path -->
+<!-- Correct JS path preserved -->
 <script src="js/app.js" defer></script>
 
 </body>
