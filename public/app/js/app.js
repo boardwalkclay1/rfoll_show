@@ -1,7 +1,11 @@
+// ===============================
 // CONFIG
+// ===============================
 const API_BASE = "https://rollshow.boardwalkclay1.workers.dev";
 
+// ===============================
 // USER STORAGE
+// ===============================
 function saveUser(user) {
   localStorage.setItem("rollshow_user", JSON.stringify(user));
 }
@@ -17,6 +21,9 @@ function logout() {
   window.location.href = "/pages/auth-login.html";
 }
 
+// ===============================
+// ROLE GUARD
+// ===============================
 function requireUser(roles = null) {
   const user = getUser();
   if (!user) {
@@ -31,23 +38,26 @@ function requireUser(roles = null) {
   return user;
 }
 
-// Attach logout
+// Attach logout buttons
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".logout-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
+    btn.addEventListener("click", e => {
       e.preventDefault();
       logout();
     });
   });
 });
 
+// ===============================
 // AUTH
+// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
 
+  // LOGIN
   if (loginForm) {
-    loginForm.addEventListener("submit", async (e) => {
+    loginForm.addEventListener("submit", async e => {
       e.preventDefault();
 
       const email = document.getElementById("loginEmail").value;
@@ -68,16 +78,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
       saveUser(data.user);
 
+      // ROLE REDIRECTS
       if (data.user.role === "skater") {
         window.location.href = "/pages/skater-dashboard.html";
+      } else if (data.user.role === "buyer") {
+        window.location.href = "/pages/buyer-profile.html";
+      } else if (data.user.role === "business") {
+        if (!data.user.verified) {
+          alert("Your business is pending verification.");
+          window.location.href = "/index.html";
+        } else {
+          window.location.href = "/pages/business-dashboard.html";
+        }
       } else {
         window.location.href = "/index.html";
       }
     });
   }
 
+  // SIGNUP
   if (signupForm) {
-    signupForm.addEventListener("submit", async (e) => {
+    signupForm.addEventListener("submit", async e => {
       e.preventDefault();
 
       const name = document.getElementById("signupName").value;
@@ -104,7 +125,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// ===============================
 // HOMEPAGE SHOWS
+// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const featured = document.getElementById("featuredShows");
   const grid = document.getElementById("showGrid");
@@ -123,38 +146,37 @@ document.addEventListener("DOMContentLoaded", () => {
       if (featured) {
         featured.innerHTML = "";
         shows.slice(0, 3).forEach(show => {
-          featured.innerHTML += `
-            <div class="show-card">
-              <img src="${show.thumbnail}" class="thumb">
-              <h3>${show.title}</h3>
-              <p>${(show.description || "").slice(0, 80)}...</p>
-              <button onclick="viewShow('${show.id}')">View Show</button>
-            </div>
-          `;
+          featured.innerHTML += showCard(show);
         });
       }
 
       if (grid) {
         grid.innerHTML = "";
         shows.forEach(show => {
-          grid.innerHTML += `
-            <div class="show-card">
-              <img src="${show.thumbnail}" class="thumb">
-              <h3>${show.title}</h3>
-              <p>${(show.description || "").slice(0, 80)}...</p>
-              <button onclick="viewShow('${show.id}')">View Show</button>
-            </div>
-          `;
+          grid.innerHTML += showCard(show);
         });
       }
     });
 });
 
+function showCard(show) {
+  return `
+    <div class="show-card">
+      <img src="${show.thumbnail}" class="thumb">
+      <h3>${show.title}</h3>
+      <p>${(show.description || "").slice(0, 80)}...</p>
+      <button onclick="viewShow('${show.id}')">View Show</button>
+    </div>
+  `;
+}
+
 function viewShow(id) {
   window.location.href = `/pages/show.html?id=${encodeURIComponent(id)}`;
 }
 
+// ===============================
 // SHOW PAGE
+// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const header = document.getElementById("showHeader");
   const preview = document.getElementById("showVideoPreview");
@@ -193,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-buyer-id": user.id
+          "x-user-id": user.id
         },
         body: JSON.stringify({ showId })
       });
@@ -210,7 +232,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+// ===============================
 // TICKET WALLET
+// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const wallet = document.getElementById("ticketWalletList");
   if (!wallet) return;
@@ -219,7 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!user) return;
 
   fetch(`${API_BASE}/api/tickets`, {
-    headers: { "x-buyer-id": user.id }
+    headers: { "x-user-id": user.id }
   })
     .then(res => res.json())
     .then(tickets => {
@@ -246,7 +270,9 @@ function viewTicket(id) {
   window.location.href = `/pages/ticket-view.html?id=${id}`;
 }
 
+// ===============================
 // PURCHASE HISTORY
+// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   const history = document.getElementById("purchaseHistoryList");
   if (!history) return;
@@ -255,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!user) return;
 
   fetch(`${API_BASE}/api/purchases`, {
-    headers: { "x-buyer-id": user.id }
+    headers: { "x-user-id": user.id }
   })
     .then(res => res.json())
     .then(rows => {
