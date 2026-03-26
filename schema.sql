@@ -1,76 +1,64 @@
--- USERS
 CREATE TABLE users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
-  role TEXT NOT NULL, -- 'skater' or 'buyer'
+  role TEXT NOT NULL, -- buyer | skater | admin
+  phone TEXT,
+  city TEXT,
+  state TEXT,
   created_at TEXT NOT NULL
 );
 
--- SKATER PROFILES
 CREATE TABLE skaters (
-  user_id TEXT PRIMARY KEY,
-  display_name TEXT,
-  discipline TEXT,
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
   bio TEXT,
-  paypal_id TEXT,
-  venmo_id TEXT,
+  discipline TEXT,
+  profile_image TEXT,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- SHOWS
 CREATE TABLE shows (
   id TEXT PRIMARY KEY,
   skater_id TEXT NOT NULL,
   title TEXT NOT NULL,
-  tagline TEXT,
   description TEXT,
-  discipline TEXT,
-  price INTEGER NOT NULL,
+  price_cents INTEGER NOT NULL,
+  thumbnail TEXT,
+  video_url TEXT,
   premiere_date TEXT,
-  video_id TEXT,
-  status TEXT NOT NULL, -- draft, scheduled, live, ended
   created_at TEXT NOT NULL,
-  FOREIGN KEY (skater_id) REFERENCES skaters(user_id)
+  FOREIGN KEY (skater_id) REFERENCES skaters(id)
 );
 
--- TICKETS
 CREATE TABLE tickets (
   id TEXT PRIMARY KEY,
   show_id TEXT NOT NULL,
   buyer_id TEXT NOT NULL,
-  purchase_time TEXT NOT NULL,
-  status TEXT NOT NULL, -- valid, used, refunded
+  qr_code TEXT NOT NULL,
+  stamp TEXT,
+  status TEXT NOT NULL, -- pending | paid | canceled
+  created_at TEXT NOT NULL,
   FOREIGN KEY (show_id) REFERENCES shows(id),
   FOREIGN KEY (buyer_id) REFERENCES users(id)
 );
 
--- PAYOUTS
+CREATE TABLE purchases (
+  id TEXT PRIMARY KEY,
+  buyer_id TEXT NOT NULL,
+  ticket_id TEXT NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  partner_transaction_id TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (buyer_id) REFERENCES users(id),
+  FOREIGN KEY (ticket_id) REFERENCES tickets(id)
+);
+
 CREATE TABLE payouts (
   id TEXT PRIMARY KEY,
   skater_id TEXT NOT NULL,
-  amount INTEGER NOT NULL,
-  status TEXT NOT NULL, -- pending, paid
+  amount_cents INTEGER NOT NULL,
+  status TEXT NOT NULL, -- pending | paid | failed
   created_at TEXT NOT NULL,
-  FOREIGN KEY (skater_id) REFERENCES skaters(user_id)
-);
-
--- VIDEO METADATA
-CREATE TABLE videos (
-  id TEXT PRIMARY KEY,
-  skater_id TEXT NOT NULL,
-  title TEXT,
-  duration INTEGER,
-  r2_key TEXT,
-  created_at TEXT NOT NULL,
-  FOREIGN KEY (skater_id) REFERENCES skaters(user_id)
-);
-
--- BRANDING (tickets + stamps + flyers)
-CREATE TABLE branding (
-  skater_id TEXT PRIMARY KEY,
-  ticket_json TEXT,
-  stamp_json TEXT,
-  flyer_json TEXT,
-  FOREIGN KEY (skater_id) REFERENCES skaters(user_id)
+  FOREIGN KEY (skater_id) REFERENCES skaters(id)
 );
