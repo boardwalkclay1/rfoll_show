@@ -1,12 +1,46 @@
-const CACHE_NAME = "rollshow-cache-v1";
+const CACHE_NAME = "rollshow-cache-v2";
 
 const ASSETS = [
-  "/",
-  "/index.html",
-  "/login.html",
+  "/",                         // root
+  "/index.html",               // landing page
+
+  // AUTH
+  "/pages/auth-login.html",
+  "/pages/auth-signup.html",
+
+  // BUYER
+  "/pages/buyer-profile.html",
+  "/pages/ticket-wallet.html",
+  "/pages/purchase-history.html",
+  "/pages/ticket-confirmation.html",
+  "/pages/ticket.view.html",
+
+  // SKATER
+  "/pages/skater-dashboard.html",
+  "/pages/create-show.html",
+  "/pages/video-studio.html",
+  "/pages/branding-studio.html",
+
+  // PUBLIC
+  "/pages/show.html",
+  "/pages/skaters-feed.html",
+
+  // LEGAL
+  "/pages/terms.html",
+  "/pages/privacy.html",
+  "/pages/legal.html",
+
+  // STYLES + JS
   "/app/styles/styles.css",
-  "/js/app.js",
-  "/images/roll-show.jpg",
+  "/app/js/app.js",
+
+  // IMAGES
+  "/app/images/roll-index.jpg",
+  "/app/images/jammin.jpg",
+  "/app/images/icons/icon-192.png",
+  "/app/images/icons/icon-512.png",
+
+  // MANIFEST
   "/manifest.webmanifest"
 ];
 
