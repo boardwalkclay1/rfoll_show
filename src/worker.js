@@ -3,15 +3,7 @@ export default {
     const url = new URL(request.url);
     const { pathname } = url;
 
-    // --- CORS PRE-FLIGHT ---
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: corsHeaders()
-      });
-    }
-
-    // --- STATIC ASSETS (Pages) ---
+    // --- STATIC ASSETS (served by Pages) ---
     if (
       pathname.startsWith("/app/") ||
       pathname === "/manifest.webmanifest" ||
@@ -26,6 +18,14 @@ export default {
       pathname.endsWith(".webp")
     ) {
       return env.ASSETS.fetch(request);
+    }
+
+    // --- CORS PRE-FLIGHT ---
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders()
+      });
     }
 
     // --- API ROUTES ---
