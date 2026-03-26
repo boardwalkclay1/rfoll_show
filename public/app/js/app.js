@@ -1,13 +1,12 @@
-// =============================
+// ======================================================
 // CONFIG — POINT FRONTEND TO WORKER API
-// =============================
-const API_BASE = "https://roll-worker.boardwalkclay1.workers.dev"; 
-// Replace <YOUR-WORKER-SUBDOMAIN> with your actual Worker domain
+// ======================================================
+const API_BASE = "https://roll-worker.boardwalkclay1.workers.dev";
 
 
-// =============================
-// GLOBAL HELPERS
-// =============================
+// ======================================================
+// USER STORAGE HELPERS
+// ======================================================
 function saveUser(user) {
   localStorage.setItem("rollshow_user", JSON.stringify(user));
 }
@@ -20,13 +19,13 @@ function getUser() {
 
 function logout() {
   localStorage.removeItem("rollshow_user");
-  window.location.href = "/auth-login.html";
+  window.location.href = "/pages/auth-login.html";
 }
 
 function requireUser(roles = null) {
   const user = getUser();
   if (!user) {
-    window.location.href = "/auth-login.html";
+    window.location.href = "/pages/auth-login.html";
     return null;
   }
   if (roles && !roles.includes(user.role)) {
@@ -36,6 +35,7 @@ function requireUser(roles = null) {
   }
   return user;
 }
+
 
 // Attach logout to any .logout-btn
 document.addEventListener("DOMContentLoaded", () => {
@@ -48,9 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// =============================
-// AUTH PAGES (LOGIN + SIGNUP)
-// =============================
+// ======================================================
+// AUTH — LOGIN + SIGNUP
+// ======================================================
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
@@ -69,9 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ email, password })
       });
 
-      let data;
-      try { data = await res.json(); }
-      catch { return alert("Server error. Try again."); }
+      const data = await res.json();
 
       if (!data.success) {
         alert("Login failed: " + data.error);
@@ -81,7 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
       saveUser(data.user);
 
       if (data.user.role === "skater") {
-        window.location.href = "/create-show.html";
+        window.location.href = "/pages/skater-dashboard.html";
       } else {
         window.location.href = "/index.html";
       }
@@ -104,9 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ name, email, password, role })
       });
 
-      let data;
-      try { data = await res.json(); }
-      catch { return alert("Server error. Try again."); }
+      const data = await res.json();
 
       if (!data.success) {
         alert("Signup failed: " + data.error);
@@ -114,181 +110,198 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       alert("Account created! Please log in.");
-      window.location.href = "/auth-login.html";
+      window.location.href = "/pages/auth-login.html";
     });
   }
 });
 
 
-// =============================
-// HOMEPAGE — LIST SHOWS
-// =============================
+// ======================================================
+// HOMEPAGE — FEATURED + ALL SHOWS
+// ======================================================
 document.addEventListener("DOMContentLoaded", () => {
-  const showsContainer = document.getElementById("showsList");
-  if (!showsContainer) return;
+  const featured = document.getElementById("featuredShows");
+  const grid = document.getElementById("showGrid");
 
-  fetch(`${API_BASE}/api/get-shows`)
+  if (!featured && !grid) return;
+
+  fetch(`${API_BASE}/api/shows`)
     .then(res => res.json())
     .then(shows => {
       if (!Array.isArray(shows) || shows.length === 0) {
-        showsContainer.innerHTML = "<p>No shows yet.</p>";
+        if (featured) featured.innerHTML = "<p>No shows yet.</p>";
+        if (grid) grid.innerHTML = "<p>No shows yet.</p>";
         return;
       }
 
-      showsContainer.innerHTML = "";
-      shows.forEach(show => {
-        const card = document.createElement("div");
-        card.className = "show-card";
-        card.innerHTML = `
-          <h3>${show.title}</h3>
-          <p>${show.tagline || ""}</p>
-          <p><strong>Discipline:</strong> ${show.discipline || "N/A"}</p>
-          <p><strong>Price:</strong> $${show.price?.toFixed ? show.price.toFixed(2) : show.price}</p>
-          <button data-show-id="${show.id}" class="view-show-btn">View Show</button>
-        `;
-        showsContainer.appendChild(card);
-      });
+      // Featured = first 3
+      if (featured) {
+        featured.innerHTML = "";
+        shows.slice(0, 3).forEach(show => {
+          featured.innerHTML += `
+            <div class="show-card">
+              <img src="${show.thumbnail}" class="thumb">
+              <h3>${show.title}</h3>
+              <p>${show.description?.slice(0, 80) || ""}...</p>
+              <button onclick="viewShow('${show.id}')">View Show</button>
+            </div>
+          `;
+        });
+      }
 
-      showsContainer.addEventListener("click", (e) => {
-        const btn = e.target.closest(".view-show-btn");
-        if (!btn) return;
-        const showId = btn.getAttribute("data-show-id");
-        window.location.href = `/show-page.html?id=${encodeURIComponent(showId)}`;
-      });
-    })
-    .catch(() => {
-      showsContainer.innerHTML = "<p>Error loading shows.</p>";
+      // All shows
+      if (grid) {
+        grid.innerHTML = "";
+        shows.forEach(show => {
+          grid.innerHTML += `
+            <div class="show-card">
+              <img src="${show.thumbnail}" class="thumb">
+              <h3>${show.title}</h3>
+              <p>${show.description?.slice(0, 80) || ""}...</p>
+              <button onclick="viewShow('${show.id}')">View Show</button>
+            </div>
+          `;
+        });
+      }
     });
 });
 
+function viewShow(id) {
+  window.location.href = `/pages/show.html?id=${encodeURIComponent(id)}`;
+}
 
-// =============================
-// CREATE SHOW PAGE
-// =============================
+
+// ======================================================
+// SHOW PAGE — LOAD DETAILS + BUY TICKET
+// ======================================================
 document.addEventListener("DOMContentLoaded", () => {
-  const createShowForm = document.getElementById("createShowForm");
-  if (!createShowForm) return;
+  const header = document.getElementById("showHeader");
+  const preview = document.getElementById("showVideoPreview");
+  const priceDisplay = document.getElementById("ticketPriceDisplay");
+  const desc = document.getElementById("showDescriptionText");
+  const buyBtn = document.getElementById("buyTicketBtn");
 
-  const user = requireUser(["skater"]);
-  if (!user) return;
-
-  createShowForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const title = document.getElementById("showTitle").value;
-    const tagline = document.getElementById("showTagline").value;
-    const description = document.getElementById("showDescription").value;
-    const discipline = document.getElementById("showDiscipline").value;
-    const price = parseFloat(document.getElementById("showPrice").value);
-    const premiereDate = document.getElementById("showPremiereDate").value;
-    const videoSource = document.getElementById("showVideoSource").value;
-
-    const res = await fetch(`${API_BASE}/api/create-show`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        skater_id: user.id,
-        title,
-        tagline,
-        description,
-        discipline,
-        price,
-        premiereDate,
-        videoSource
-      })
-    });
-
-    let data;
-    try { data = await res.json(); }
-    catch { return alert("Server error. Try again."); }
-
-    if (data.success) {
-      alert("Show created!");
-      window.location.href = `/show-page.html?id=${encodeURIComponent(data.id)}`;
-    } else {
-      alert("Failed to create show: " + (data.error || "Unknown error"));
-    }
-  });
-});
-
-
-// =============================
-// SHOW PAGE — BUY TICKET
-// =============================
-document.addEventListener("DOMContentLoaded", () => {
-  const buyTicketBtn = document.getElementById("buyTicketBtn");
-  const showMeta = document.getElementById("showMeta");
-  if (!buyTicketBtn && !showMeta) return;
+  if (!header && !buyBtn) return;
 
   const url = new URL(window.location.href);
   const showId = url.searchParams.get("id");
   if (!showId) return;
 
   // Load show details
-  if (showMeta) {
-    fetch(`${API_BASE}/api/get-shows`)
-      .then(res => res.json())
-      .then(shows => {
-        const show = Array.isArray(shows)
-          ? shows.find(s => s.id === showId)
-          : null;
+  fetch(`${API_BASE}/api/shows/${showId}`)
+    .then(res => res.json())
+    .then(show => {
+      header.innerHTML = `
+        <h1>${show.title}</h1>
+        <p>${show.description}</p>
+      `;
 
-        if (!show) {
-          showMeta.innerHTML = "<p>Show not found.</p>";
-          return;
-        }
+      preview.innerHTML = `
+        <img src="${show.thumbnail}" class="video-thumb">
+      `;
 
-        showMeta.innerHTML = `
-          <h1>${show.title}</h1>
-          <p>${show.tagline || ""}</p>
-          <p>${show.description || ""}</p>
-          <p><strong>Discipline:</strong> ${show.discipline || "N/A"}</p>
-          <p><strong>Price:</strong> $${show.price?.toFixed ? show.price.toFixed(2) : show.price}</p>
-        `;
-      })
-      .catch(() => {
-        showMeta.innerHTML = "<p>Error loading show.</p>";
-      });
-  }
+      priceDisplay.textContent = `$${(show.price_cents / 100).toFixed(2)}`;
+      desc.textContent = show.description;
+    });
 
   // Buy ticket
-  if (buyTicketBtn) {
-    buyTicketBtn.addEventListener("click", async () => {
+  if (buyBtn) {
+    buyBtn.addEventListener("click", async () => {
       const user = requireUser(["buyer", "skater"]);
       if (!user) return;
 
-      const res = await fetch(`${API_BASE}/api/buy-ticket`, {
+      const res = await fetch(`${API_BASE}/api/tickets/create`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          show_id: showId,
-          buyer_id: user.id
-        })
+        headers: {
+          "Content-Type": "application/json",
+          "x-buyer-id": user.id
+        },
+        body: JSON.stringify({ showId })
       });
 
-      let data;
-      try { data = await res.json(); }
-      catch { return alert("Server error. Try again."); }
+      const data = await res.json();
 
-      if (data.success) {
-        alert("Ticket purchased! Ticket ID: " + data.ticket_id);
-      } else {
-        alert("Failed to buy ticket: " + (data.error || "Unknown error"));
+      if (!data.ticketId) {
+        alert("Error creating ticket.");
+        return;
       }
+
+      // Redirect to confirmation page
+      window.location.href = `/pages/ticket-confirmation.html?ticket=${data.ticketId}`;
     });
   }
 });
 
 
-// =============================
-// ROLE-BASED ELEMENT HIDING
-// =============================
+// ======================================================
+// TICKET WALLET
+// ======================================================
 document.addEventListener("DOMContentLoaded", () => {
-  const user = getUser();
-  document.querySelectorAll("[data-require-role]").forEach(el => {
-    const needed = el.getAttribute("data-require-role");
-    if (!user || user.role !== needed) {
-      el.style.display = "none";
-    }
-  });
+  const wallet = document.getElementById("ticketWalletList");
+  if (!wallet) return;
+
+  const user = requireUser(["buyer", "skater"]);
+  if (!user) return;
+
+  fetch(`${API_BASE}/api/tickets`, {
+    headers: { "x-buyer-id": user.id }
+  })
+    .then(res => res.json())
+    .then(tickets => {
+      if (!tickets.length) {
+        wallet.innerHTML = "<p>No tickets yet.</p>";
+        return;
+      }
+
+      wallet.innerHTML = "";
+      tickets.forEach(t => {
+        wallet.innerHTML += `
+          <div class="ticket-card">
+            <h3>${t.title}</h3>
+            <p>Premiere: ${t.premiere_date}</p>
+            <p>QR: ${t.qr_code}</p>
+            <button onclick="viewTicket('${t.id}')">View Ticket</button>
+          </div>
+        `;
+      });
+    });
+});
+
+function viewTicket(id) {
+  window.location.href = `/pages/ticket.view.html?id=${id}`;
+}
+
+
+// ======================================================
+// PURCHASE HISTORY
+// ======================================================
+document.addEventListener("DOMContentLoaded", () => {
+  const history = document.getElementById("purchaseHistoryList");
+  if (!history) return;
+
+  const user = requireUser(["buyer", "skater"]);
+  if (!user) return;
+
+  fetch(`${API_BASE}/api/purchases`, {
+    headers: { "x-buyer-id": user.id }
+  })
+    .then(res => res.json())
+    .then(rows => {
+      if (!rows.length) {
+        history.innerHTML = "<p>No purchases yet.</p>";
+        return;
+      }
+
+      history.innerHTML = "";
+      rows.forEach(p => {
+        history.innerHTML += `
+          <div class="purchase-item">
+            <h3>${p.title}</h3>
+            <p>Amount: $${(p.amount_cents / 100).toFixed(2)}</p>
+            <p>Date: ${new Date(p.created_at).toLocaleString()}</p>
+            <p>Transaction: ${p.partner_transaction_id}</p>
+          </div>
+        `;
+      });
+    });
 });
