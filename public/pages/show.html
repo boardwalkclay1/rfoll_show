@@ -37,9 +37,24 @@
   </script>
 </head>
 
-<body>
+<body style="background:black;">
 
-<header class="header">
+  <!-- BACKGROUND IMAGE -->
+  <img 
+    src="/app/images/jammin.jpg"
+    alt="Background"
+    style="
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      object-position: center 88%;
+      z-index: 0;
+    "
+  >
+
+<header class="header" style="position:relative; z-index:5;">
   <div class="logo">ROLL SHOW</div>
 
   <nav class="nav">
@@ -49,7 +64,7 @@
   </nav>
 </header>
 
-<main class="show-page">
+<main class="show-page" style="position:relative; z-index:5;">
 
   <!-- Hero Section -->
   <section class="show-hero">
