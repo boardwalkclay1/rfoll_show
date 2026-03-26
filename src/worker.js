@@ -3,6 +3,15 @@ export default {
     const url = new URL(request.url);
     const { pathname } = url;
 
+    // --- CORS PRE-FLIGHT ---
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: corsHeaders()
+      });
+    }
+
+    // --- API ROUTES ---
     if (pathname === "/api/shows" && request.method === "GET") {
       return listShows(env);
     }
@@ -28,9 +37,16 @@ export default {
       return handlePartnerWebhook(request, env);
     }
 
-    return new Response("Not found", { status: 404 });
+    return new Response("Not found", {
+      status: 404,
+      headers: corsHeaders()
+    });
   }
 };
+
+// ======================================================
+// API FUNCTIONS
+// ======================================================
 
 async function listShows(env) {
   const { results } = await env.DB.prepare(
@@ -96,9 +112,6 @@ async function createPendingTicket(request, env) {
      VALUES (?, ?, ?, ?, ?, 'pending', ?)`
   ).bind(ticketId, showId, buyerId, qrCode, "unverified", now).run();
 
-  // TODO: call white-label partner API here to create checkout session
-  // and return checkout URL to frontend.
-
   return json({
     ticketId,
     status: "pending",
@@ -140,15 +153,28 @@ async function handlePartnerWebhook(request, env) {
   return json({ ok: true });
 }
 
-// Placeholder auth – replace with real session/JWT later
+// ======================================================
+// HELPERS
+// ======================================================
+
 async function getBuyerIdFromAuth(request) {
-  const header = request.headers.get("x-buyer-id");
-  return header || null;
+  return request.headers.get("x-buyer-id") || null;
 }
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json" }
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders()
+    }
   });
+}
+
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "https://roll-show.pages.dev",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, x-buyer-id"
+  };
 }
