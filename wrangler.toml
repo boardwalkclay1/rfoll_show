@@ -29,8 +29,8 @@ database_name = "DB_business"
 database_id = "<ID_BUSINESS>"
 
 [[d1_databases]]
-binding = "DB_musicians"
-database_name = "DB_musicians"
+binding = "DB_musician"
+database_name = "DB_musician"
 database_id = "<ID_MUSICIANS>"
 
 # ============================
