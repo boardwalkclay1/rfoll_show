@@ -2,23 +2,11 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <title>Roll Show – Skate Performances</title>
+  <title>Roll Show – Welcome</title>
 
   <!-- MOBILE + PWA -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000">
-
-  <!-- SOCIAL SHARE -->
-  <meta property="og:title" content="Roll Show – Skate Performances">
-  <meta property="og:description" content="Buy tickets, watch shows, support skaters, and experience the culture.">
-  <meta property="og:image" content="/app/images/roll-index.jpg">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://rollshow.boardwalkclay1.workers.dev/">
-
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Roll Show – Skate Performances">
-  <meta name="twitter:description" content="Experience skate culture from every discipline.">
-  <meta name="twitter:image" content="/app/images/roll-index.jpg">
 
   <!-- ICONS -->
   <link rel="icon" href="/app/images/icons/icon-192.png">
@@ -27,8 +15,8 @@
   <!-- MANIFEST -->
   <link rel="manifest" href="/manifest.webmanifest">
 
-  <!-- STYLES -->
-  <link rel="stylesheet" href="/app/styles/styles.css">
+  <!-- LANDING PAGE CSS -->
+  <link rel="stylesheet" href="/app/styles/landing.css">
 
   <!-- SERVICE WORKER -->
   <script>
@@ -38,133 +26,46 @@
   </script>
 </head>
 
-<body style="background:black;">
+<body>
 
- <!-- BACKGROUND (twice as large, locked in) -->
-<img 
-  src="/app/images/roll-index.jpg"
-  class="bg-full-zoom"
-  alt="Background"
-/>
+  <!-- BACKGROUND -->
+  <img src="/app/images/roll-index.jpg" class="bg-landing" alt="Background">
 
+  <!-- MAIN CONTENT -->
+  <main class="landing-container">
 
-  <!-- HEADER -->
-  <header class="header">
-    <nav class="nav">
-      <a href="/pages/auth-login.html">Login</a>
-      <a href="/pages/buyer-profile.html">My Tickets</a>
-      <a href="/pages/skater-dashboard.html">Skater Dashboard</a>
-      <a href="/pages/business-dashboard.html">Business/Celebrity</a>
-    </nav>
-  </header>
+    <h1 class="landing-title">Roll Show</h1>
+    <p class="landing-subtitle">Skate Performances • Culture • Community</p>
 
-  <!-- MAIN -->
-  <main>
+    <div class="role-grid">
 
-    <!-- HERO -->
-    <section class="hero">
-      <div class="hero-content">
-        <h1>Skate Performances From Every Discipline</h1>
-        <p class="subtitle">
-          Buy tickets, watch shows, support skaters, and build real deals between performers, brands, and music.
-        </p>
-
-        <div class="cta-row">
-          <a class="cta" href="/pages/signup-buyer.html">Buy Tickets</a>
-          <a class="cta" href="/pages/signup-skater.html">Become a Skater</a>
-          <a class="cta" href="/pages/signup-business.html">Register Business / Celebrity</a>
-        </div>
+      <!-- BUYER -->
+      <div class="role-card">
+        <h2>Ticket Buyer</h2>
+        <p>Buy tickets and watch shows.</p>
+        <a class="role-btn" href="/pages/auth-login.html?role=buyer">Login</a>
+        <a class="role-btn" href="/pages/signup-buyer.html">Sign Up</a>
       </div>
-    </section>
 
-    <!-- FEATURED SHOWS -->
-    <section class="featured-section">
-      <h2>Featured Shows</h2>
-      <div id="featuredShows" class="featured-grid"></div>
-    </section>
-
-    <!-- PERFORMER FEED -->
-    <section class="explore-section">
-      <h2>Performer Feed</h2>
-      <p class="section-subtitle">
-        Browse skaters by discipline, watch short clips, and discover who you want to work with.
-      </p>
-
-      <div id="performerFeed" class="show-grid"></div>
-
-      <div class="center">
-        <a class="cta" href="/pages/skaters-feed.html">View Full Skater Feed</a>
+      <!-- SKATER -->
+      <div class="role-card">
+        <h2>Skater</h2>
+        <p>Perform, build your brand, and earn.</p>
+        <a class="role-btn" href="/pages/auth-login.html?role=skater">Login</a>
+        <a class="role-btn" href="/pages/signup-skater.html">Sign Up</a>
       </div>
-    </section>
 
-    <!-- BUSINESS / CELEBRITY -->
-    <section class="explore-section">
-      <h2>For Businesses & Celebrities</h2>
-      <p class="section-subtitle">
-        Create a verified profile, make offers to skaters, negotiate deals, and sign contracts directly in the app.
-      </p>
-
-      <div class="info-grid">
-        <div class="info-card">
-          <h3>Register Your Business</h3>
-          <p>Submit your business or brand details for verification before accessing the offer dashboard.</p>
-          <a class="cta" href="/pages/signup-business.html">Register Business</a>
-        </div>
-
-        <div class="info-card">
-          <h3>Make Offers to Skaters</h3>
-          <p>Browse skater profiles by discipline and send structured offers with terms, rates, and deliverables.</p>
-          <a class="cta" href="/pages/business-dashboard.html">Business Dashboard</a>
-        </div>
-
-        <div class="info-card">
-          <h3>Contracts Inside the App</h3>
-          <p>Negotiate, approve, and store contracts directly in Roll Show so every performance is protected.</p>
-          <a class="cta" href="/pages/contracts.html">View Contract Tools</a>
-        </div>
+      <!-- BUSINESS / CELEBRITY -->
+      <div class="role-card">
+        <h2>Business / Celebrity</h2>
+        <p>Make offers and collaborate with skaters.</p>
+        <a class="role-btn" href="/pages/auth-login.html?role=business">Login</a>
+        <a class="role-btn" href="/pages/signup-business.html">Register</a>
       </div>
-    </section>
 
-    <!-- MUSIC -->
-    <section class="explore-section">
-      <h2>Music for Performances</h2>
-      <p class="section-subtitle">
-        Musicians can upload tracks. Skaters can use free tracks or license premium songs for their shows.
-      </p>
-
-      <div class="info-grid">
-        <div class="info-card">
-          <h3>Upload Your Music</h3>
-          <p>Artists can upload songs to be used in performances, build exposure, and earn from licensing.</p>
-          <a class="cta" href="/pages/music-upload.html">Musician Upload</a>
-        </div>
-
-        <div class="info-card">
-          <h3>Free & Licensed Tracks</h3>
-          <p>Skaters can use free tracks or pay a $10 license fee — $8 to the artist, $2 platform cut.</p>
-          <a class="cta" href="/pages/music-library.html">Browse Music Library</a>
-        </div>
-
-        <div class="info-card">
-          <h3>Royalties & Trademarks</h3>
-          <p>Skaters can set up royalties and trademarks for their performances directly from their dashboard.</p>
-          <a class="cta" href="/pages/skater-dashboard.html">Skater Dashboard</a>
-        </div>
-      </div>
-    </section>
+    </div>
 
   </main>
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <p>© Roll Show</p>
-    <div class="footer-links">
-      <a href="/pages/terms.html">Terms of Service</a>
-      <a href="/pages/privacy.html">Privacy Policy</a>
-      <a href="/pages/legal.html">Legal</a>
-    </div>
-  </footer>
-
-  <script src="/app/js/app.js" defer></script>
 </body>
 </html>
