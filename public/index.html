@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <title>Roll Show – Welcome</title>
+  <title>Roll Show – Skate Performances</title>
 
   <!-- MOBILE + PWA -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,7 +15,7 @@
   <!-- MANIFEST -->
   <link rel="manifest" href="/manifest.webmanifest">
 
-  <!-- LANDING PAGE CSS -->
+  <!-- STYLES -->
   <link rel="stylesheet" href="/app/styles/landing.css">
 
   <!-- SERVICE WORKER -->
@@ -31,39 +31,57 @@
   <!-- BACKGROUND -->
   <img src="/app/images/roll-index.jpg" class="bg-landing" alt="Background">
 
-  <!-- MAIN CONTENT -->
-  <main class="landing-container">
+  <main class="landing-shell">
 
-    <h1 class="landing-title">Roll Show</h1>
-    <p class="landing-subtitle">Skate Performances • Culture • Community</p>
+    <header class="landing-header">
+      <div class="logo-mark">Roll Show</div>
+    </header>
 
-    <div class="role-grid">
+    <section class="landing-hero">
+      <div class="hero-copy">
+        <h1>Skate Performances From Every Discipline</h1>
+        <p class="hero-subtitle">
+          This is the skater’s platform. Build your shows, your brand, your deals, and your legacy.
+        </p>
 
-      <!-- BUYER -->
-      <div class="role-card">
-        <h2>Ticket Buyer</h2>
-        <p>Buy tickets and watch shows.</p>
-        <a class="role-btn" href="/pages/auth-login.html?role=buyer">Login</a>
-        <a class="role-btn" href="/pages/signup-buyer.html">Sign Up</a>
+        <!-- SKATER PRIMARY CTA (cursive style) -->
+        <div class="hero-skater-cta">
+          <a href="/pages/signup-skater.html" class="btn-skater-main">
+            Become a Skater
+          </a>
+          <a href="/pages/auth-login.html?role=skater" class="btn-skater-ghost">
+            Skater Login
+          </a>
+        </div>
       </div>
 
-      <!-- SKATER -->
-      <div class="role-card">
-        <h2>Skater</h2>
-        <p>Perform, build your brand, and earn.</p>
-        <a class="role-btn" href="/pages/auth-login.html?role=skater">Login</a>
-        <a class="role-btn" href="/pages/signup-skater.html">Sign Up</a>
-      </div>
+      <!-- SIDE ROLES: BUYER + COLLAB (smaller) -->
+      <div class="hero-side-roles">
 
-      <!-- BUSINESS / CELEBRITY -->
-      <div class="role-card">
-        <h2>Business / Celebrity</h2>
-        <p>Make offers and collaborate with skaters.</p>
-        <a class="role-btn" href="/pages/auth-login.html?role=business">Login</a>
-        <a class="role-btn" href="/pages/signup-business.html">Register</a>
-      </div>
+        <div class="side-card">
+          <h2>Ticket Buyer</h2>
+          <p>Buy tickets and watch shows.</p>
+          <a href="/pages/signup-buyer.html" class="btn-side">
+            Buyer Sign Up
+          </a>
+          <a href="/pages/auth-login.html?role=buyer" class="btn-side-ghost">
+            Buyer Login
+          </a>
+        </div>
 
-    </div>
+        <div class="side-card">
+          <h2>Collab</h2>
+          <p>Brands, celebrities, music, and offers.</p>
+          <a href="/pages/signup-business.html" class="btn-side">
+            Collab Register
+          </a>
+          <a href="/pages/auth-login.html?role=business" class="btn-side-ghost">
+            Collab Login
+          </a>
+        </div>
+
+      </div>
+    </section>
 
   </main>
 
