@@ -4,11 +4,38 @@ compatibility_date = "2024-01-01"
 
 assets = { directory = "./public" }
 
-[[d1_databases]]
-binding = "DB"
-database_name = "roll_show"
-database_id = "fe6c6c63-9a89-4dfc-ad2f-0d69c8365bf2"
+# ============================
+# D1 DATABASE BINDINGS (5 DBs)
+# ============================
 
+[[d1_databases]]
+binding = "DB_users"
+database_name = "DB_users"
+database_id = "<ID_USERS>"
+
+[[d1_databases]]
+binding = "DB_skaters"
+database_name = "DB_skaters"
+database_id = "<ID_SKATERS>"
+
+[[d1_databases]]
+binding = "DB_buyers"
+database_name = "DB_buyers"
+database_id = "<ID_BUYERS>"
+
+[[d1_databases]]
+binding = "DB_business"
+database_name = "DB_business"
+database_id = "<ID_BUSINESS>"
+
+[[d1_databases]]
+binding = "DB_musicians"
+database_name = "DB_musicians"
+database_id = "<ID_MUSICIANS>"
+
+# ============================
+# OBSERVABILITY
+# ============================
 [observability]
 enabled = false
 
