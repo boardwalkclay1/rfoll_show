@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <title>Roll Show – Skate Performances</title>
+  <title>Roll Show – Skate • Music • Label</title>
 
   <!-- MOBILE + PWA -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -33,12 +33,16 @@
 
   <main class="landing-shell">
 
-    <!-- TITLE -->
+    <!-- TITLE / LABEL POSITIONING -->
     <header class="landing-header">
       <h1 class="landing-title-cursive">Roll Show</h1>
-      <p class="landing-subtitle">Skate Performances • Culture • Community</p>
+      <p class="landing-subtitle">Skate Performances • Indie Music • No‑Upfront Label</p>
+      <p class="landing-tagline">
+        A rights‑driven platform and label for skaters, indie artists, and collaborators.
+      </p>
     </header>
 
+    <!-- HERO: SKATER + ARTIST + LABEL -->
     <section class="landing-hero">
 
       <!-- SKATER HERO SECTION -->
@@ -61,18 +65,26 @@
       <!-- SIDE ROLES -->
       <div class="hero-side-roles">
 
+        <!-- ARTIST / MUSICIAN -->
+        <div class="side-card">
+          <h3>Indie Artist</h3>
+          <p>Join the no‑upfront label. We distribute, you keep ownership, we split royalties.</p>
+          <a href="/pages/signup-musician.html" class="btn-side">Artist Sign Up</a>
+          <a href="/pages/auth-login.html?role=musician" class="btn-side-ghost">Artist Login</a>
+        </div>
+
         <!-- BUYER -->
         <div class="side-card">
           <h3>Ticket Buyer</h3>
-          <p>Buy tickets and watch shows.</p>
+          <p>Buy tickets, watch shows, support skaters and artists.</p>
           <a href="/pages/signup-buyer.html" class="btn-side">Sign Up</a>
           <a href="/pages/auth-login.html?role=buyer" class="btn-side-ghost">Login</a>
         </div>
 
-        <!-- COLLAB -->
+        <!-- BUSINESS / COLLAB -->
         <div class="side-card">
-          <h3>Collab</h3>
-          <p>Brands • Celebrities • Music • Offers</p>
+          <h3>Collab / Business</h3>
+          <p>Brands • Events • Sponsors • Opportunities.</p>
           <a href="/pages/signup-business.html" class="btn-side">Register</a>
           <a href="/pages/auth-login.html?role=business" class="btn-side-ghost">Login</a>
         </div>
@@ -80,6 +92,123 @@
       </div>
 
     </section>
+
+    <!-- RIGHTS & ROYALTIES EXPLAINER -->
+    <section class="landing-section rights-section">
+      <h2>How Rights & Royalties Work</h2>
+      <div class="rights-grid">
+
+        <div class="rights-card">
+          <h3>Ownership</h3>
+          <p>
+            Artists keep ownership of their music. Skaters keep ownership of their performances.
+            Roll Show receives a license to use, distribute, and monetize content on our platform
+            and on third‑party services (like Tidal, Viva, and others).
+          </p>
+        </div>
+
+        <div class="rights-card">
+          <h3>Recorder Rights</h3>
+          <p>
+            By default, the person who records the video owns the recording. During skater signup
+            and upload, we explain this clearly and give skaters tools to:
+          </p>
+          <ul>
+            <li>Identify who recorded the clip.</li>
+            <li>Give the recorder a percentage if they agree.</li>
+            <li>Document that agreement in the platform.</li>
+          </ul>
+        </div>
+
+        <div class="rights-card">
+          <h3>40 / 40 / 20 Split</h3>
+          <p>
+            For eligible content, net revenue is split:
+          </p>
+          <ul>
+            <li>40% to the artist (music).</li>
+            <li>40% to the skater (performance/video).</li>
+            <li>20% to Roll Show (platform/label share).</li>
+          </ul>
+          <p>
+            If a recorder is added, we make it easy to assign them a percentage and adjust the split.
+          </p>
+        </div>
+
+        <div class="rights-card">
+          <h3>No Upfront Fees</h3>
+          <p>
+            Roll Show operates as a no‑upfront indie label and platform. We don’t charge artists or
+            skaters to join. We earn only from our share of royalties and platform revenue.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- AGREEMENTS & LEGAL CENTER -->
+    <section class="landing-section legal-section">
+      <h2>Agreements & Legal</h2>
+      <p class="legal-intro">
+        Each role has its own agreement, presented clearly during signup. You can review the current
+        versions anytime from this page or from your account.
+      </p>
+
+      <div class="legal-grid">
+
+        <div class="legal-card">
+          <h3>Artist Agreement</h3>
+          <p>
+            Covers music rights, distribution, royalties, and how Roll Show can use and distribute your tracks.
+            Shown and accepted during musician signup.
+          </p>
+          <a href="/legal/artist-agreement.html" class="btn-legal">View Artist Agreement</a>
+        </div>
+
+        <div class="legal-card">
+          <h3>Skater Agreement</h3>
+          <p>
+            Covers performance rights, likeness, video usage, recorder ownership rules, and royalty splits.
+            Shown and accepted during skater signup.
+          </p>
+          <a href="/legal/skater-agreement.html" class="btn-legal">View Skater Agreement</a>
+        </div>
+
+        <div class="legal-card">
+          <h3>Business / Collab Agreement</h3>
+          <p>
+            Covers brand integrations, offers, sponsorships, and how deals are structured on Roll Show.
+            Shown and accepted during business signup.
+          </p>
+          <a href="/legal/business-agreement.html" class="btn-legal">View Business Agreement</a>
+        </div>
+
+        <div class="legal-card">
+          <h3>Your Signed Agreements</h3>
+          <p>
+            Once you create an account and accept an agreement, a snapshot of what you signed is stored
+            and can be viewed from your profile at any time.
+          </p>
+          <a href="/pages/account-agreements.html" class="btn-legal">View My Agreements</a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="landing-footer">
+      <div class="footer-links">
+        <a href="/legal/terms.html">Terms of Service</a>
+        <a href="/legal/privacy.html">Privacy Policy</a>
+        <a href="/legal/artist-agreement.html">Artist Agreement</a>
+        <a href="/legal/skater-agreement.html">Skater Agreement</a>
+        <a href="/legal/business-agreement.html">Business Agreement</a>
+      </div>
+      <p class="footer-note">
+        Roll Show operates as a no‑upfront indie label and rights platform. All agreements are presented
+        clearly during signup and stored for your records.
+      </p>
+    </footer>
 
   </main>
 
