@@ -1,90 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Video Studio – Roll Show</title>
-
-  <!-- Correct folder path -->
-  <link rel="stylesheet" href="/app/styles/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.png">
+  <link rel="stylesheet" href="/app/styles/dashboard.css">
 </head>
 
-<body>
+<body style="background:url('/app/images/bg-video-studio.jpg') center/cover no-repeat;">
 
-<header class="header">
-  <div class="logo">ROLL SHOW</div>
+  <main class="dash-shell">
+    <h1>Your Videos</h1>
+    <ul id="video-list"></ul>
+  </main>
 
-  <nav class="nav">
-    <a href="/pages/skater-dashboard.html">Dashboard</a>
-    <a href="/pages/video-studio.html" class="active">Video Studio</a>
-    <a href="/pages/branding-studio.html">Branding Studio</a>
-    <button id="themeToggle">Theme</button>
-  </nav>
-</header>
-
-<main class="video-studio-page">
-
-  <!-- Page Header -->
-  <section class="page-header">
-    <h1>Video Studio</h1>
-    <p class="subtitle">Record, upload, edit, and assemble your 20‑minute show.</p>
-  </section>
-
-  <!-- Workspace Layout -->
-  <section class="video-workspace">
-
-    <!-- Left Column: Recording + Upload -->
-    <aside class="video-left">
-
-      <!-- Recording Deck -->
-      <div class="studio-card">
-        <h2>Record Video</h2>
-
-        <video id="recordPreview" autoplay muted class="record-preview"></video>
-
-        <div class="controls">
-          <button id="startRecord" class="btn-primary">Start Recording</button>
-          <button id="stopRecord" class="btn-secondary">Stop</button>
-          <button id="saveRecord" class="btn-secondary">Save Clip</button>
-        </div>
-      </div>
-
-      <!-- Upload Clips -->
-      <div class="studio-card">
-        <h2>Upload Clips</h2>
-
-        <input type="file" id="clipUpload" accept="video/*" multiple class="file-input">
-
-        <div id="clipList" class="clip-list">
-          <!-- JS injects uploaded/recorded clips -->
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- Right Column: Timeline + Render -->
-    <section class="video-right">
-
-      <!-- Timeline -->
-      <div class="studio-card timeline-card">
-        <h2>Timeline</h2>
-
-        <p class="note">Drag clips into the order you want them to appear in your final show.</p>
-
-        <div id="timeline" class="timeline">
-          <!-- JS injects timeline blocks -->
-        </div>
-
-        <button id="renderVideo" class="btn-primary render-btn">Render Final Show</button>
-      </div>
-
-    </section>
-
-  </section>
-
-</main>
-
-<!-- Correct JS path -->
-<script src="/app/js/app.js" defer></script>
-
+  <script type="module" src="/app/js/skater/video-studio.js"></script>
 </body>
 </html>
