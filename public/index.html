@@ -7,20 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000">
 
-  <!-- ICONS -->
   <link rel="icon" href="/app/images/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
   <link rel="manifest" href="/manifest.webmanifest">
 
-  <!-- LANDING CSS -->
   <link rel="stylesheet" href="/app/styles/landing.css">
-
-  <!-- DISABLE SERVICE WORKER FOR NOW -->
-  <script>
-    // if ("serviceWorker" in navigator) {
-    //   navigator.serviceWorker.register("/service-worker.js");
-    // }
-  </script>
 </head>
 
 <body>
@@ -36,9 +27,8 @@
   </div>
 
   <nav class="menu-panel" id="menuPanel">
-    <a href="/index.html">Home</a>
     <a href="/pages/skater-signup.html">Become a Skater</a>
-    <a href="/pages/musician-signup.html">Indie Artist Sign Up</a>
+    <a href="/pages/musician-signup.html">Indie Artist</a>
     <a href="/pages/business-signup.html">Business / Collab</a>
     <a href="/pages/buyer-signup.html">Ticket Buyer</a>
     <a href="/legal/terms.html">Terms</a>
@@ -51,15 +41,20 @@
     <header class="landing-header">
       <h1 class="landing-title-cursive">Roll Show</h1>
       <p class="landing-subtitle">Skate • Music • Label</p>
+
+      <div class="header-ticket-cta">
+        <a href="/pages/shows.html" class="btn-ticket-main">Buy Tickets</a>
+      </div>
     </header>
 
     <!-- HERO -->
     <section class="landing-hero">
 
+      <!-- SKATER PRIMARY -->
       <div class="hero-skater-block">
         <h2 class="skater-headline">Become the Show</h2>
         <p class="skater-subtext">
-          Skaters are the heart of Roll Show. Build your shows, your brand, your deals, your legacy.
+          Build your shows, your brand, your deals, your legacy.
         </p>
 
         <div class="skater-cta-group">
@@ -68,11 +63,12 @@
         </div>
       </div>
 
+      <!-- SIDE ROLES -->
       <div class="hero-side-roles">
 
         <div class="side-card">
           <h3>Indie Artist</h3>
-          <p>No‑upfront label. Keep ownership, share royalties.</p>
+          <p>Keep ownership. Share royalties. No upfront label.</p>
           <a href="/pages/musician-signup.html" class="btn-side">Artist Sign Up</a>
           <a href="/pages/auth-login.html?role=musician" class="btn-side-ghost">Login</a>
         </div>
@@ -101,12 +97,12 @@
         <a href="/legal/terms.html">Terms</a>
         <a href="/legal/privacy.html">Privacy</a>
       </div>
-      <p class="footer-note">Roll Show is a no‑upfront indie label and rights platform.</p>
+      <p class="footer-note">A no‑upfront indie label and rights platform.</p>
     </footer>
 
   </main>
 
-  <!-- BURGER MENU JS -->
+  <!-- MENU JS -->
   <script>
     function toggleMenu() {
       document.getElementById("menuPanel").classList.toggle("open");
