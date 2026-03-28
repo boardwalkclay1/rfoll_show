@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Offer – Roll Show</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.png">
+  <link rel="stylesheet" href="/app/styles/dashboard.css">
+</head>
+
+<body style="background:url('/app/images/bg-create-offer.jpg') center/cover no-repeat;">
+
+  <main class="dash-shell">
+    <h1>Create Offer</h1>
+
+    <form id="create-offer-form" class="upload-form">
+      <input name="skater_id" placeholder="Skater ID" required>
+      <input name="title" placeholder="Offer Title" required>
+      <textarea name="details" placeholder="Offer Details" required></textarea>
+      <button type="submit">Send Offer</button>
+    </form>
+  </main>
+
+  <script type="module" src="/app/js/business/create-offer.js"></script>
+</body>
+</html>
