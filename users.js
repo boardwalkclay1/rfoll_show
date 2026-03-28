@@ -2,8 +2,6 @@ import { json, getUserId, hash, verify } from "./utils.js";
 
 /* ============================================================
    BASE SIGNUP (ALL ROLES)
-   - Creates user in DB_users
-   - Role-specific modules create secondary profiles
 ============================================================ */
 export async function signupBase(env, { name, email, password, role }) {
   if (!name || !email || !password || !role) {
@@ -32,9 +30,7 @@ export async function signupBase(env, { name, email, password, role }) {
 }
 
 /* ============================================================
-   LOGIN
-   - Returns user identity only
-   - Role-specific dashboards fetch their own data
+   LOGIN — RETURNS OWNER FLAG
 ============================================================ */
 export async function login(request, env) {
   const { email, password } = await request.json();
@@ -52,6 +48,9 @@ export async function login(request, env) {
     return json({ success: false, error: "Invalid credentials" }, 401);
   }
 
+  // OWNER FLAG
+  const is_owner = row.role === "owner" || row.is_owner === 1;
+
   return json({
     success: true,
     user: {
@@ -59,16 +58,14 @@ export async function login(request, env) {
       name: row.name,
       email: row.email,
       role: row.role,
+      is_owner,
       created_at: row.created_at
     }
   });
 }
 
 /* ============================================================
-   ROLE GUARD
-   - Ensures user exists
-   - Ensures user has allowed role
-   - Passes user object to handler
+   ROLE GUARD — OWNER BYPASS
 ============================================================ */
 export async function requireRole(request, env, allowedRoles, handler) {
   const userId = getUserId(request);
@@ -84,6 +81,12 @@ export async function requireRole(request, env, allowedRoles, handler) {
     return json({ error: "Unauthorized" }, 401);
   }
 
+  // OWNER BYPASS — FULL ACCESS
+  if (user.role === "owner" || user.is_owner === 1) {
+    return handler(request, env, user);
+  }
+
+  // Normal role check
   if (!allowedRoles.includes(user.role)) {
     return json({ error: "Forbidden" }, 403);
   }
