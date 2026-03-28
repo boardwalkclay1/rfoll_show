@@ -5,37 +5,18 @@ compatibility_date = "2024-01-01"
 assets = { directory = "./public" }
 
 # ============================
-# D1 DATABASE BINDINGS (5 DBs)
+# UNIFIED D1 DATABASE
 # ============================
 
 [[d1_databases]]
-binding = "DB_users"
-database_name = "DB_users"
-database_id = "862b2a72-249e-4d39-bf02-55d721a41985"   # INSERT REAL ID
-
-[[d1_databases]]
-binding = "DB_skaters"
-database_name = "DB_skaters"
-database_id = "1299acce-c0ff-4ab3-b91e-da31fa54e591"   # INSERT REAL ID
-
-[[d1_databases]]
-binding = "DB_buyers"
-database_name = "DB_buyers"
-database_id = "a2f17cb8-ee40-45b6-b747-8f9016d8c97e"   # INSERT REAL ID
-
-[[d1_databases]]
-binding = "DB_business"
-database_name = "DB_business"
-database_id = "1ee51f5a-8674-4df3-885d-071414bed906"   # INSERT REAL ID
-
-[[d1_databases]]
-binding = "DB_musician"
-database_name = "DB_musician"
-database_id = "340768aa-b3a2-4e63-a659-c9fa71de1644"   # INSERT REAL ID
+binding = "DB"
+database_name = "roll-show"
+database_id = "862b2a72-249e-4d39-bf02-55d721a41985"
 
 # ============================
 # OBSERVABILITY
 # ============================
+
 [observability]
 enabled = false
 
