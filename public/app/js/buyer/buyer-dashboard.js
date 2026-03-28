@@ -1,26 +1,28 @@
-// /app/js/buyer-dashboard.js
-import API from "./api.js";
-import { getUserIdFromQuery } from "./utils.js";
+import API from "../api.js";
+import { getUserIdFromQuery } from "../utils.js";
 
 const userId = getUserIdFromQuery();
 
 async function loadDashboard() {
-  try {
-    const data = await API.get(`/api/buyer/dashboard?user=${userId}`);
+  const data = await API.get(`/api/buyer/dashboard?user=${userId}`);
 
-    document.getElementById("buyer-name").textContent = data.name;
+  document.getElementById("buyer-name").textContent = data.name;
 
-    const tickets = document.getElementById("buyer-tickets");
-    tickets.innerHTML = "";
-    data.tickets.forEach(ticket => {
-      const li = document.createElement("li");
-      li.textContent = `${ticket.show_title} — $${(ticket.price_cents / 100).toFixed(2)}`;
-      tickets.appendChild(li);
-    });
+  const tickets = document.getElementById("buyer-tickets");
+  tickets.innerHTML = "";
+  data.tickets.forEach(t => {
+    const li = document.createElement("li");
+    li.textContent = `${t.show_title} — ${t.date}`;
+    tickets.appendChild(li);
+  });
 
-  } catch (err) {
-    console.error(err);
-  }
+  const rec = document.getElementById("recommended-skaters");
+  rec.innerHTML = "";
+  data.recommended.forEach(s => {
+    const li = document.createElement("li");
+    li.textContent = `${s.name} — ${s.discipline}`;
+    rec.appendChild(li);
+  });
 }
 
 loadDashboard();
