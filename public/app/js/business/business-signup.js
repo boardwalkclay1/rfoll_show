@@ -1,6 +1,6 @@
+// app/js/business/business-signup.js
 import API from "../api.js";
 import { initAgreementModal } from "../agreement-modal.js";
-import RightsEngine from "../rights-engine.js";
 
 const form = document.getElementById("business-signup-form");
 const modal = initAgreementModal("agreement-modal");
@@ -11,32 +11,50 @@ form.addEventListener("submit", async (e) => {
 
   const fd = new FormData(form);
 
+  // Base signup payload
   const payload = {
     name: fd.get("name"),
     email: fd.get("email"),
     password: fd.get("password"),
-    extra: {
-      company_name: fd.get("company_name")
-    }
+    company_name: fd.get("company_name") || "",
+    website: fd.get("website") || ""
   };
 
+  // Load the business agreement HTML
   const html = await API.getText("/legal/pages/business-agreement.html");
 
+  // Open modal
   modal.open({
     title: "Business Agreement",
     html,
     onAgreeCallback: async (agreementHtml) => {
-      const user = await RightsEngine.signupWithAgreement({
-        role: "business",
-        signupPath: "/api/signup",
-        rightsPath: "/api/rights/business-signup",
-        agreementType: "business",
-        agreementVersion: AGREEMENT_VERSION,
-        agreementHtml,
-        formData: payload
+
+      // 1. Create the business user
+      const signupRes = await API.post("/api/business/signup", {
+        name: payload.name,
+        email: payload.email,
+        password: payload.password,
+        company_name: payload.company_name,
+        website: payload.website
       });
 
-      window.location.href = `/pages/business/business-dashboard.html?user=${user.id}`;
+      if (!signupRes.success) {
+        alert("Signup failed: " + signupRes.error);
+        return;
+      }
+
+      const user = signupRes;
+
+      // 2. Store agreement snapshot
+      await API.post("/api/agreements/store", {
+        user_id: user.id,
+        role: "business",
+        version: AGREEMENT_VERSION,
+        html: agreementHtml
+      });
+
+      // 3. Redirect to dashboard
+      window.location.href = "/pages/business-dashboard.html";
     }
   });
 });
