@@ -30,20 +30,20 @@ form.addEventListener("submit", async (e) => {
     let target = "/";
 
     if (user.is_owner) {
-      target = "/pages/owner-dashboard.html";
+      target = "/pages/owner/owner-dashboard.html";
     } else {
       switch (user.role) {
         case "skater":
-          target = "/pages/skater-dashboard.html";
+          target = "/pages/skater/skater-dashboard.html";
           break;
         case "musician":
-          target = "/pages/musician-dashboard.html";
+          target = "/pages/musician/musician-dashboard.html";
           break;
         case "business":
-          target = "/pages/business-dashboard.html";
+          target = "/pages/business/business-dashboard.html";
           break;
         case "buyer":
-          target = "/pages/buyer-dashboard.html";
+          target = "/pages/buyer/buyer-dashboard.html";
           break;
       }
     }
