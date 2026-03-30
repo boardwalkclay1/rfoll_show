@@ -3,6 +3,7 @@ import { requireRole } from "../users.js";
 
 export async function ownerOverview(request, env) {
   return requireRole(request, env, ["owner"], async (_req, env) => {
+
     const total_users = await env.DB_users.prepare(
       "SELECT COUNT(*) AS c FROM users"
     ).first();
