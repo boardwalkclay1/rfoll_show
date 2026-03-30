@@ -14,3 +14,9 @@ enabled = false
 
 [observability.logs]
 invocation_logs = true
+
+# ============================================================
+# FIX FOR BCRYPTJS — REQUIRED FOR CLOUDFLARE WORKERS
+# ============================================================
+[alias]
+"crypto" = "crypto-browserify"
