@@ -22,8 +22,6 @@ export function json(data, status = 200) {
 
 /* ============================================================
    UNIFIED USER ID EXTRACTION
-   - Supports ALL roles
-   - Worker treats all IDs the same
 ============================================================ */
 export function getUserId(request) {
   return (
@@ -37,19 +35,20 @@ export function getUserId(request) {
 }
 
 /* ============================================================
-   PASSWORD HASHING (SHA-256)
+   BCRYPTJS — WORKER SAFE
+============================================================ */
+import bcrypt from "bcryptjs";
+
+/* ============================================================
+   PASSWORD HASHING (bcrypt)
 ============================================================ */
 export async function hash(str) {
-  const data = new TextEncoder().encode(str);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(digest)]
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
+  return await bcrypt.hash(str, 10);
 }
 
 /* ============================================================
-   PASSWORD VERIFY
+   PASSWORD VERIFY (bcrypt)
 ============================================================ */
 export async function verify(str, hashed) {
-  return (await hash(str)) === hashed;
+  return await bcrypt.compare(str, hashed);
 }
