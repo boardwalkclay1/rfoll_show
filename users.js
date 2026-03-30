@@ -1,7 +1,7 @@
 import { json, getUserId, hash, verify } from "./utils.js";
 
 /* ============================================================
-   BASE SIGNUP (ALL ROLES)
+   BASE SIGNUP (ALL ROLES) — BCRYPT VERSION
 ============================================================ */
 export async function signupBase(env, { name, email, password, role }) {
   if (!name || !email || !password || !role) {
@@ -18,6 +18,8 @@ export async function signupBase(env, { name, email, password, role }) {
 
   const id = crypto.randomUUID();
   const created = new Date().toISOString();
+
+  // bcrypt hash
   const hashed = await hash(password);
 
   await env.DB_users.prepare(
@@ -29,7 +31,7 @@ export async function signupBase(env, { name, email, password, role }) {
 }
 
 /* ============================================================
-   LOGIN — SAFE OWNER FLAG + DEBUG
+   LOGIN — BCRYPT VERSION
 ============================================================ */
 export async function login(request, env) {
   try {
@@ -39,13 +41,11 @@ export async function login(request, env) {
       "SELECT * FROM users WHERE email = ?"
     ).bind(email).first();
 
-    // 🔥 DEBUG LINE — THIS IS WHAT WE NEED
-    console.log("LOGIN ROW:", row);
-
     if (!row) {
       return json({ success: false, error: "Invalid credentials" }, 401);
     }
 
+    // bcrypt verify
     const valid = await verify(password, row.password_hash);
     if (!valid) {
       return json({ success: false, error: "Invalid credentials" }, 401);
