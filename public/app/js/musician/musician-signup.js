@@ -1,6 +1,6 @@
 // app/js/musician/musician-signup.js
 import API from "../api.js";
-import { initAgreementModal } from "../agreement-modal.js";
+import { initAgreementModal } from "/app/js/agreement-model.js";
 
 const form = document.getElementById("musician-signup-form");
 const modal = initAgreementModal("agreement-modal");
