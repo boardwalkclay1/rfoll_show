@@ -20,7 +20,6 @@ export async function signupBase(env, { name, email, password, role }) {
   const created = new Date().toISOString();
   const hashed = await hash(password);
 
-  // IMPORTANT: use the REAL column name
   await env.DB_users.prepare(
     `INSERT INTO users (id, name, email, password_hash, role, created_at, "owner-1")
      VALUES (?, ?, ?, ?, ?, ?, 0)`
@@ -30,7 +29,7 @@ export async function signupBase(env, { name, email, password, role }) {
 }
 
 /* ============================================================
-   LOGIN — SAFE OWNER FLAG
+   LOGIN — SAFE OWNER FLAG + DEBUG
 ============================================================ */
 export async function login(request, env) {
   try {
@@ -39,6 +38,9 @@ export async function login(request, env) {
     const row = await env.DB_users.prepare(
       "SELECT * FROM users WHERE email = ?"
     ).bind(email).first();
+
+    // 🔥 DEBUG LINE — THIS IS WHAT WE NEED
+    console.log("LOGIN ROW:", row);
 
     if (!row) {
       return json({ success: false, error: "Invalid credentials" }, 401);
@@ -49,7 +51,6 @@ export async function login(request, env) {
       return json({ success: false, error: "Invalid credentials" }, 401);
     }
 
-    // FIXED: read the real column name
     const is_owner =
       row.role === "owner" ||
       row["owner-1"] == 1 ||
@@ -90,7 +91,6 @@ export async function requireRole(request, env, allowedRoles, handler) {
       return json({ error: "Unauthorized" }, 401);
     }
 
-    // FIXED: read the real column name
     const is_owner =
       user.role === "owner" ||
       user["owner-1"] == 1 ||
