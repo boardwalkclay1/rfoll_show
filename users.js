@@ -20,8 +20,9 @@ export async function signupBase(env, { name, email, password, role }) {
   const created = new Date().toISOString();
   const hashed = await hash(password);
 
+  // IMPORTANT: use the REAL column name
   await env.DB_users.prepare(
-    `INSERT INTO users (id, name, email, password_hash, role, created_at, is_owner)
+    `INSERT INTO users (id, name, email, password_hash, role, created_at, "owner-1")
      VALUES (?, ?, ?, ?, ?, ?, 0)`
   ).bind(id, name, email, hashed, role, created).run();
 
@@ -48,11 +49,11 @@ export async function login(request, env) {
       return json({ success: false, error: "Invalid credentials" }, 401);
     }
 
-    // SAFE OWNER CHECK — handles null, undefined, "1", 1, true
+    // FIXED: read the real column name
     const is_owner =
       row.role === "owner" ||
-      row.is_owner == 1 ||
-      row.is_owner === true;
+      row["owner-1"] == 1 ||
+      row["owner-1"] === true;
 
     return json({
       success: true,
@@ -89,10 +90,11 @@ export async function requireRole(request, env, allowedRoles, handler) {
       return json({ error: "Unauthorized" }, 401);
     }
 
+    // FIXED: read the real column name
     const is_owner =
       user.role === "owner" ||
-      user.is_owner == 1 ||
-      user.is_owner === true;
+      user["owner-1"] == 1 ||
+      user["owner-1"] === true;
 
     if (is_owner) {
       return handler(request, env, user);
