@@ -35,20 +35,25 @@ export function getUserId(request) {
 }
 
 /* ============================================================
-   BCRYPTJS — WORKER SAFE
+   PASSWORD HASHING (AUTH WORKER)
 ============================================================ */
-import bcrypt from "bcryptjs";
-
-/* ============================================================
-   PASSWORD HASHING (bcrypt)
-============================================================ */
-export async function hash(str) {
-  return await bcrypt.hash(str, 10);
+export async function hash(str, env) {
+  const res = await env.AUTH.fetch("https://auth/hash", {
+    method: "POST",
+    body: JSON.stringify({ password: str })
+  });
+  const data = await res.json();
+  return data.hashed;
 }
 
 /* ============================================================
-   PASSWORD VERIFY (bcrypt)
+   PASSWORD VERIFY (AUTH WORKER)
 ============================================================ */
-export async function verify(str, hashed) {
-  return await bcrypt.compare(str, hashed);
+export async function verify(str, hashed, env) {
+  const res = await env.AUTH.fetch("https://auth/verify", {
+    method: "POST",
+    body: JSON.stringify({ password: str, hash: hashed })
+  });
+  const data = await res.json();
+  return data.ok;
 }
