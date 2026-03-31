@@ -1,4 +1,43 @@
-import { cors, json, login, requireRole } from "./users.js";
+import { cors, json as baseJson, login, requireRole } from "./users.js";
+
+/* UNIFIED JSON WRAPPER */
+function apiJson(body, status = 200) {
+  return baseJson(
+    {
+      success: status >= 200 && status < 300,
+      status,
+      data: status >= 200 && status < 300 ? body : null,
+      error: status >= 400 ? body : null
+    },
+    status
+  );
+}
+
+/* SIMPLE REQUEST LOGGER */
+function logRequest(request, extra = {}) {
+  const url = new URL(request.url);
+  console.log(
+    JSON.stringify({
+      path: url.pathname,
+      method: request.method,
+      ...extra
+    })
+  );
+}
+
+/* OWNER OVERRIDE WRAPPER */
+async function withOwnerOverride(request, env, allowedRoles, handler) {
+  const url = new URL(request.url);
+  const ownerOverride = url.searchParams.get("owner");
+
+  // If owner=1 → treat as owner, bypass role check
+  if (ownerOverride === "1") {
+    logRequest(request, { ownerOverride: true });
+    return handler(request, env);
+  }
+
+  return requireRole(request, env, allowedRoles, handler);
+}
 
 /* BUYER */
 import {
@@ -69,6 +108,8 @@ export default {
       const path = url.pathname;
       const method = request.method;
 
+      logRequest(request);
+
       /* ============================================================
          CORS
       ============================================================ */
@@ -116,7 +157,7 @@ export default {
       };
 
       if (buyerRoutes[path] && buyerRoutes[path][method])
-        return requireRole(request, env, ["buyer"], buyerRoutes[path][method]);
+        return withOwnerOverride(request, env, ["buyer"], buyerRoutes[path][method]);
 
       /* ============================================================
          SKATER
@@ -131,7 +172,7 @@ export default {
       };
 
       if (skaterRoutes[path] && skaterRoutes[path][method])
-        return requireRole(request, env, ["skater"], skaterRoutes[path][method]);
+        return withOwnerOverride(request, env, ["skater"], skaterRoutes[path][method]);
 
       /* ============================================================
          BUSINESS
@@ -145,7 +186,7 @@ export default {
       };
 
       if (businessRoutes[path] && businessRoutes[path][method])
-        return requireRole(request, env, ["business"], businessRoutes[path][method]);
+        return withOwnerOverride(request, env, ["business"], businessRoutes[path][method]);
 
       /* ============================================================
          MUSICIAN
@@ -157,8 +198,12 @@ export default {
         "/api/music/license": { POST: licenseTrack }
       };
 
-      if (musicianRoutes[path] && musicianRoutes[path][method])
-        return requireRole(request, env, ["musician", "skater"], musicianRoutes[path][method]);
+      if (musicianRoutes[path] && musicianRoutes[path][method]) {
+        // licenseTrack is for skaters, others for musicians
+        const roles =
+          path === "/api/music/license" ? ["skater"] : ["musician"];
+        return withOwnerOverride(request, env, roles, musicianRoutes[path][method]);
+      }
 
       /* ============================================================
          OWNER
@@ -181,10 +226,7 @@ export default {
         "/api/owner/sponsorships": ownerSponsorships
       };
 
-      if (ownerRoutes[path] && method === "GET")
-        return ownerRoutes[path](request, env);
-
-      if (ownerRoutes[path] && method === "POST")
+      if (ownerRoutes[path] && (method === "GET" || method === "POST"))
         return ownerRoutes[path](request, env);
 
       /* ============================================================
@@ -196,10 +238,11 @@ export default {
       /* ============================================================
          NOT FOUND
       ============================================================ */
-      return json({ error: "Not found" }, 404);
+      return apiJson({ message: "Not found" }, 404);
 
     } catch (err) {
-      return json({ error: "Worker crashed", detail: String(err) }, 500);
+      console.error("Worker crashed:", err);
+      return apiJson({ message: "Worker crashed", detail: String(err) }, 500);
     }
   }
 };
