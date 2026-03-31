@@ -1,8 +1,7 @@
-import { json } from "../users.js";
-import { requireRole } from "../users.js";
+import { apiJson, requireRole } from "../users.js";
 
 /* ============================================================
-   OWNER: BUSINESS APPLICATIONS LIST (PENDING)
+   OWNER: BUSINESS APPLICATIONS LIST (PENDING + NEEDS INFO)
 ============================================================ */
 export async function ownerBusinessApplications(request, env) {
   return requireRole(request, env, ["owner"], async (_req, env) => {
@@ -25,7 +24,7 @@ export async function ownerBusinessApplications(request, env) {
        ORDER BY b.submitted_at DESC`
     ).all();
 
-    return json({ applications: results || [] });
+    return apiJson({ applications: results || [] });
   });
 }
 
@@ -39,7 +38,7 @@ export async function ownerBusinessUpdateStatus(request, env) {
 
     const valid = ["approve", "reject", "needs_info"];
     if (!valid.includes(action)) {
-      return json({ success: false, error: "Invalid action" }, 400);
+      return apiJson({ message: "Invalid action" }, 400);
     }
 
     let verified = 0;
@@ -62,6 +61,11 @@ export async function ownerBusinessUpdateStatus(request, env) {
        WHERE id = ?`
     ).bind(verified, review_status, notes || "", businessId).run();
 
-    return json({ success: true, businessId, review_status, verified });
+    return apiJson({
+      success: true,
+      businessId,
+      review_status,
+      verified
+    });
   });
 }
