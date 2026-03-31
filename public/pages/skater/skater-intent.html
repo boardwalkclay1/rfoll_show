@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Skater Verification – Roll Show</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/favicon.png">
+  <link rel="stylesheet" href="/app/styles/intent.css">
+</head>
+
+<body style="background:url('/app/images/roll-show.jpg') center/cover no-repeat;">
+
+  <main class="intent-shell">
+
+    <h1 class="intent-title">Roll Show Skater Check</h1>
+    <p class="intent-sub">Before you join, we just need to know a little about your skating.</p>
+
+    <form id="intent-form" class="intent-form">
+
+      <label>What type of skater are you?</label>
+      <select name="skate_style" required>
+        <option value="">Select your style</option>
+        <option>Street</option>
+        <option>Park</option>
+        <option>Jam</option>
+        <option>Dance</option>
+        <option>Roller Derby</option>
+        <option>Beginner (starting out)</option>
+      </select>
+
+      <label>Where do you skate?</label>
+      <input name="skate_location" placeholder="Example: Cascade ATL" required>
+
+      <label class="check">
+        <input type="checkbox" name="is_skater" required>
+        I am a skater or actively becoming one.
+      </label>
+
+      <button type="submit" class="btn-intent">Continue</button>
+    </form>
+
+  </main>
+
+  <script type="module" src="/app/js/skater/skater-intent.js"></script>
+</body>
+</html>
