@@ -1,4 +1,4 @@
-import { json } from "./users.js";
+import { apiJson } from "./users.js";
 import { signupBase } from "./users.js";
 
 /* ============================================================
@@ -9,7 +9,7 @@ export async function signupSkater(request, env) {
   body.role = "skater";
 
   const base = await signupBase(env, body);
-  if (base.error) return json({ success: false, error: base.error }, 400);
+  if (base.error) return apiJson({ message: base.error }, 400);
 
   await env.DB_skaters.prepare(
     `INSERT INTO skaters (id, user_id, bio, discipline, profile_image, clip_url, created_at)
@@ -24,7 +24,7 @@ export async function signupSkater(request, env) {
     base.created_at
   ).run();
 
-  return json({ success: true, user: base });
+  return apiJson({ user: base });
 }
 
 /* ============================================================
@@ -38,7 +38,7 @@ export async function listShows(env) {
      ORDER BY s.created_at DESC`
   ).all();
 
-  return json(results);
+  return apiJson({ shows: results });
 }
 
 /* ============================================================
@@ -52,9 +52,9 @@ export async function getShow(env, id) {
      WHERE s.id = ?`
   ).bind(id).first();
 
-  if (!row) return json({ error: "Show not found" }, 404);
+  if (!row) return apiJson({ message: "Show not found" }, 404);
 
-  return json(row);
+  return apiJson({ show: row });
 }
 
 /* ============================================================
@@ -64,6 +64,8 @@ export async function skaterDashboard(request, env, user) {
   const skater = await env.DB_skaters.prepare(
     "SELECT * FROM skaters WHERE user_id = ?"
   ).bind(user.id).first();
+
+  if (!skater) return apiJson({ message: "Skater profile not found" }, 404);
 
   const { results: shows } = await env.DB_skaters.prepare(
     "SELECT * FROM shows WHERE skater_id = ? ORDER BY created_at DESC"
@@ -86,8 +88,7 @@ export async function skaterDashboard(request, env, user) {
     `SELECT o.*, u.name AS sender_name
      FROM offers o
      JOIN users u ON o.from_user_id = u.id
-     WHERE o.to_user_id = ?
-        OR o.from_user_id = ?
+     WHERE o.to_user_id = ? OR o.from_user_id = ?
      ORDER BY o.created_at DESC`
   ).bind(user.id, user.id).all();
 
@@ -114,7 +115,7 @@ export async function skaterDashboard(request, env, user) {
      ORDER BY l.created_at DESC`
   ).bind(skater.id).all();
 
-  return json({
+  return apiJson({
     skater,
     shows,
     lessons,
@@ -127,18 +128,20 @@ export async function skaterDashboard(request, env, user) {
 }
 
 /* ============================================================
-   LIST SKATER'S OWN SHOWS
+   LIST SKATER SHOWS
 ============================================================ */
 export async function listSkaterShows(request, env, user) {
   const skater = await env.DB_skaters.prepare(
     "SELECT id FROM skaters WHERE user_id = ?"
   ).bind(user.id).first();
 
+  if (!skater) return apiJson({ message: "Skater not found" }, 404);
+
   const { results } = await env.DB_skaters.prepare(
     "SELECT * FROM shows WHERE skater_id = ? ORDER BY created_at DESC"
   ).bind(skater.id).all();
 
-  return json(results);
+  return apiJson({ shows: results });
 }
 
 /* ============================================================
@@ -148,7 +151,7 @@ export async function createShow(request, env, user) {
   const { title, description, premiere_date, price_cents, thumbnail, video_url } =
     await request.json();
 
-  if (!title) return json({ error: "Missing title" }, 400);
+  if (!title) return apiJson({ message: "Missing title" }, 400);
 
   const skater = await env.DB_skaters.prepare(
     "SELECT id FROM skaters WHERE user_id = ?"
@@ -162,7 +165,7 @@ export async function createShow(request, env, user) {
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   ).bind(id, skater.id, title, description, price_cents, thumbnail, video_url, premiere_date, now).run();
 
-  return json({ success: true, showId: id });
+  return apiJson({ showId: id });
 }
 
 /* ============================================================
@@ -175,12 +178,14 @@ export async function updateSkaterProfile(request, env, user) {
     "SELECT id FROM skaters WHERE user_id = ?"
   ).bind(user.id).first();
 
+  if (!skater) return apiJson({ message: "Skater not found" }, 404);
+
   await env.DB_skaters.prepare(
     `UPDATE skaters SET discipline = ?, bio = ?, profile_image = ?, clip_url = ?
      WHERE id = ?`
   ).bind(discipline, bio, profile_image, clip_url, skater.id).run();
 
-  return json({ success: true });
+  return apiJson({ success: true });
 }
 
 /* ============================================================
@@ -193,6 +198,8 @@ export async function createLesson(request, env, user) {
     "SELECT id FROM skaters WHERE user_id = ?"
   ).bind(user.id).first();
 
+  if (!skater) return apiJson({ message: "Skater not found" }, 404);
+
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
@@ -201,7 +208,7 @@ export async function createLesson(request, env, user) {
      VALUES (?, ?, ?, ?, ?, ?)`
   ).bind(id, skater.id, title, description, price_cents, now).run();
 
-  return json({ success: true, lessonId: id });
+  return apiJson({ lessonId: id });
 }
 
 /* ============================================================
@@ -212,7 +219,7 @@ export async function respondLessonRequest(request, env, user) {
 
   const valid = ["accepted", "declined", "completed"];
   if (!valid.includes(status)) {
-    return json({ error: "Invalid status" }, 400);
+    return apiJson({ message: "Invalid status" }, 400);
   }
 
   const row = await env.DB_skaters.prepare(
@@ -224,19 +231,18 @@ export async function respondLessonRequest(request, env, user) {
   ).bind(requestId, user.id).first();
 
   if (!row) {
-    return json({ error: "Unauthorized or request not found" }, 403);
+    return apiJson({ message: "Unauthorized or request not found" }, 403);
   }
 
   await env.DB_skaters.prepare(
     "UPDATE lesson_requests SET status = ? WHERE id = ?"
   ).bind(status, requestId).run();
 
-  return json({ success: true });
+  return apiJson({ success: true });
 }
-import { json } from "./users.js";
 
 /* ============================================================
-   SKATER: LIST BUSINESSES (SIGNED ONLY)
+   SKATER: LIST BUSINESSES
 ============================================================ */
 export async function skaterBusinesses(request, env, user) {
   const skater = await env.DB_skaters.prepare(
@@ -244,7 +250,7 @@ export async function skaterBusinesses(request, env, user) {
   ).bind(user.id).first();
 
   if (!skater || !skater.signed_to_label) {
-    return json({ error: "You must be signed to the label to access businesses." }, 403);
+    return apiJson({ message: "You must be signed to the label to access businesses." }, 403);
   }
 
   const { results: businesses } = await env.DB_business.prepare(
@@ -261,32 +267,31 @@ export async function skaterBusinesses(request, env, user) {
      WHERE s.skater_id = ?`
   ).bind(skater.id).all();
 
-  return json({
+  return apiJson({
     businesses,
     sponsorships
   });
 }
 
 /* ============================================================
-   SKATER: CONTACT BUSINESS (MESSAGE THREAD)
+   SKATER: CONTACT BUSINESS
 ============================================================ */
 export async function skaterContactBusiness(request, env, user) {
-  const body = await request.json();
-  const { businessId, message } = body;
+  const { businessId, message } = await request.json();
 
   const skater = await env.DB_skaters.prepare(
     "SELECT id, signed_to_label FROM skaters WHERE user_id = ?"
   ).bind(user.id).first();
 
   if (!skater || !skater.signed_to_label) {
-    return json({ error: "You must be signed to the label to contact businesses." }, 403);
+    return apiJson({ message: "You must be signed to the label to contact businesses." }, 403);
   }
 
   const business = await env.DB_business.prepare(
     "SELECT id FROM businesses WHERE id = ? AND verified = 1"
   ).bind(businessId).first();
 
-  if (!business) return json({ error: "Business not found." }, 404);
+  if (!business) return apiJson({ message: "Business not found." }, 404);
 
   let thread = await env.DB_business.prepare(
     `SELECT * FROM message_threads
@@ -312,5 +317,5 @@ export async function skaterContactBusiness(request, env, user) {
      VALUES (?, ?, ?, ?, ?, ?)`
   ).bind(msgId, thread.id, user.id, null, message || "Let's talk branding.", now).run();
 
-  return json({ success: true, threadId: thread.id, messageId: msgId });
+  return apiJson({ threadId: thread.id, messageId: msgId });
 }
