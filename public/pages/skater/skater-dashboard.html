@@ -1,119 +1,47 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Roll Show — Skater Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- BRAND -->
-  <meta name="theme-color" content="#000000">
   <link rel="icon" href="/app/images/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
   <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:image" content="/app/images/roll-index.jpg">
 
-  <!-- GLOBAL STYLES ONLY (NO BROKEN dashboard.css) -->
   <link rel="stylesheet" href="/app/styles/styles.css">
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js");
-    }
-  </script>
+  <link rel="stylesheet" href="/app/styles/dashboard.css">
 </head>
 
-<body class="rs-body rs-dashboard-body">
-  <aside class="rs-sidebar">
-    <div class="rs-sidebar-logo">ROLL SHOW</div>
-    <nav class="rs-sidebar-nav">
-      <a href="#" class="active">Dashboard</a>
-      <a href="/pages/skater/skater-shows.html">Shows</a>
-      <a href="/pages/skater/skater-earnings.html">Earnings</a>
-      <a href="/pages/skater/skater-settings.html">Settings</a>
-    </nav>
-  </aside>
+<body class="rs-body">
+  <img src="/app/images/bg-skater-dash.jpg" class="bg-landing" alt="Background">
 
-  <main class="rs-main">
-    <header class="rs-header">
-      <h1 class="rs-title">Skater Dashboard</h1>
-      <p class="rs-subtitle">Your shows, earnings, and activity on Roll Show.</p>
-      <p id="skater-dashboard-status" class="rs-status-text"></p>
+  <main class="rs-dash-shell rs-dash-skater">
+    <header class="rs-dash-header">
+      <div>
+        <h1 class="rs-dash-title" id="skater-name">Skater</h1>
+        <p class="rs-dash-sub">Your shows, earnings, and activity.</p>
+      </div>
+      <div class="rs-dash-stat" id="skater-earnings">$0.00</div>
     </header>
 
-    <section class="rs-grid">
-      <article class="rs-card">
-        <h2 class="rs-card-title">Welcome</h2>
-        <p class="rs-label">Skater</p>
-        <p id="skater-name" class="rs-value-large">—</p>
+    <section class="rs-dash-grid">
+      <article class="rs-dash-card">
+        <h3>Upcoming Shows</h3>
+        <ul class="rs-dash-list" id="skater-shows"></ul>
       </article>
 
-      <article class="rs-card">
-        <h2 class="rs-card-title">Total Earnings</h2>
-        <p class="rs-label">All time</p>
-        <p id="skater-earnings" class="rs-value-large">$0.00</p>
+      <article class="rs-dash-card">
+        <h3>Stats</h3>
+        <p>Total shows: <span id="skater-total-shows">0</span></p>
+        <p>Total tickets: <span id="skater-total-tickets">0</span></p>
       </article>
     </section>
 
-    <section class="rs-card rs-table-card">
-      <h2 class="rs-card-title">Recent Shows</h2>
-      <ul id="skater-shows" class="rs-list">
-        <!-- JS will populate -->
-      </ul>
-    </section>
+    <p class="rs-dash-status" id="skater-status"></p>
   </main>
 
-  <script type="module">
-    import API from "/app/js/api.js";
-    import { getUserIdFromQuery } from "/app/js/utils.js";
-
-    const statusEl = document.getElementById("skater-dashboard-status");
-    const nameEl = document.getElementById("skater-name");
-    const earningsEl = document.getElementById("skater-earnings");
-    const showsEl = document.getElementById("skater-shows");
-
-    const userId = getUserIdFromQuery();
-
-    if (!userId) {
-      statusEl.textContent = "Missing skater ID in URL.";
-      // optional: redirect to login
-      // window.location.href = "/pages/login.html";
-    } else {
-      loadDashboard(userId);
-    }
-
-    async function loadDashboard(id) {
-      try {
-        statusEl.textContent = "Loading dashboard…";
-
-        const data = await API.get(`/api/skater/dashboard?user=${encodeURIComponent(id)}`);
-
-        nameEl.textContent = data.name || "Skater";
-        earningsEl.textContent = `$${(data.earnings_cents / 100).toFixed(2)}`;
-
-        showsEl.innerHTML = "";
-        if (Array.isArray(data.shows) && data.shows.length) {
-          data.shows.forEach(show => {
-            const li = document.createElement("li");
-            li.textContent = `${show.title} — $${(show.price_cents / 100).toFixed(2)}`;
-            showsEl.appendChild(li);
-          });
-        } else {
-          const li = document.createElement("li");
-          li.textContent = "No shows yet.";
-          showsEl.appendChild(li);
-        }
-
-        statusEl.textContent = "";
-      } catch (err) {
-        console.error(err);
-        if (err && err.error === "Unauthorized") {
-          statusEl.textContent = "Unauthorized — sign in again.";
-          // optional: redirect
-          // window.location.href = "/pages/login.html";
-        } else {
-          statusEl.textContent = "Failed to load dashboard.";
-        }
-      }
-    }
-  </script>
+  <script type="module" src="/app/js/skater/skater-dashboard.js"></script>
 </body>
 </html>
