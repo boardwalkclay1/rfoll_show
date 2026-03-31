@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show — Owner Dashboard: Businesses</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- BRAND -->
+  <link rel="icon" href="/app/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+
+  <!-- GLOBAL STYLES -->
+  <link rel="stylesheet" href="/app/styles/styles.css">
+
+  <!-- SERVICE WORKER -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+  </script>
+</head>
+
+<body class="rs-body">
+
+  <!-- SIDEBAR -->
+  <aside class="rs-sidebar">
+    <div class="rs-sidebar-logo">ROLL SHOW</div>
+
+    <nav class="rs-sidebar-nav">
+      <a href="/pages/owner/owner-dashboard.html">Dashboard</a>
+      <a href="/pages/owner/users.html">Users</a>
+      <a href="/pages/owner/skaters.html">Skaters</a>
+      <a href="/pages/owner/businesses.html" class="active">Businesses</a>
+      <a href="/pages/owner/musicians.html">Musicians</a>
+      <a href="/pages/owner/shows.html">Shows</a>
+      <a href="/pages/owner/contracts.html">Contracts</a>
+      <a href="/pages/owner/music.html">Music</a>
+      <a href="/pages/owner/settings.html">Settings</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="rs-main">
+    <header class="rs-header">
+      <h1 class="rs-title">Businesses</h1>
+      <p class="rs-subtitle">All verified and pending businesses on Roll Show.</p>
+    </header>
+
+    <section class="rs-card rs-table-card">
+      <table class="rs-table">
+        <thead>
+          <tr>
+            <th>Business Name</th>
+            <th>Contact Email</th>
+            <th>Offers</th>
+            <th>Join Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+
+        <tbody id="businesses-table-body">
+          <!-- JS will populate rows -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- JS -->
+  <script src="/app/js/owner/businesses.js" type="module"></script>
+</body>
+</html>
