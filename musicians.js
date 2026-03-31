@@ -1,4 +1,4 @@
-import { json } from "./users.js";
+import { apiJson } from "./users.js";
 import { signupBase } from "./users.js";
 
 /* ============================================================
@@ -9,7 +9,7 @@ export async function signupMusician(request, env) {
   body.role = "musician";
 
   const base = await signupBase(env, body);
-  if (base.error) return json({ success: false, error: base.error }, 400);
+  if (base.error) return apiJson({ message: base.error }, 400);
 
   await env.DB_musician.prepare(
     `INSERT INTO musicians (id, user_id, bio, created_at)
@@ -21,7 +21,7 @@ export async function signupMusician(request, env) {
     base.created_at
   ).run();
 
-  return json({ success: true, user: base });
+  return apiJson({ user: base });
 }
 
 /* ============================================================
@@ -31,6 +31,8 @@ export async function musicianDashboard(request, env, user) {
   const musician = await env.DB_musician.prepare(
     "SELECT * FROM musicians WHERE user_id = ?"
   ).bind(user.id).first();
+
+  if (!musician) return apiJson({ message: "Musician profile not found" }, 404);
 
   const { results: tracks } = await env.DB_musician.prepare(
     "SELECT * FROM tracks WHERE artist_id = ? ORDER BY created_at DESC"
@@ -44,7 +46,7 @@ export async function musicianDashboard(request, env, user) {
      ORDER BY l.created_at DESC`
   ).bind(musician.id).all();
 
-  return json({
+  return apiJson({
     musician,
     tracks,
     licenses
@@ -58,12 +60,14 @@ export async function uploadTrack(request, env, user) {
   const { title, r2_key, artwork_r2_key } = await request.json();
 
   if (!r2_key) {
-    return json({ error: "Missing R2 key for uploaded file." }, 400);
+    return apiJson({ message: "Missing R2 key for uploaded file." }, 400);
   }
 
   const musician = await env.DB_musician.prepare(
     "SELECT id FROM musicians WHERE user_id = ?"
   ).bind(user.id).first();
+
+  if (!musician) return apiJson({ message: "Musician not found" }, 404);
 
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
@@ -73,7 +77,7 @@ export async function uploadTrack(request, env, user) {
      VALUES (?, ?, ?, ?, ?, ?)`
   ).bind(id, musician.id, title, r2_key, artwork_r2_key || null, now).run();
 
-  return json({ success: true, trackId: id });
+  return apiJson({ trackId: id });
 }
 
 /* ============================================================
@@ -84,7 +88,7 @@ export async function listMusic(env) {
     "SELECT id, artist_id, title, artwork_r2_key, created_at FROM tracks ORDER BY created_at DESC"
   ).all();
 
-  return json(results);
+  return apiJson({ tracks: results });
 }
 
 /* ============================================================
@@ -98,7 +102,7 @@ export async function licenseTrack(request, env, user) {
   ).bind(user.id).first();
 
   if (!skater) {
-    return json({ error: "Only skaters can license music." }, 403);
+    return apiJson({ message: "Only skaters can license music." }, 403);
   }
 
   const track = await env.DB_musician.prepare(
@@ -106,7 +110,7 @@ export async function licenseTrack(request, env, user) {
   ).bind(trackId).first();
 
   if (!track) {
-    return json({ error: "Track not found." }, 404);
+    return apiJson({ message: "Track not found." }, 404);
   }
 
   const id = crypto.randomUUID();
@@ -117,7 +121,7 @@ export async function licenseTrack(request, env, user) {
      VALUES (?, ?, ?, ?, ?)`
   ).bind(id, trackId, skater.id, amount_cents || 1000, now).run();
 
-  return json({ success: true, licenseId: id });
+  return apiJson({ licenseId: id });
 }
 
 /* ============================================================
@@ -131,7 +135,7 @@ export async function musicianCreateOffer(request, env, user) {
   ).bind(skaterId).first();
 
   if (!target || target.role !== "skater") {
-    return json({ error: "Musicians may only send offers to skaters." }, 403);
+    return apiJson({ message: "Musicians may only send offers to skaters." }, 403);
   }
 
   const id = crypto.randomUUID();
@@ -142,7 +146,7 @@ export async function musicianCreateOffer(request, env, user) {
      VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`
   ).bind(id, user.id, skaterId, type, amount_cents, terms, now).run();
 
-  return json({ success: true, offerId: id });
+  return apiJson({ offerId: id });
 }
 
 /* ============================================================
@@ -158,5 +162,5 @@ export async function listMusicianOffers(request, env, user) {
      ORDER BY o.created_at DESC`
   ).bind(user.id).all();
 
-  return json(results);
+  return apiJson({ offers: results });
 }
