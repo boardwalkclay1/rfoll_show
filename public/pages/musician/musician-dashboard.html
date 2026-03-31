@@ -4,22 +4,85 @@
   <meta charset="UTF-8">
   <title>Artist Dashboard – Roll Show</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- BRAND -->
   <link rel="icon" href="/favicon.png">
-  <link rel="stylesheet" href="/app/styles/dashboard.css">
+  <link rel="stylesheet" href="/app/styles/styles.css"> <!-- USE GLOBAL STYLES ONLY -->
 </head>
 
 <body style="background:url('/app/images/bg-artist-dash.jpg') center/cover no-repeat;">
 
   <main class="dash-shell">
-    <h1 id="artist-name"></h1>
+    <h1 id="artist-name">Artist</h1>
     <h2>Earnings: <span id="artist-earnings">$0.00</span></h2>
 
     <section>
       <h3>Your Tracks</h3>
       <ul id="artist-tracks"></ul>
     </section>
+
+    <p id="artist-status" class="status-text"></p>
   </main>
 
-  <script type="module" src="/app/js/musician/musician-dashboard.js"></script>
+  <script type="module">
+    import API from "/app/js/api.js";
+
+    // INLINE REPLACEMENT FOR utils.js
+    function getUserIdFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("user");
+    }
+
+    const userId = getUserIdFromQuery();
+    const statusEl = document.getElementById("artist-status");
+
+    if (!userId) {
+      statusEl.textContent = "Missing artist ID in URL.";
+    } else {
+      loadDashboard();
+    }
+
+    async function loadDashboard() {
+      try {
+        statusEl.textContent = "Loading…";
+
+        const data = await API.get(`/api/musician/dashboard?user=${encodeURIComponent(userId)}`);
+
+        document.getElementById("artist-name").textContent = data.name || "Artist";
+        document.getElementById("artist-earnings").textContent =
+          `$${((data.earnings_cents || 0) / 100).toFixed(2)}`;
+
+        const list = document.getElementById("artist-tracks");
+        list.innerHTML = "";
+
+        if (Array.isArray(data.tracks) && data.tracks.length > 0) {
+          data.tracks.forEach(track => {
+            const li = document.createElement("li");
+            li.textContent = `${track.title} — $${(track.price_cents / 100).toFixed(2)}`;
+            list.appendChild(li);
+          });
+        } else {
+          list.innerHTML = "<li>No tracks uploaded yet.</li>";
+        }
+
+        statusEl.textContent = "";
+
+      } catch (err) {
+        console.error("Artist dashboard error:", err);
+
+        if (err.message?.includes("<!DOCTYPE")) {
+          statusEl.textContent = "Worker returned HTML instead of JSON — routing issue.";
+          return;
+        }
+
+        if (err?.error === "Unauthorized") {
+          statusEl.textContent = "Unauthorized — please sign in again.";
+          return;
+        }
+
+        statusEl.textContent = "Failed to load dashboard.";
+      }
+    }
+  </script>
 </body>
 </html>
