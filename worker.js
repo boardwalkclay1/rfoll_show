@@ -219,3 +219,18 @@ export default {
     }
   }
 };
+import {
+  skaterBusinesses,
+  skaterContactBusiness
+} from "./skaters.js";
+
+import {
+  businessCreateAd,
+  businessCreateEvent
+} from "./business.js";
+
+import {
+  ownerAds,
+  ownerUpdateAdStatus,
+  ownerSponsorships
+} from "./routes/owner.js";
