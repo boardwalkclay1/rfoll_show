@@ -21,7 +21,7 @@
     <header class="rs-dash-header">
       <div>
         <h1 class="rs-dash-title" id="skater-name">Skater</h1>
-        <p class="rs-dash-sub">Your feed, shows, lessons, and earnings.</p>
+        <p class="rs-dash-sub">Your feed, shows, lessons, and videos.</p>
       </div>
       <div class="rs-dash-stat" id="skater-earnings">$0.00</div>
     </header>
@@ -29,16 +29,50 @@
     <nav class="rs-dash-nav" id="skater-nav"></nav>
 
     <section class="rs-dash-grid">
+
+      <!-- SHOWS -->
       <article class="rs-dash-card">
-        <h3>Upcoming Shows</h3>
+        <h3>Your Shows</h3>
         <ul class="rs-dash-list" id="skater-shows"></ul>
+        <a class="rs-dash-pill" id="shows-link">View All Shows</a>
+        <a class="rs-dash-pill" id="create-show-link">Create Show</a>
       </article>
 
+      <!-- FEED -->
       <article class="rs-dash-card">
-        <h3>Quick Stats</h3>
-        <p>Total shows: <span id="skater-total-shows">0</span></p>
-        <p>Total tickets: <span id="skater-total-tickets">0</span></p>
+        <h3>Your Feed</h3>
+        <p>Quick access to your skater feed.</p>
+        <a class="rs-dash-pill" id="feed-link">Open Feed</a>
       </article>
+
+      <!-- LESSONS -->
+      <article class="rs-dash-card">
+        <h3>Lessons</h3>
+        <ul class="rs-dash-list" id="skater-lessons"></ul>
+        <a class="rs-dash-pill" id="intent-link">Lesson Intent</a>
+      </article>
+
+      <!-- VIDEO UPLOAD -->
+      <article class="rs-dash-card">
+        <h3>Upload Video</h3>
+        <p>Upload clips directly from here.</p>
+        <a class="rs-dash-pill" id="upload-video-link">Upload Video</a>
+      </article>
+
+      <!-- VIDEO STUDIO -->
+      <article class="rs-dash-card">
+        <h3>Video Studio</h3>
+        <p>Edit and manage your clips.</p>
+        <a class="rs-dash-pill" id="video-studio-link">Open Studio</a>
+      </article>
+
+      <!-- WELCOME -->
+      <article class="rs-dash-card">
+        <h3>Welcome</h3>
+        <p>Your onboarding & skater intro.</p>
+        <a class="rs-dash-pill" id="welcome-link">Open Welcome Page</a>
+      </article>
+
     </section>
 
     <p class="rs-dash-status" id="skater-status"></p>
