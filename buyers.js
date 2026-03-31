@@ -1,12 +1,15 @@
-import { json } from "./users.js";
+import { apiJson } from "./users.js";
 import { signupBase } from "./users.js";
 
+/* ============================================================
+   BUYER SIGNUP
+============================================================ */
 export async function signupBuyer(request, env) {
   const body = await request.json();
   body.role = "buyer";
 
   const base = await signupBase(env, body);
-  if (base.error) return json({ success: false, error: base.error }, 400);
+  if (base.error) return apiJson({ message: base.error }, 400);
 
   await env.DB_buyers.prepare(
     `INSERT INTO buyers (id, user_id, phone, city, state, created_at)
@@ -20,32 +23,45 @@ export async function signupBuyer(request, env) {
     base.created_at
   ).run();
 
-  return json({ success: true, user: base });
+  return apiJson({ user: base });
 }
 
+/* ============================================================
+   LIST TICKETS
+============================================================ */
 export async function listTickets(request, env, user) {
   const buyer = await env.DB_buyers.prepare(
     "SELECT id FROM buyers WHERE user_id = ?"
   ).bind(user.id).first();
 
+  if (!buyer) return apiJson({ message: "Buyer not found" }, 404);
+
   const { results } = await env.DB_buyers.prepare(
-    `SELECT t.*, s.title, s.premiere_date
+    `SELECT t.id, t.status, t.created_at,
+            s.title AS show_title,
+            s.premiere_date AS date
      FROM tickets t
      JOIN shows s ON t.show_id = s.id
      WHERE t.buyer_id = ? AND t.status = 'paid'
      ORDER BY t.created_at DESC`
   ).bind(buyer.id).all();
 
-  return json(results);
+  return apiJson({ tickets: results });
 }
 
+/* ============================================================
+   LIST PURCHASES
+============================================================ */
 export async function listPurchases(request, env, user) {
   const buyer = await env.DB_buyers.prepare(
     "SELECT id FROM buyers WHERE user_id = ?"
   ).bind(user.id).first();
 
+  if (!buyer) return apiJson({ message: "Buyer not found" }, 404);
+
   const { results } = await env.DB_buyers.prepare(
-    `SELECT p.*, s.title
+    `SELECT p.id, p.amount_cents, p.created_at,
+            s.title AS show_title
      FROM purchases p
      JOIN tickets t ON p.ticket_id = t.id
      JOIN shows s ON t.show_id = s.id
@@ -53,16 +69,21 @@ export async function listPurchases(request, env, user) {
      ORDER BY p.created_at DESC`
   ).bind(buyer.id).all();
 
-  return json(results);
+  return apiJson({ purchases: results });
 }
 
+/* ============================================================
+   CREATE TICKET (PENDING)
+============================================================ */
 export async function createTicket(request, env, user) {
   const { showId } = await request.json();
-  if (!showId) return json({ error: "Missing showId" }, 400);
+  if (!showId) return apiJson({ message: "Missing showId" }, 400);
 
   const buyer = await env.DB_buyers.prepare(
     "SELECT id FROM buyers WHERE user_id = ?"
   ).bind(user.id).first();
+
+  if (!buyer) return apiJson({ message: "Buyer not found" }, 404);
 
   const id = crypto.randomUUID();
   const qr = `ROLLSHOW-${id}`;
@@ -73,20 +94,23 @@ export async function createTicket(request, env, user) {
      VALUES (?, ?, ?, ?, 'unverified', 'pending', ?)`
   ).bind(id, showId, buyer.id, qr, now).run();
 
-  return json({ ticketId: id, status: "pending" });
+  return apiJson({ ticketId: id, status: "pending" });
 }
 
+/* ============================================================
+   PARTNER WEBHOOK (MARK PAID)
+============================================================ */
 export async function partnerWebhook(request, env) {
   const body = await request.json();
   const { ticketId, amount_cents, partner_transaction_id, status } = body;
 
-  if (status !== "paid") return json({ ok: true });
+  if (status !== "paid") return apiJson({ ok: true });
 
   const ticket = await env.DB_buyers.prepare(
     "SELECT buyer_id FROM tickets WHERE id = ?"
   ).bind(ticketId).first();
 
-  if (!ticket) return json({ error: "Ticket not found" }, 404);
+  if (!ticket) return apiJson({ message: "Ticket not found" }, 404);
 
   await env.DB_buyers.prepare(
     "UPDATE tickets SET status = 'paid', stamp = 'verified' WHERE id = ?"
@@ -107,5 +131,5 @@ export async function partnerWebhook(request, env) {
     now
   ).run();
 
-  return json({ ok: true });
+  return apiJson({ ok: true });
 }
