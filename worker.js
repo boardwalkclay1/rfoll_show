@@ -1,5 +1,6 @@
 import { cors, json, login, requireRole } from "./users.js";
 
+/* BUYER */
 import {
   signupBuyer,
   listTickets,
@@ -8,6 +9,7 @@ import {
   partnerWebhook
 } from "./buyers.js";
 
+/* SKATER */
 import {
   signupSkater,
   listShows,
@@ -18,6 +20,7 @@ import {
   updateSkaterProfile
 } from "./skaters.js";
 
+/* BUSINESS */
 import {
   signupBusiness,
   businessDashboard,
@@ -27,6 +30,7 @@ import {
   listContracts
 } from "./business.js";
 
+/* MUSICIAN */
 import {
   signupMusician,
   musicianDashboard,
@@ -35,6 +39,7 @@ import {
   licenseTrack
 } from "./musicians.js";
 
+/* OWNER */
 import {
   ownerOverview,
   ownerUsers,
@@ -45,7 +50,9 @@ import {
   ownerContracts,
   ownerMusic,
   ownerSettingsBranding,
-  ownerSettingsNotes
+  ownerSettingsNotes,
+  ownerBusinessApplications,
+  ownerBusinessUpdateStatus
 } from "./routes/owner.js";
 
 export default {
@@ -54,7 +61,9 @@ export default {
       const url = new URL(request.url);
       const path = url.pathname;
 
-      // CORS
+      /* ============================================================
+         CORS
+      ============================================================ */
       if (request.method === "OPTIONS") {
         return new Response(null, { status: 204, headers: cors() });
       }
@@ -184,6 +193,15 @@ export default {
 
       if (path === "/api/owner/settings/notes" && request.method === "POST")
         return ownerSettingsNotes(request, env);
+
+      /* ============================================================
+         OWNER — BUSINESS APPLICATION REVIEW
+      ============================================================ */
+      if (path === "/api/owner/business/applications" && request.method === "GET")
+        return ownerBusinessApplications(request, env);
+
+      if (path === "/api/owner/business/applications/status" && request.method === "POST")
+        return ownerBusinessUpdateStatus(request, env);
 
       /* ============================================================
          WEBHOOK
