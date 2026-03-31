@@ -1,48 +1,59 @@
 import API from "../api.js";
-import { getUserIdFromQuery } from "../utils.js";
+
+function getUserIdFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("user");
+}
 
 const userId = getUserIdFromQuery();
 
 async function loadDashboard() {
-  const data = await API.get(`/api/skater/dashboard?user=${userId}`);
+  const nameEl = document.getElementById("skater-name");
+  const earningsEl = document.getElementById("skater-earnings");
+  const showsEl = document.getElementById("skater-shows");
+  const totalShowsEl = document.getElementById("skater-total-shows");
+  const totalTicketsEl = document.getElementById("skater-total-tickets");
+  const statusEl = document.getElementById("skater-status");
 
-  // NAME
-  document.getElementById("skater-name").textContent = data.name;
-
-  // EARNINGS
-  document.getElementById("skater-earnings").textContent =
-    `$${(data.earnings_cents / 100).toFixed(2)}`;
-
-  // SHOWS
-  const shows = document.getElementById("skater-shows");
-  shows.innerHTML = "";
-  data.shows.forEach(show => {
-    const li = document.createElement("li");
-    li.textContent = `${show.title} — $${(show.price_cents / 100).toFixed(2)}`;
-    shows.appendChild(li);
-  });
-
-  // BADGE
-  if (data.badge_status) {
-    const badgeImg = document.getElementById("skater-badge");
-    const badgeText = document.getElementById("badge-status");
-
-    if (data.badge_status === "verified") {
-      badgeImg.src = "/app/images/badges/badge-verified.png";
-      badgeText.textContent = "Roll Show Verified";
-    } else if (data.badge_status === "pending") {
-      badgeImg.src = "/app/images/badges/badge-pending.png";
-      badgeText.textContent = "Verification Pending";
-    } else {
-      badgeImg.src = "/app/images/badges/badge-unverified.png";
-      badgeText.textContent = "Unverified";
-    }
+  if (!userId) {
+    statusEl.textContent = "Missing skater ID in URL.";
+    return;
   }
 
-  // VERIFICATION CARD
-  if (data.badge_status !== "verified") {
-    const card = document.getElementById("verify-card");
-    if (card) card.style.display = "block";
+  try {
+    statusEl.textContent = "Loading…";
+
+    const res = await API.get(`/api/skater/dashboard?user=${encodeURIComponent(userId)}`);
+    if (!res.success) {
+      statusEl.textContent = res.error?.message || "Failed to load dashboard.";
+      return;
+    }
+
+    const data = res.data || {};
+
+    nameEl.textContent = data.name || "Skater";
+    earningsEl.textContent = `$${((data.earnings_cents || 0) / 100).toFixed(2)}`;
+
+    showsEl.innerHTML = "";
+    const shows = Array.isArray(data.shows) ? data.shows : [];
+    if (shows.length === 0) {
+      showsEl.innerHTML = "<li>No shows yet.</li>";
+    } else {
+      shows.forEach(show => {
+        const li = document.createElement("li");
+        li.textContent = `${show.title} — ${show.date}`;
+        showsEl.appendChild(li);
+      });
+    }
+
+    totalShowsEl.textContent = shows.length.toString();
+    totalTicketsEl.textContent = (data.total_tickets || 0).toString();
+
+    statusEl.textContent = "";
+
+  } catch (err) {
+    console.error("Skater dashboard error:", err);
+    statusEl.textContent = "Server error loading dashboard.";
   }
 }
 
