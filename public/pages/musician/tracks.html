@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show — Tracks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="stylesheet" href="/app/styles/styles.css">
+  <link rel="stylesheet" href="/app/styles/dashboard.css">
+</head>
+
+<body class="rs-body">
+  <img src="/app/images/bg-artist-dash.jpg" class="bg-landing" alt="Background">
+
+  <main class="rs-dash-shell rs-dash-musician">
+    <header class="rs-dash-header">
+      <div>
+        <h1 class="rs-dash-title">Tracks</h1>
+        <p class="rs-dash-sub">Your full music library.</p>
+      </div>
+    </header>
+
+    <nav class="rs-dash-nav" id="artist-nav"></nav>
+
+    <section class="rs-dash-card">
+      <h3>All Tracks</h3>
+      <ul class="rs-dash-list" id="artist-tracks-full"></ul>
+    </section>
+
+    <p class="rs-dash-status" id="artist-status"></p>
+  </main>
+
+  <script type="module" src="/app/js/musician/musician-tracks.js"></script>
+</body>
+</html>
