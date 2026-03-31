@@ -5,36 +5,42 @@
   <title>Roll Show — Business Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- FAVICONS -->
   <link rel="icon" href="/app/images/icons/icon-192.png">
   <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
-
-  <!-- MANIFEST -->
   <link rel="manifest" href="/manifest.webmanifest">
-
-  <!-- SOCIAL PREVIEW -->
   <meta property="og:image" content="/app/images/roll-index.jpg">
 
-  <!-- GLOBAL STYLES -->
   <link rel="stylesheet" href="/app/styles/styles.css">
-
-  <!-- SERVICE WORKER -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/service-worker.js");
-    }
-  </script>
+  <link rel="stylesheet" href="/app/styles/dashboard.css">
 </head>
 
 <body class="rs-body">
+  <img src="/app/images/bg-business-dash.jpg" class="bg-landing" alt="Background">
 
-  <!-- CINEMATIC BACKGROUND -->
-  <img src="/app/images/roll-index.jpg" class="bg-landing" alt="Background">
+  <main class="rs-dash-shell rs-dash-business">
+    <header class="rs-dash-header">
+      <div>
+        <h1 class="rs-dash-title" id="business-name">Business</h1>
+        <p class="rs-dash-sub">Your offers, contracts, and performance.</p>
+      </div>
+      <div class="rs-dash-stat" id="business-revenue">$0.00</div>
+    </header>
 
-  <main class="rs-auth-shell">
-    <section class="rs-card" id="business-dashboard"></section>
+    <section class="rs-dash-grid">
+      <article class="rs-dash-card">
+        <h3>Active Offers</h3>
+        <ul class="rs-dash-list" id="business-offers"></ul>
+      </article>
+
+      <article class="rs-dash-card">
+        <h3>Contracts</h3>
+        <ul class="rs-dash-list" id="business-contracts"></ul>
+      </article>
+    </section>
+
+    <p class="rs-dash-status" id="business-status"></p>
   </main>
 
-  <script src="/app/js/business/business-dashboard.js" type="module"></script>
+  <script type="module" src="/app/js/business/business-dashboard.js"></script>
 </body>
 </html>
