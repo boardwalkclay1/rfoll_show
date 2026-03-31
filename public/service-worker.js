@@ -1,19 +1,15 @@
 /* ============================================================
-   ROLL SHOW — SERVICE WORKER v1
-   Clean, modern, no stale CSS, no stale HTML
+   ROLL SHOW — SERVICE WORKER (AUTO-UPDATING)
+   No HTML caching. No stale CSS/JS. No manual version bumps.
 ============================================================ */
 
-const CACHE_VERSION = "rollshow-v1";
-const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const CACHE_NAME = "rollshow-static";
 
 /* ============================================================
    STATIC ASSETS TO CACHE
 ============================================================ */
 const STATIC_ASSETS = [
-  "/", 
-  "/index.html",
-
-  /* GLOBAL */
+  "/",
   "/app/styles/styles.css",
   "/app/js/app.js",
 
@@ -26,26 +22,22 @@ const STATIC_ASSETS = [
 ];
 
 /* ============================================================
-   INSTALL — Cache static assets
+   INSTALL — Cache static assets only
 ============================================================ */
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
   );
   self.skipWaiting();
 });
 
 /* ============================================================
-   ACTIVATE — Remove old caches
+   ACTIVATE — Clear old caches
 ============================================================ */
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== STATIC_CACHE)
-          .map(key => caches.delete(key))
-      )
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
@@ -53,24 +45,15 @@ self.addEventListener("activate", event => {
 
 /* ============================================================
    FETCH STRATEGY
-   - HTML → network-first (so updates always load)
+   - HTML → ALWAYS network (never cached)
    - CSS/JS/Images → cache-first
 ============================================================ */
 self.addEventListener("fetch", event => {
   const req = event.request;
-  const url = new URL(req.url);
 
-  // HTML → always try network first
+  // HTML → network only (auto-updates always)
   if (req.mode === "navigate" || req.headers.get("accept")?.includes("text/html")) {
-    event.respondWith(
-      fetch(req)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(STATIC_CACHE).then(cache => cache.put(req, clone));
-          return res;
-        })
-        .catch(() => caches.match(req).then(cached => cached || caches.match("/index.html")))
-    );
+    event.respondWith(fetch(req).catch(() => caches.match("/index.html")));
     return;
   }
 
@@ -91,7 +74,7 @@ self.addEventListener("fetch", event => {
           cached ||
           fetch(req).then(res => {
             const clone = res.clone();
-            caches.open(STATIC_CACHE).then(cache => cache.put(req, clone));
+            caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
             return res;
           })
         );
@@ -101,7 +84,5 @@ self.addEventListener("fetch", event => {
   }
 
   // Default → network fallback to cache
-  event.respondWith(
-    fetch(req).catch(() => caches.match(req))
-  );
+  event.respondWith(fetch(req).catch(() => caches.match(req)));
 });
