@@ -1,29 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Business Dashboard – Roll Show</title>
+  <meta charset="UTF-8" />
+  <title>Roll Show — Business Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/favicon.png">
-  <link rel="stylesheet" href="/app/styles/dashboard.css">
+
+  <link rel="icon" href="/app/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:image" content="/app/images/roll-index.jpg">
+
+  <link rel="stylesheet" href="/app/styles/styles.css">
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/service-worker.js");
+    }
+  </script>
 </head>
 
-<body style="background:url('/app/images/bg-business-dash.jpg') center/cover no-repeat;">
+<body class="rs-body">
 
-  <main class="dash-shell">
-    <h1 id="business-name"></h1>
+  <img src="/app/images/roll-index.jpg" class="bg-landing" alt="Background">
 
-    <section>
-      <h3>Your Offers</h3>
-      <ul id="business-offers"></ul>
-    </section>
-
-    <section>
-      <h3>Submissions From Skaters</h3>
-      <ul id="offers-inbox"></ul>
-    </section>
+  <main class="rs-auth-shell">
+    <section class="rs-card" id="business-dashboard"></section>
   </main>
 
-  <script type="module" src="/app/js/business/business-dashboard.js"></script>
+  <script src="/app/js/business/dashboard.js" type="module"></script>
 </body>
 </html>
