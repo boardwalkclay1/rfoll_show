@@ -1,88 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Artist Dashboard – Roll Show</title>
+  <meta charset="UTF-8" />
+  <title>Roll Show — Musician Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- BRAND -->
-  <link rel="icon" href="/favicon.png">
-  <link rel="stylesheet" href="/app/styles/styles.css"> <!-- USE GLOBAL STYLES ONLY -->
+  <link rel="icon" href="/app/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:image" content="/app/images/roll-index.jpg">
+
+  <link rel="stylesheet" href="/app/styles/styles.css">
+  <link rel="stylesheet" href="/app/styles/dashboard.css">
 </head>
 
-<body style="background:url('/app/images/bg-artist-dash.jpg') center/cover no-repeat;">
+<body class="rs-body">
+  <img src="/app/images/bg-artist-dash.jpg" class="bg-landing" alt="Background">
 
-  <main class="dash-shell">
-    <h1 id="artist-name">Artist</h1>
-    <h2>Earnings: <span id="artist-earnings">$0.00</span></h2>
+  <main class="rs-dash-shell rs-dash-musician">
+    <header class="rs-dash-header">
+      <div>
+        <h1 class="rs-dash-title" id="artist-name">Artist</h1>
+        <p class="rs-dash-sub">Your tracks, licenses, and earnings.</p>
+      </div>
+      <div class="rs-dash-stat" id="artist-earnings">$0.00</div>
+    </header>
 
-    <section>
-      <h3>Your Tracks</h3>
-      <ul id="artist-tracks"></ul>
+    <section class="rs-dash-grid">
+      <article class="rs-dash-card">
+        <h3>Your Tracks</h3>
+        <ul class="rs-dash-list" id="artist-tracks"></ul>
+      </article>
+
+      <article class="rs-dash-card">
+        <h3>Licenses</h3>
+        <ul class="rs-dash-list" id="artist-licenses"></ul>
+      </article>
     </section>
 
-    <p id="artist-status" class="status-text"></p>
+    <p class="rs-dash-status" id="artist-status"></p>
   </main>
 
-  <script type="module">
-    import API from "/app/js/api.js";
-
-    // INLINE REPLACEMENT FOR utils.js
-    function getUserIdFromQuery() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("user");
-    }
-
-    const userId = getUserIdFromQuery();
-    const statusEl = document.getElementById("artist-status");
-
-    if (!userId) {
-      statusEl.textContent = "Missing artist ID in URL.";
-    } else {
-      loadDashboard();
-    }
-
-    async function loadDashboard() {
-      try {
-        statusEl.textContent = "Loading…";
-
-        const data = await API.get(`/api/musician/dashboard?user=${encodeURIComponent(userId)}`);
-
-        document.getElementById("artist-name").textContent = data.name || "Artist";
-        document.getElementById("artist-earnings").textContent =
-          `$${((data.earnings_cents || 0) / 100).toFixed(2)}`;
-
-        const list = document.getElementById("artist-tracks");
-        list.innerHTML = "";
-
-        if (Array.isArray(data.tracks) && data.tracks.length > 0) {
-          data.tracks.forEach(track => {
-            const li = document.createElement("li");
-            li.textContent = `${track.title} — $${(track.price_cents / 100).toFixed(2)}`;
-            list.appendChild(li);
-          });
-        } else {
-          list.innerHTML = "<li>No tracks uploaded yet.</li>";
-        }
-
-        statusEl.textContent = "";
-
-      } catch (err) {
-        console.error("Artist dashboard error:", err);
-
-        if (err.message?.includes("<!DOCTYPE")) {
-          statusEl.textContent = "Worker returned HTML instead of JSON — routing issue.";
-          return;
-        }
-
-        if (err?.error === "Unauthorized") {
-          statusEl.textContent = "Unauthorized — please sign in again.";
-          return;
-        }
-
-        statusEl.textContent = "Failed to load dashboard.";
-      }
-    }
-  </script>
+  <script type="module" src="/app/js/musician/musician-dashboard.js"></script>
 </body>
 </html>
