@@ -10,8 +10,7 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   showMessage("Submitting application...", "info");
 
-  const formData = new FormData(form);
-  const payload = Object.fromEntries(formData.entries());
+  const payload = Object.fromEntries(new FormData(form).entries());
 
   try {
     const res = await fetch("/api/business/signup", {
