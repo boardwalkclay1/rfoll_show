@@ -2,7 +2,7 @@ import { json } from "./users.js";
 import { signupBase } from "./users.js";
 
 /* ============================================================
-   BUSINESS SIGNUP
+   BUSINESS SIGNUP (APPLICATION)
 ============================================================ */
 export async function signupBusiness(request, env) {
   const body = await request.json();
@@ -11,27 +11,73 @@ export async function signupBusiness(request, env) {
   const base = await signupBase(env, body);
   if (base.error) return json({ success: false, error: base.error }, 400);
 
+  const id = crypto.randomUUID();
+  const now = new Date().toISOString();
+
   await env.DB_business.prepare(
-    `INSERT INTO businesses (id, user_id, company_name, website, verified, created_at)
-     VALUES (?, ?, ?, ?, 0, ?)`
+    `INSERT INTO businesses (
+       id,
+       user_id,
+       company_name,
+       website,
+       phone,
+       address,
+       ein,
+       verified,
+       review_status,
+       review_notes,
+       submitted_at,
+       created_at
+     )
+     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'pending', '', ?, ?)`
   ).bind(
-    crypto.randomUUID(),
+    id,
     base.id,
     body.company_name || body.name || null,
     body.website || null,
+    body.phone || null,
+    body.address || null,
+    body.ein || null,
+    now,
     base.created_at
   ).run();
 
-  return json({ success: true, user: base });
+  return json({
+    success: true,
+    user: base,
+    business: {
+      id,
+      company_name: body.company_name || body.name || null,
+      website: body.website || null,
+      phone: body.phone || null,
+      address: body.address || null,
+      ein: body.ein || null,
+      verified: 0,
+      review_status: "pending"
+    }
+  });
 }
 
 /* ============================================================
-   BUSINESS DASHBOARD
+   BUSINESS DASHBOARD (GATED BY VERIFIED)
 ============================================================ */
 export async function businessDashboard(request, env, user) {
   const business = await env.DB_business.prepare(
     "SELECT * FROM businesses WHERE user_id = ?"
   ).bind(user.id).first();
+
+  if (!business) {
+    return json({ success: false, error: "Business profile not found." }, 404);
+  }
+
+  if (!business.verified) {
+    return json({
+      success: false,
+      error: "Your business is not verified yet.",
+      review_status: business.review_status,
+      review_notes: business.review_notes
+    }, 403);
+  }
 
   const { results: offers } = await env.DB_business.prepare(
     `SELECT o.*, u.name AS skater_name
