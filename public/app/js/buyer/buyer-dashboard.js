@@ -5,12 +5,37 @@ function getUserIdFromQuery() {
   return params.get("user");
 }
 
+function buildNav(userId) {
+  const base = "/app/pages/buyer";
+  const links = [
+    { href: `${base}/dashboard.html?user=${userId}`, label: "Dashboard" },
+    { href: `${base}/profile.html?user=${userId}`, label: "Profile" },
+    { href: `${base}/tickets.html?user=${userId}`, label: "Tickets" },
+    { href: `${base}/purchases.html?user=${userId}`, label: "Purchases" },
+    { href: `${base}/recommended.html?user=${userId}`, label: "Recommended" }
+  ];
+
+  const nav = document.getElementById("buyer-nav");
+  nav.innerHTML = "";
+  const currentPath = window.location.pathname;
+
+  links.forEach(link => {
+    const a = document.createElement("a");
+    a.href = link.href;
+    a.textContent = link.label;
+    if (currentPath.endsWith("dashboard.html") && link.href.includes("dashboard.html")) {
+      a.classList.add("rs-dash-nav-active");
+    }
+    nav.appendChild(a);
+  });
+}
+
 const userId = getUserIdFromQuery();
 
 async function loadDashboard() {
   const nameEl = document.getElementById("buyer-name");
   const ticketsEl = document.getElementById("buyer-tickets");
-  const recEl = document.getElementById("recommended-skaters");
+  const purchasesEl = document.getElementById("buyer-purchases");
   const statusEl = document.getElementById("buyer-status");
 
   if (!userId) {
@@ -18,49 +43,52 @@ async function loadDashboard() {
     return;
   }
 
-  try {
-    statusEl.textContent = "Loading…";
+  buildNav(userId);
+  statusEl.textContent = "Loading…";
 
-    const res = await API.get(`/api/buyer/dashboard?user=${encodeURIComponent(userId)}`);
-    if (!res.success) {
-      statusEl.textContent = res.error?.message || "Failed to load dashboard.";
-      return;
-    }
+  // You can set buyer name from login or another endpoint; placeholder for now
+  nameEl.textContent = "Buyer";
 
-    const data = res.data || {};
+  const [ticketsRes, purchasesRes] = await Promise.all([
+    API.get(`/api/buyer/tickets?user=${encodeURIComponent(userId)}`),
+    API.get(`/api/buyer/purchases?user=${encodeURIComponent(userId)}`)
+  ]);
 
-    nameEl.textContent = data.name || "Buyer";
-
-    ticketsEl.innerHTML = "";
-    const tickets = Array.isArray(data.tickets) ? data.tickets : [];
-    if (tickets.length === 0) {
+  ticketsEl.innerHTML = "";
+  if (!ticketsRes.success) {
+    ticketsEl.innerHTML = "<li>Failed to load tickets.</li>";
+  } else {
+    const tData = ticketsRes.data || {};
+    const tickets = Array.isArray(tData.tickets) ? tData.tickets : [];
+    if (!tickets.length) {
       ticketsEl.innerHTML = "<li>No tickets yet.</li>";
     } else {
-      tickets.forEach(ticket => {
+      tickets.slice(0, 5).forEach(t => {
         const li = document.createElement("li");
-        li.textContent = `${ticket.show_title} — ${ticket.date}`;
+        li.textContent = `${t.show_title} — ${t.date}`;
         ticketsEl.appendChild(li);
       });
     }
+  }
 
-    recEl.innerHTML = "";
-    const recs = Array.isArray(data.recommended) ? data.recommended : [];
-    if (recs.length === 0) {
-      recEl.innerHTML = "<li>No recommendations yet.</li>";
+  purchasesEl.innerHTML = "";
+  if (!purchasesRes.success) {
+    purchasesEl.innerHTML = "<li>Failed to load purchases.</li>";
+  } else {
+    const pData = purchasesRes.data || {};
+    const purchases = Array.isArray(pData.purchases) ? pData.purchases : [];
+    if (!purchases.length) {
+      purchasesEl.innerHTML = "<li>No purchases yet.</li>";
     } else {
-      recs.forEach(skater => {
+      purchases.slice(0, 5).forEach(p => {
         const li = document.createElement("li");
-        li.textContent = skater.name;
-        recEl.appendChild(li);
+        li.textContent = `${p.show_title} — $${(p.amount_cents / 100).toFixed(2)}`;
+        purchasesEl.appendChild(li);
       });
     }
-
-    statusEl.textContent = "";
-
-  } catch (err) {
-    console.error("Buyer dashboard error:", err);
-    statusEl.textContent = "Server error loading dashboard.";
   }
+
+  statusEl.textContent = "";
 }
 
 loadDashboard();
