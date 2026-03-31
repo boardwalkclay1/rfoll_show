@@ -5,6 +5,33 @@ function getUserIdFromQuery() {
   return params.get("user");
 }
 
+function buildNav(userId) {
+  const base = "/app/pages/skater";
+  const links = [
+    { href: `${base}/dashboard.html?user=${userId}`, label: "Dashboard" },
+    { href: `${base}/profile.html?user=${userId}`, label: "Profile" },
+    { href: `${base}/shows.html?user=${userId}`, label: "Shows" },
+    { href: `${base}/lessons.html?user=${userId}`, label: "Lessons" },
+    { href: `${base}/businesses.html?user=${userId}`, label: "Businesses" },
+    { href: `${base}/music.html?user=${userId}`, label: "Music" }
+  ];
+
+  const nav = document.getElementById("skater-nav");
+  nav.innerHTML = "";
+
+  const currentPath = window.location.pathname;
+
+  links.forEach(link => {
+    const a = document.createElement("a");
+    a.href = link.href;
+    a.textContent = link.label;
+    if (link.href.includes("dashboard.html") && currentPath.includes("dashboard.html")) {
+      a.classList.add("rs-dash-nav-active");
+    }
+    nav.appendChild(a);
+  });
+}
+
 const userId = getUserIdFromQuery();
 
 async function loadDashboard() {
@@ -20,41 +47,38 @@ async function loadDashboard() {
     return;
   }
 
-  try {
-    statusEl.textContent = "Loading…";
+  buildNav(userId);
 
-    const res = await API.get(`/api/skater/dashboard?user=${encodeURIComponent(userId)}`);
-    if (!res.success) {
-      statusEl.textContent = res.error?.message || "Failed to load dashboard.";
-      return;
-    }
+  statusEl.textContent = "Loading…";
 
-    const data = res.data || {};
+  const res = await API.get(`/api/skater/dashboard?user=${encodeURIComponent(userId)}`);
 
-    nameEl.textContent = data.name || "Skater";
-    earningsEl.textContent = `$${((data.earnings_cents || 0) / 100).toFixed(2)}`;
-
-    showsEl.innerHTML = "";
-    const shows = Array.isArray(data.shows) ? data.shows : [];
-    if (shows.length === 0) {
-      showsEl.innerHTML = "<li>No shows yet.</li>";
-    } else {
-      shows.forEach(show => {
-        const li = document.createElement("li");
-        li.textContent = `${show.title} — ${show.date}`;
-        showsEl.appendChild(li);
-      });
-    }
-
-    totalShowsEl.textContent = shows.length.toString();
-    totalTicketsEl.textContent = (data.total_tickets || 0).toString();
-
-    statusEl.textContent = "";
-
-  } catch (err) {
-    console.error("Skater dashboard error:", err);
-    statusEl.textContent = "Server error loading dashboard.";
+  if (!res.success) {
+    statusEl.textContent = res.error?.message || "Failed to load dashboard.";
+    return;
   }
+
+  const data = res.data || {};
+
+  nameEl.textContent = data.name || "Skater";
+  earningsEl.textContent = `$${((data.earnings_cents || 0) / 100).toFixed(2)}`;
+
+  const shows = Array.isArray(data.shows) ? data.shows : [];
+  showsEl.innerHTML = "";
+  if (shows.length === 0) {
+    showsEl.innerHTML = "<li>No shows yet.</li>";
+  } else {
+    shows.forEach(show => {
+      const li = document.createElement("li");
+      li.textContent = `${show.title} — ${show.date}`;
+      showsEl.appendChild(li);
+    });
+  }
+
+  totalShowsEl.textContent = shows.length.toString();
+  totalTicketsEl.textContent = (data.total_tickets || 0).toString();
+
+  statusEl.textContent = "";
 }
 
 loadDashboard();
