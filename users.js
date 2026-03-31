@@ -42,6 +42,7 @@ export async function hash(str, env) {
     method: "POST",
     body: JSON.stringify({ password: str })
   });
+
   const data = await res.json();
   return data.hashed;
 }
@@ -54,6 +55,7 @@ export async function verify(str, hashed, env) {
     method: "POST",
     body: JSON.stringify({ password: str, hash: hashed })
   });
+
   const data = await res.json();
   return data.ok;
 }
@@ -63,7 +65,7 @@ export async function verify(str, hashed, env) {
 ============================================================ */
 export async function signupBase(env, { name, email, password, role }) {
   if (!name || !email || !password || !role) {
-    return json({ error: "Missing fields" }, 400);
+    return { error: "Missing fields" };
   }
 
   const exists = await env.DB_users.prepare(
@@ -71,13 +73,12 @@ export async function signupBase(env, { name, email, password, role }) {
   ).bind(email).first();
 
   if (exists) {
-    return json({ error: "Email already registered" }, 400);
+    return { error: "Email already registered" };
   }
 
   const id = crypto.randomUUID();
   const created = new Date().toISOString();
 
-  // FIXED: pass env
   const hashed = await hash(password, env);
 
   await env.DB_users.prepare(
@@ -85,7 +86,13 @@ export async function signupBase(env, { name, email, password, role }) {
      VALUES (?, ?, ?, ?, ?, ?, 0)`
   ).bind(id, name, email, hashed, role, created).run();
 
-  return json({ success: true, id, name, email, role, created_at: created });
+  return {
+    id,
+    name,
+    email,
+    role,
+    created_at: created
+  };
 }
 
 /* ============================================================
@@ -103,7 +110,6 @@ export async function login(request, env) {
       return json({ success: false, error: "Invalid credentials" }, 401);
     }
 
-    // FIXED: pass env
     const valid = await verify(password, row.password_hash, env);
 
     if (!valid) {
@@ -128,7 +134,10 @@ export async function login(request, env) {
     });
 
   } catch (err) {
-    return json({ success: false, error: "Server error", detail: String(err) }, 500);
+    return json(
+      { success: false, error: "Server error", detail: String(err) },
+      500
+    );
   }
 }
 
@@ -155,10 +164,12 @@ export async function requireRole(request, env, allowedRoles, handler) {
       user["owner-1"] == 1 ||
       user["owner-1"] === true;
 
+    // OWNER BYPASS
     if (is_owner) {
       return handler(request, env, user);
     }
 
+    // NORMAL ROLE CHECK
     if (!allowedRoles.includes(user.role)) {
       return json({ error: "Forbidden" }, 403);
     }
