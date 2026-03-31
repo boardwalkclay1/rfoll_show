@@ -1,30 +1,36 @@
-// app/js/business/business-signup.js
-import API from "../api.js";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Owner — Business Applications</title>
+  <link rel="stylesheet" href="/assets/css/owner.css" />
+</head>
+<body class="owner-body">
+  <main class="owner-shell">
+    <header class="owner-header">
+      <h1>Business Applications</h1>
+      <p>Review and approve businesses before they access the platform.</p>
+    </header>
 
-const form = document.getElementById("business-signup-form");
+    <section class="owner-card">
+      <table class="owner-table" id="applications-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Owner</th>
+            <th>Website</th>
+            <th>Phone</th>
+            <th>Submitted</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const fd = new FormData(form);
-
-  try {
-    const res = await API.post("/api/business/signup", {
-      name: fd.get("name"),
-      email: fd.get("email"),
-      password: fd.get("password")
-    });
-
-    if (!res.success) {
-      alert("Signup failed: " + res.error);
-      return;
-    }
-
-    alert("Account created! Please log in.");
-    window.location.href = "/pages/auth-login.html?role=business";
-
-  } catch (err) {
-    console.error(err);
-    alert("Signup failed. Please try again.");
-  }
-});
+  <script src="/app/js/owner/business-applications.js" type="module"></script>
+</body>
+</html>
