@@ -1,4 +1,4 @@
-import { json } from "../utils.js";
+import { json } from "../users.js";
 import { requireRole } from "../users.js";
 
 /* ============================================================
