@@ -5,6 +5,11 @@
   <title>Roll Show — Business Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <link rel="icon" href="/app/images/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/app/images/icons/icon-512.png">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta property="og:image" content="/app/images/roll-index.jpg">
+
   <link rel="stylesheet" href="/app/styles/styles.css">
   <link rel="stylesheet" href="/app/styles/dashboard.css">
 </head>
@@ -16,7 +21,7 @@
     <header class="rs-dash-header">
       <div>
         <h1 class="rs-dash-title" id="business-name">Business</h1>
-        <p class="rs-dash-sub">Your offers, contracts, and performance.</p>
+        <p class="rs-dash-sub">Your offers, contracts, ads, and brand performance.</p>
       </div>
       <div class="rs-dash-stat" id="business-revenue">$0.00</div>
     </header>
@@ -24,15 +29,51 @@
     <nav class="rs-dash-nav" id="business-nav"></nav>
 
     <section class="rs-dash-grid">
+
+      <!-- OFFERS -->
       <article class="rs-dash-card">
         <h3>Active Offers</h3>
         <ul class="rs-dash-list" id="business-offers"></ul>
+        <a class="rs-dash-pill" id="offers-link">View All Offers</a>
+        <a class="rs-dash-pill" id="create-offer-link">Create Offer</a>
+        <a class="rs-dash-pill" id="offers-inbox-link">Offers Inbox</a>
       </article>
 
+      <!-- CONTRACTS -->
       <article class="rs-dash-card">
         <h3>Contracts</h3>
         <ul class="rs-dash-list" id="business-contracts"></ul>
+        <a class="rs-dash-pill" id="contracts-link">View All Contracts</a>
       </article>
+
+      <!-- BRANDING -->
+      <article class="rs-dash-card">
+        <h3>Branding Studio</h3>
+        <p>Manage your brand assets, logos, and identity.</p>
+        <a class="rs-dash-pill" id="branding-link">Open Branding Studio</a>
+      </article>
+
+      <!-- FEED -->
+      <article class="rs-dash-card">
+        <h3>Business Feed</h3>
+        <p>Your activity feed and updates.</p>
+        <a class="rs-dash-pill" id="feed-link">Open Feed</a>
+      </article>
+
+      <!-- ADS -->
+      <article class="rs-dash-card">
+        <h3>Ads</h3>
+        <p>Create and manage your business ads.</p>
+        <a class="rs-dash-pill" id="ads-link">Create Ad</a>
+      </article>
+
+      <!-- APPLICATION -->
+      <article class="rs-dash-card">
+        <h3>Business Application</h3>
+        <p>Review your verification status.</p>
+        <a class="rs-dash-pill" id="apply-link">View Application</a>
+      </article>
+
     </section>
 
     <p class="rs-dash-status" id="business-status"></p>
