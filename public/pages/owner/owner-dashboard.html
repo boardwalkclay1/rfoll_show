@@ -2,105 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Roll Show • Owner Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.png" />
-
-  <!-- Owner Styles -->
-  <link rel="stylesheet" href="/pages/owner/css/owner.css" />
+  <title>Owner Dashboard • Roll Show</title>
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/owner.css" />
 </head>
 
-<body class="rs-body">
+<body class="bg-owner">
 
-  <!-- BACKGROUND IMAGE (favicon as background) -->
-  <img src="/favicon.png" class="bg-landing" alt="Background">
+  <div class="owner-shell">
 
-  <!-- BURGER BUTTON -->
-  <div class="burger" id="burger">
-    <div></div>
+    <header class="page-header">
+      <h1>Owner Dashboard</h1>
+      <p>Platform-wide metrics, activity, and controls.</p>
+    </header>
+
+    <main class="owner-main grid-3">
+
+      <section class="owner-section">
+        <h2>Users</h2>
+        <div id="owner-users" class="stats-box"></div>
+      </section>
+
+      <section class="owner-section">
+        <h2>Shows</h2>
+        <div id="owner-shows" class="stats-box"></div>
+      </section>
+
+      <section class="owner-section">
+        <h2>Revenue</h2>
+        <div id="owner-revenue" class="stats-box"></div>
+      </section>
+
+    </main>
+
   </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <h1 class="glow">OWNER</h1>
-
-    <a class="nav-link" href="/pages/owner/owner-dashboard.html">Dashboard Overview</a>
-    <a class="nav-link" href="/pages/owner/users.html">Users</a>
-    <a class="nav-link" href="/pages/owner/skaters.html">Skaters</a>
-    <a class="nav-link" href="/pages/owner/businesses.html">Businesses</a>
-    <a class="nav-link" href="/pages/owner/musicians.html">Musicians</a>
-    <a class="nav-link" href="/pages/owner/shows.html">Shows</a>
-    <a class="nav-link" href="/pages/owner/contracts.html">Contracts</a>
-    <a class="nav-link" href="/pages/owner/music.html">Music Library</a>
-    <a class="nav-link" href="/pages/owner/settings.html">Platform Settings</a>
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <div class="main" id="main">
-    <div class="title glow">Roll Show Owner Dashboard</div>
-    <div class="subtitle">Your command center for the entire platform.</div>
-
-    <!-- QUICK JUMPS -->
-    <div class="jump-row">
-      <a class="jump-btn" href="/pages/skater/skater-dashboard.html">View Skater Dashboard</a>
-      <a class="jump-btn" href="/pages/business/business-dashboard.html">View Business Dashboard</a>
-      <a class="jump-btn" href="/pages/musician/musician-dashboard.html">View Musician Dashboard</a>
-      <a class="jump-btn" href="/pages/buyer/buyer-dashboard.html">View Buyer Dashboard</a>
-    </div>
-
-    <!-- SYSTEM OVERVIEW CARDS -->
-    <div class="grid" id="overview-grid"></div>
-  </div>
-
-  <script>
-    // BURGER MENU
-    const burger = document.getElementById("burger");
-    const sidebar = document.getElementById("sidebar");
-    const main = document.getElementById("main");
-
-    burger.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
-      main.classList.toggle("shifted");
-    });
-
-    // LOAD OWNER OVERVIEW
-    async function loadOverview() {
-      const user = JSON.parse(localStorage.getItem("rollshow_user"));
-      if (!user) return;
-
-      const res = await fetch("/api/owner/overview", {
-        headers: { "x-owner-id": user.id }
-      });
-
-      const data = await res.json();
-      const grid = document.getElementById("overview-grid");
-
-      const items = [
-        { label: "Total Users", value: data.total_users },
-        { label: "Skaters", value: data.total_skaters },
-        { label: "Businesses", value: data.total_businesses },
-        { label: "Musicians", value: data.total_musicians },
-        { label: "Shows", value: data.total_shows },
-        { label: "Tickets Sold", value: data.total_tickets },
-        { label: "Purchases", value: data.total_purchases },
-        { label: "Revenue", value: "$" + data.total_revenue }
-      ];
-
-      items.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <h3>${item.label}</h3>
-          <p>${item.value}</p>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    loadOverview();
-  </script>
-
+  <script type="module" src="/js/owner/owner-dashboard.js"></script>
 </body>
 </html>
