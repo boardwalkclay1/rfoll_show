@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Musician Profile • Roll Show</title>
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/musician.css" />
+</head>
+
+<body class="bg-musician">
+
+  <div class="musician-shell">
+
+    <header class="musician-header">
+      <div class="musician-avatar" id="musician-avatar"></div>
+
+      <div class="musician-header-text">
+        <h1 id="musician-name">Artist Name</h1>
+        <p id="musician-genre">Genre • Style</p>
+        <p id="musician-location">City, State</p>
+      </div>
+
+      <div class="musician-header-actions">
+        <button id="edit-profile-btn" class="btn-primary">Edit Profile</button>
+        <button id="upload-track-btn" class="btn-outline">Upload Track</button>
+      </div>
+    </header>
+
+    <main class="musician-main">
+
+      <section class="musician-section">
+        <h2>Bio</h2>
+        <p id="musician-bio">Loading bio...</p>
+      </section>
+
+      <section class="musician-section grid-3">
+        <div>
+          <h3>Tracks</h3>
+          <div id="profile-tracks" class="mini-list"></div>
+        </div>
+
+        <div>
+          <h3>Albums</h3>
+          <div id="profile-albums" class="mini-list"></div>
+        </div>
+
+        <div>
+          <h3>Collabs</h3>
+          <div id="profile-collabs" class="mini-list"></div>
+        </div>
+      </section>
+
+      <section class="musician-section">
+        <h2>Feed</h2>
+        <div id="profile-feed" class="feed-list"></div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <script type="module" src="/js/musician/musician-profile.js"></script>
+</body>
+</html>
