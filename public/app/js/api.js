@@ -7,15 +7,15 @@ const API_BASE = "https://rollshow.boardwalkclay1.workers.dev";
 ------------------------------------------------------------ */
 async function safeJson(res) {
   const text = await res.text();
+  const type = res.headers.get("content-type") || "";
 
-  // If Worker returns HTML (fallback error page)
-  const contentType = res.headers.get("content-type") || "";
-  if (!contentType.includes("application/json")) {
+  // Worker returned HTML → fallback page or crash
+  if (!type.includes("application/json")) {
     return {
       success: false,
       status: res.status,
       data: null,
-      error: { message: "Server returned non‑JSON response" }
+      error: { message: "Non‑JSON response from server" }
     };
   }
 
@@ -36,26 +36,27 @@ async function safeJson(res) {
 ------------------------------------------------------------ */
 async function request(method, path, payload, extraHeaders = {}) {
   const headers = {
-    "Content-Type": "application/json",
     ...extraHeaders
   };
 
   const options = { method, headers };
 
+  // JSON body
   if (payload && !(payload instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
     options.body = JSON.stringify(payload);
   }
 
-  // FormData upload (branding, tracks, images)
+  // FormData upload
   if (payload instanceof FormData) {
-    delete headers["Content-Type"];
+    // Let browser set multipart boundary
     options.body = payload;
   }
 
   let res;
   try {
     res = await fetch(API_BASE + path, options);
-  } catch (err) {
+  } catch {
     return {
       success: false,
       status: 0,
@@ -100,7 +101,6 @@ const API = {
 
   withUser(user) {
     if (!user) return {};
-
     return {
       "x-user-id": user.id,
       "x-user-role": user.role
