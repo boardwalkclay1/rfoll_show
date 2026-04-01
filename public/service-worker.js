@@ -1,41 +1,70 @@
 /* ============================================================
-   ROLL SHOW — SERVICE WORKER (AUTO-UPDATING)
-   No HTML caching. No stale CSS/JS. No manual version bumps.
+   ROLL SHOW — FULL PRECACHE SERVICE WORKER
+   EXACTLY LIKE YOU ASKED — EVERY PAGE, EVERY IMAGE, EVERYTHING
 ============================================================ */
 
-const CACHE_NAME = "rollshow-static-v1";
+const CACHE_NAME = "rollshow-full-v1";
 
 /* ============================================================
-   INSTALL — Cache ALL static assets under /app/
+   INSTALL — Precache EVERYTHING
 ============================================================ */
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      const base = "/app/";
-      const assets = [
-        // Core
+      await cache.addAll([
+
+        /* ROOT */
         "/",
+        "/index.html",
         "/manifest.webmanifest",
 
-        // Styles
+        /* GLOBAL STYLES */
         "/app/styles/styles.css",
         "/app/styles/dashboard.css",
 
-        // Global JS
+        /* GLOBAL JS */
         "/app/js/app.js",
 
-        // Images (backgrounds, icons, etc.)
+        /* DASHBOARD JS */
+        "/app/js/skater/skater-dashboard.js",
+        "/app/js/musician/musician-dashboard.js",
+        "/app/js/business/business-dashboard.js",
+        "/app/js/buyer/buyer-dashboard.js",
+        "/app/js/owner/owner-dashboard.js",
+
+        /* DASHBOARD PAGES */
+        "/app/pages/skater-dashboard.html",
+        "/app/pages/musician-dashboard.html",
+        "/app/pages/business-dashboard.html",
+        "/app/pages/buyer-dashboard.html",
+        "/app/pages/owner-dashboard.html",
+
+        /* BACKGROUNDS */
+        "/app/images/backs/roll-show-gold.jpg",
+        "/app/images/backs/Roll-music.jpg",
+        "/app/images/backs/Roll-business.jpg",
+        "/app/images/backs/Roll-buyer.jpg",
+        "/app/images/backs/Roll-owner.jpg",
+
+        /* ALT BACKGROUNDS (if used) */
         "/app/images/bg-artist-dash.jpg",
         "/app/images/bg-buyer-dash.jpg",
         "/app/images/bg-skater-dash.jpg",
         "/app/images/bg-business-dash.jpg",
-        "/app/images/icons/icon-192.png",
-        "/app/images/icons/icon-512.png"
-      ];
 
-      await cache.addAll(assets);
+        /* ICONS */
+        "/app/images/favicon.png",
+        "/app/images/icons/icon-192.png",
+        "/app/images/icons/icon-512.png",
+
+        /* ANY OTHER STATIC ASSETS */
+        "/app/images/logo.png",
+        "/app/images/logo-white.png",
+        "/app/images/logo-gold.png"
+      ]);
     })
   );
+
   self.skipWaiting();
 });
 
@@ -52,46 +81,19 @@ self.addEventListener("activate", event => {
 });
 
 /* ============================================================
-   FETCH STRATEGY
-   - HTML → ALWAYS network (never cached)
-   - CSS/JS/Images → cache-first
+   FETCH — Cache-first for EVERYTHING
 ============================================================ */
 self.addEventListener("fetch", event => {
-  const req = event.request;
-
-  // HTML → network only (auto-updates always)
-  if (req.mode === "navigate" || req.headers.get("accept")?.includes("text/html")) {
-    event.respondWith(fetch(req).catch(() => caches.match("/index.html")));
-    return;
-  }
-
-  // Static assets → cache-first
-  if (
-    req.url.includes("/app/") &&
-    (req.url.endsWith(".css") ||
-     req.url.endsWith(".js") ||
-     req.url.endsWith(".png") ||
-     req.url.endsWith(".jpg") ||
-     req.url.endsWith(".jpeg") ||
-     req.url.endsWith(".webp") ||
-     req.url.endsWith(".gif") ||
-     req.url.endsWith(".svg"))
-  ) {
-    event.respondWith(
-      caches.match(req).then(cached => {
-        return (
-          cached ||
-          fetch(req).then(res => {
-            const clone = res.clone();
-            caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
-            return res;
-          })
-        );
-      })
-    );
-    return;
-  }
-
-  // Default → network fallback to cache
-  event.respondWith(fetch(req).catch(() => caches.match(req)));
+  event.respondWith(
+    caches.match(event.request).then(cached => {
+      return (
+        cached ||
+        fetch(event.request).then(res => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return res;
+        })
+      );
+    })
+  );
 });
