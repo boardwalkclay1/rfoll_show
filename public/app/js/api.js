@@ -1,17 +1,21 @@
-// api.js — FIXED UNIFIED API
+// api.js — FINAL UNIFIED API CLIENT
 
 const API_BASE = "https://rollshow.boardwalkclay1.workers.dev";
 
+/* ------------------------------------------------------------
+   SAFE JSON PARSER
+------------------------------------------------------------ */
 async function safeJson(res) {
   const text = await res.text();
 
-  // Worker fallback HTML → detect immediately
-  if (!res.headers.get("content-type")?.includes("application/json")) {
+  // If Worker returns HTML (fallback error page)
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
     return {
       success: false,
       status: res.status,
       data: null,
-      error: { message: "Invalid response from server" }
+      error: { message: "Server returned non‑JSON response" }
     };
   }
 
@@ -27,13 +31,26 @@ async function safeJson(res) {
   }
 }
 
-async function request(method, path, payload) {
-  const options = {
-    method,
-    headers: { "Content-Type": "application/json" }
+/* ------------------------------------------------------------
+   INTERNAL REQUEST HANDLER
+------------------------------------------------------------ */
+async function request(method, path, payload, extraHeaders = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...extraHeaders
   };
 
-  if (payload) options.body = JSON.stringify(payload);
+  const options = { method, headers };
+
+  if (payload && !(payload instanceof FormData)) {
+    options.body = JSON.stringify(payload);
+  }
+
+  // FormData upload (branding, tracks, images)
+  if (payload instanceof FormData) {
+    delete headers["Content-Type"];
+    options.body = payload;
+  }
 
   let res;
   try {
@@ -57,12 +74,37 @@ async function request(method, path, payload) {
   };
 }
 
+/* ------------------------------------------------------------
+   PUBLIC API
+------------------------------------------------------------ */
 const API = {
-  get(path) {
-    return request("GET", path);
+  get(path, headers = {}) {
+    return request("GET", path, null, headers);
   },
-  post(path, payload) {
-    return request("POST", path, payload);
+
+  post(path, payload, headers = {}) {
+    return request("POST", path, payload, headers);
+  },
+
+  put(path, payload, headers = {}) {
+    return request("PUT", path, payload, headers);
+  },
+
+  delete(path, headers = {}) {
+    return request("DELETE", path, null, headers);
+  },
+
+  upload(path, formData, headers = {}) {
+    return request("POST", path, formData, headers);
+  },
+
+  withUser(user) {
+    if (!user) return {};
+
+    return {
+      "x-user-id": user.id,
+      "x-user-role": user.role
+    };
   }
 };
 
