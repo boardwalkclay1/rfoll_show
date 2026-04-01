@@ -80,7 +80,11 @@ async function loadDashboard() {
 
   statusEl.textContent = "Loading…";
 
-  const res = await API.get(`/api/business/dashboard?user=${encodeURIComponent(userId)}`);
+  // ⭐ FIX: send user headers so Worker doesn't return HTML
+  const headers = API.withUser({ id: userId, role: "business" });
+
+  const res = await API.get(`/api/business/dashboard?user=${encodeURIComponent(userId)}`, headers);
+
   if (!res.success) {
     statusEl.textContent = res.error?.message || "Failed to load dashboard.";
     return;
