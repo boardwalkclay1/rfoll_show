@@ -72,21 +72,32 @@ async function loadDashboard() {
 
   statusEl.textContent = "Loading…";
 
-  const res = await API.get(`/api/musician/dashboard?user=${encodeURIComponent(userId)}`);
+  // ⭐ REQUIRED HEADERS
+  const headers = API.withUser({ id: userId, role: "musician" });
+
+  const res = await API.get(
+    `/api/musician/dashboard?user=${encodeURIComponent(userId)}`,
+    headers
+  );
+
   if (!res.success) {
     statusEl.textContent = res.error?.message || "Failed to load dashboard.";
     return;
   }
 
   const data = res.data || {};
+
+  /* HEADER */
   nameEl.textContent = data.musician?.name || "Artist";
   earningsEl.textContent = `$${((data.musician?.earnings_cents || 0) / 100).toFixed(2)}`;
 
+  /* TRACKS */
   const tracks = Array.isArray(data.tracks) ? data.tracks : [];
   tracksEl.innerHTML = tracks.length
     ? tracks.slice(0, 5).map(t => `<li>${t.title}</li>`).join("")
     : "<li>No tracks yet.</li>";
 
+  /* LICENSES */
   const licenses = Array.isArray(data.licenses) ? data.licenses : [];
   licensesEl.innerHTML = licenses.length
     ? licenses.slice(0, 5).map(l => `<li>${l.title}</li>`).join("")
