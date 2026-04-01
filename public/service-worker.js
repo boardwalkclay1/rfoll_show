@@ -1,88 +1,136 @@
 /* ============================================================
-   ROLL SHOW — CACHE + ALWAYS UPDATE
-   - Precache all pages, CSS, JS, images
-   - HTML: network-first (updates when you change)
-   - Assets: stale-while-revalidate (fast + updates)
+   ROLL SHOW — FULL APP SERVICE WORKER
+   - Precaches all known pages
+   - HTML → network-first (always updates)
+   - Assets → cache-first (fast)
 ============================================================ */
 
-const CACHE_NAME = "rollshow-hybrid-v1";
+const CACHE_NAME = "rollshow-full-v1";
 
 const PRECACHE_URLS = [
   /* ROOT */
   "/",
   "/index.html",
+  "/favicon.png",
   "/manifest.webmanifest",
+  "/service-worker.js",
 
-  /* GLOBAL STYLES */
-  "/app/styles/styles.css",
-  "/app/styles/dashboard.css",
+  /* APP SHELL (if used) */
+  "/app/",
+  "/app/index.html",
 
-  /* GLOBAL JS */
-  "/app/js/app.js",
+  /* ROOT PAGES (in /pages) */
+  "/pages/admin-payouts.html",
+  "/pages/auth-login.html",
+  "/pages/branding-studio.html",
+  "/pages/buyer-profile.html",
+  "/pages/contracts.html",
+  "/pages/legal.html",
+  "/pages/music-library.html",
 
-  /* DASHBOARD JS */
-  "/app/js/skater/skater-dashboard.js",
-  "/app/js/musician/musician-dashboard.js",
-  "/app/js/business/business-dashboard.js",
-  "/app/js/buyer/buyer-dashboard.js",
-  "/app/js/owner/owner-dashboard.js",
+  /* BUSINESS PAGES */
+  "/pages/business/",
+  "/pages/business/dashboard.html",
+  "/pages/business/offers.html",
+  "/pages/business/contracts.html",
+  "/pages/business/create-offer.html",
+  "/pages/business/offers-inbox.html",
+  "/pages/business/branding-studio.html",
+  "/pages/business/business-feed.html",
+  "/pages/business/apply.html",
 
-  /* DASHBOARD PAGES */
-  "/app/pages/skater-dashboard.html",
-  "/app/pages/musician/dashboard.html",
-  "/app/pages/business/business-dashboard.html",
-  "/app/pages/buyer/dashboard.html",
-  "/app/pages/owner/owner-dashboard.html",
+  /* BUYER PAGES */
+  "/pages/buyer/",
+  "/pages/buyer/dashboard.html",
+  "/pages/buyer/tickets.html",
+  "/pages/buyer/purchase-history.html",
+  "/pages/buyer/buyer-feed.html",
+  "/pages/buyer/ticket-wallet.html",
+  "/pages/buyer/ticket-confirmation.html",
+  "/pages/buyer/ticket-view.html",
+  "/pages/buyer/buyer-profile.html",
 
-  /* BUSINESS PAGES (example) */
-  "/app/pages/business/offers.html",
-  "/app/pages/business/contracts.html",
-  "/app/pages/business/create-offer.html",
-  "/app/pages/business/offers-inbox.html",
-  "/app/pages/business/branding-studio.html",
-  "/app/pages/business/business-feed.html",
-  "/app/pages/business/apply.html",
+  /* LEGAL PAGES */
+  "/pages/legal/",
+  "/pages/legal/legal.html",
+  "/pages/legal/terms.html",
+  "/pages/legal/privacy.html",
 
-  /* MUSICIAN PAGES (example) */
-  "/app/pages/musician/profile.html",
-  "/app/pages/musician/tracks.html",
-  "/app/pages/musician/licenses.html",
-  "/app/pages/musician/upload-track.html",
-  "/app/pages/musician/musician-feed.html",
-  "/app/pages/musician/branding-studio.html",
-  "/app/pages/musician/music-library.html",
+  /* MUSICIAN PAGES */
+  "/pages/musician/",
+  "/pages/musician/dashboard.html",
+  "/pages/musician/profile.html",
+  "/pages/musician/tracks.html",
+  "/pages/musician/licenses.html",
+  "/pages/musician/upload-track.html",
+  "/pages/musician/musician-feed.html",
+  "/pages/musician/branding-studio.html",
+  "/pages/musician/music-library.html",
 
-  /* BUYER PAGES (example) */
-  "/app/pages/buyer/tickets.html",
-  "/app/pages/buyer/purchase-history.html",
-  "/app/pages/buyer/buyer-feed.html",
-  "/app/pages/buyer/ticket-wallet.html",
-  "/app/pages/buyer/ticket-confirmation.html",
-  "/app/pages/buyer/ticket-view.html",
+  /* OWNER PAGES */
+  "/pages/owner/",
+  "/pages/owner/owner-dashboard.html",
+  "/pages/owner/owner-users.html",
+  "/pages/owner/owner-skaters.html",
+  "/pages/owner/owner-businesses.html",
+  "/pages/owner/owner-musicians.html",
+  "/pages/owner/owner-shows.html",
+  "/pages/owner/owner-contracts.html",
+  "/pages/owner/owner-music.html",
+  "/pages/owner/owner-settings.html",
+  "/pages/owner/admin-payouts.html",
 
-  /* BACKGROUNDS */
-  "/app/images/backs/roll-show-gold.jpg",
-  "/app/images/backs/Roll-music.jpg",
-  "/app/images/backs/Roll-business.jpg",
-  "/app/images/backs/Roll-buyer.jpg",
-  "/app/images/backs/Roll-owner.jpg",
-  "/app/images/bg-artist-dash.jpg",
-  "/app/images/bg-buyer-dash.jpg",
-  "/app/images/bg-skater-dash.jpg",
-  "/app/images/bg-business-dash.jpg",
+  /* SKATER PAGES */
+  "/pages/skater/",
+  "/pages/skater/dashboard.html",
+  "/pages/skater/skater-profile.html",
+  "/pages/skater/shows.html",
+  "/pages/skater/create-show.html",
+  "/pages/skater/lessons.html",
+  "/pages/skater/lesson-requests.html",
+  "/pages/skater/skater-feed.html",
+  "/pages/skater/branding-studio.html",
+  "/pages/skater/music-library.html",
+  "/pages/skater/businesses.html",
+
+  /* SYSTEM PAGES */
+  "/pages/system/",
+  "/pages/system/messages.html",
+  "/pages/system/notifications.html",
+  "/pages/system/search.html",
+  "/pages/system/map.html",
+  "/pages/system/qr.html",
+  "/pages/system/settings.html",
+
+  /* PUBLIC ASSETS (adjust to your real structure) */
+  "/public/css/global.css",
+  "/public/css/dashboard.css",
+  "/public/js/api.js",
+  "/public/js/app.js",
+
+  /* BACKGROUNDS (examples) */
+  "/public/images/backs/roll-show-gold.jpg",
+  "/public/images/backs/Roll-music.jpg",
+  "/public/images/backs/Roll-business.jpg",
+  "/public/images/backs/Roll-buyer.jpg",
+  "/public/images/backs/Roll-owner.jpg",
+  "/public/images/bg-artist-dash.jpg",
+  "/public/images/bg-buyer-dash.jpg",
+  "/public/images/bg-skater-dash.jpg",
+  "/public/images/bg-business-dash.jpg",
 
   /* ICONS */
-  "/app/images/favicon.png",
-  "/app/images/icons/icon-192.png",
-  "/app/images/icons/icon-512.png",
+  "/public/images/favicon.png",
+  "/public/images/icons/icon-192.png",
+  "/public/images/icons/icon-512.png",
 
   /* LOGOS */
-  "/app/images/logo.png",
-  "/app/images/logo-white.png",
-  "/app/images/logo-gold.png"
+  "/public/images/logo.png",
+  "/public/images/logo-white.png",
+  "/public/images/logo-gold.png"
 ];
 
-/* INSTALL — precache everything */
+/* INSTALL — precache everything listed */
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE_URLS))
@@ -95,21 +143,19 @@ self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys
-          .filter(k => k !== CACHE_NAME)
-          .map(k => caches.delete(k))
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       )
     )
   );
   self.clients.claim();
 });
 
-/* FETCH — HTML: network-first, assets: stale-while-revalidate */
+/* FETCH — HTML: network-first, assets: cache-first */
 self.addEventListener("fetch", event => {
   const req = event.request;
   const accept = req.headers.get("accept") || "";
 
-  // HTML: always try network first so updates show when you change files
+  // HTML: network-first so updates always show
   if (req.mode === "navigate" || accept.includes("text/html")) {
     event.respondWith(
       fetch(req)
@@ -123,7 +169,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // Assets: stale-while-revalidate
+  // Assets: cache-first
   event.respondWith(
     caches.match(req).then(cached => {
       const fetchPromise = fetch(req)
