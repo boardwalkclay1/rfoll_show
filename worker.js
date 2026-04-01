@@ -3,37 +3,34 @@ import { cors, apiJson, login, requireRole } from "./users.js";
 /* SIMPLE REQUEST LOGGER */
 function logRequest(request, extra = {}) {
   const url = new URL(request.url);
-  console.log(
-    JSON.stringify({
-      path: url.pathname,
-      method: request.method,
-      ...extra
-    })
-  );
+  console.log(JSON.stringify({
+    path: url.pathname,
+    method: request.method,
+    ...extra
+  }));
 }
 
-/* OWNER OVERRIDE WRAPPER — FIXED (CLONES REQUEST FOR POST) */
+/* OWNER OVERRIDE WRAPPER */
 async function withOwnerOverride(request, env, allowedRoles, handler) {
   const url = new URL(request.url);
   const ownerOverride = url.searchParams.get("owner");
   const userId = url.searchParams.get("user");
 
-  // Clone request so POST bodies can be read again
   const cloned = request.clone();
 
   if (ownerOverride === "1" && userId) {
     logRequest(request, { ownerOverride: true, userId });
 
-    const user = await env.DB_users.prepare(
-      "SELECT * FROM users WHERE id = ?"
-    ).bind(userId).first();
+    const user = await env.DB_users
+      .prepare("SELECT * FROM users WHERE id = ?")
+      .bind(userId)
+      .first();
 
     if (!user) {
       return apiJson({ message: "User not found for owner override" }, 404);
     }
 
     const ownerUser = { ...user, role: "owner" };
-
     return handler(cloned, env, ownerUser);
   }
 
@@ -121,8 +118,9 @@ export default {
       /* ============================================================
          AUTH
       ============================================================ */
-      if (path === "/api/login" && method === "POST")
+      if (path === "/api/login" && method === "POST") {
         return login(request.clone(), env);
+      }
 
       /* ============================================================
          SIGNUP
@@ -134,14 +132,16 @@ export default {
         "/api/business/signup": signupBusiness
       };
 
-      if (signupRoutes[path] && method === "POST")
+      if (signupRoutes[path] && method === "POST") {
         return signupRoutes[path](request.clone(), env);
+      }
 
       /* ============================================================
          PUBLIC SHOWS
       ============================================================ */
-      if (path === "/api/shows" && method === "GET")
+      if (path === "/api/shows" && method === "GET") {
         return listShows(env);
+      }
 
       if (path.startsWith("/api/shows/") && method === "GET") {
         const id = path.split("/").pop();
@@ -157,8 +157,9 @@ export default {
         "/api/buyer/tickets/create": { POST: createTicket }
       };
 
-      if (buyerRoutes[path] && buyerRoutes[path][method])
+      if (buyerRoutes[path] && buyerRoutes[path][method]) {
         return withOwnerOverride(request, env, ["buyer"], buyerRoutes[path][method]);
+      }
 
       /* ============================================================
          SKATER
@@ -172,8 +173,9 @@ export default {
         "/api/skater/contact-business": { POST: skaterContactBusiness }
       };
 
-      if (skaterRoutes[path] && skaterRoutes[path][method])
+      if (skaterRoutes[path] && skaterRoutes[path][method]) {
         return withOwnerOverride(request, env, ["skater"], skaterRoutes[path][method]);
+      }
 
       /* ============================================================
          BUSINESS
@@ -186,8 +188,9 @@ export default {
         "/api/business/events": { POST: businessCreateEvent }
       };
 
-      if (businessRoutes[path] && businessRoutes[path][method])
+      if (businessRoutes[path] && businessRoutes[path][method]) {
         return withOwnerOverride(request, env, ["business"], businessRoutes[path][method]);
+      }
 
       /* ============================================================
          MUSICIAN
@@ -200,13 +203,12 @@ export default {
       };
 
       if (musicianRoutes[path] && musicianRoutes[path][method]) {
-        const roles =
-          path === "/api/music/license" ? ["skater"] : ["musician"];
+        const roles = path === "/api/music/license" ? ["skater"] : ["musician"];
         return withOwnerOverride(request, env, roles, musicianRoutes[path][method]);
       }
 
       /* ============================================================
-         OWNER — FIXED TO USE OVERRIDE
+         OWNER
       ============================================================ */
       const ownerRoutes = {
         "/api/owner/overview": ownerOverview,
@@ -226,14 +228,16 @@ export default {
         "/api/owner/sponsorships": ownerSponsorships
       };
 
-      if (ownerRoutes[path] && (method === "GET" || method === "POST"))
+      if (ownerRoutes[path] && (method === "GET" || method === "POST")) {
         return withOwnerOverride(request, env, ["owner"], ownerRoutes[path]);
+      }
 
       /* ============================================================
          WEBHOOK
       ============================================================ */
-      if (path === "/api/webhooks/partner" && method === "POST")
+      if (path === "/api/webhooks/partner" && method === "POST") {
         return partnerWebhook(request.clone(), env);
+      }
 
       /* ============================================================
          NOT FOUND
