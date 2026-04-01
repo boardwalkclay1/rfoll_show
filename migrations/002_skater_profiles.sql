@@ -1,17 +1,12 @@
-/* ============================
-   SKATER PROFILES
-============================ */
-DROP TABLE IF EXISTS skater_profiles;
-
 CREATE TABLE skater_profiles (
-  id TEXT PRIMARY KEY,               -- skater_id (UUID)
-  user_id TEXT NOT NULL UNIQUE,      -- links to users.id
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL UNIQUE,
 
   display_name TEXT,
   bio TEXT,
 
-  discipline TEXT,                   -- roller | inline | skateboard | longboard
-  subclass TEXT,                     -- rink | outdoor | vert | street | cruiser | dancer | downhill
+  discipline TEXT,
+  subclass TEXT,
 
   avatar_url TEXT,
   city TEXT,
