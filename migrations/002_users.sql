@@ -1,12 +1,9 @@
-/* ============================
-   USERS (GLOBAL IDENTITY)
-============================ */
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
-  id TEXT PRIMARY KEY,             -- global user_id (UUID)
-  email TEXT UNIQUE NOT NULL,      -- login identity
-  password_hash TEXT NOT NULL,     -- bcrypt hash
+  id TEXT PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
   role TEXT NOT NULL,              -- buyer | skater | musician | business | owner
-  created_at TEXT NOT NULL         -- ISO timestamp
+  created_at TEXT NOT NULL
 );
