@@ -1,5 +1,4 @@
-import { apiJson } from "./users.js";
-import { signupBase } from "./users.js";
+import { apiJson, signupBase } from "./users.js";
 
 /* ============================================================
    BUSINESS SIGNUP
@@ -48,7 +47,7 @@ export async function signupBusiness(request, env) {
 }
 
 /* ============================================================
-   BUSINESS DASHBOARD (UNIFIED)
+   BUSINESS DASHBOARD (MATCHES FRONTEND)
 ============================================================ */
 export async function businessDashboard(request, env, user) {
   const business = await env.DB_business.prepare(
@@ -67,15 +66,32 @@ export async function businessDashboard(request, env, user) {
     }, 403);
   }
 
+  /* ------------------------------------------------------------
+     REVENUE (MATCHES FRONTEND EXPECTATION)
+  ------------------------------------------------------------ */
+  const revenueRow = await env.DB_business.prepare(
+    `SELECT SUM(amount_cents) AS revenue_cents
+     FROM contracts
+     WHERE business_id = ? AND status = 'completed'`
+  ).bind(business.id).first();
+
+  const revenue_cents = revenueRow?.revenue_cents || 0;
+
+  /* ------------------------------------------------------------
+     OFFERS
+  ------------------------------------------------------------ */
   const { results: offers } = await env.DB_business.prepare(
     `SELECT o.*, u.name AS skater_name
      FROM offers o
-     JOIN users u ON o.to_user_id = u.id OR o.from_user_id = u.id
-     WHERE (o.from_user_id = ? OR o.to_user_id = ?)
+     JOIN users u ON o.to_user_id = u.id
+     WHERE o.from_user_id = ?
        AND u.role = 'skater'
      ORDER BY o.created_at DESC`
-  ).bind(user.id, user.id).all();
+  ).bind(user.id).all();
 
+  /* ------------------------------------------------------------
+     CONTRACTS
+  ------------------------------------------------------------ */
   const { results: contracts } = await env.DB_business.prepare(
     `SELECT c.*, o.type, o.terms
      FROM contracts c
@@ -84,12 +100,18 @@ export async function businessDashboard(request, env, user) {
      ORDER BY c.created_at DESC`
   ).bind(user.id, user.id).all();
 
+  /* ------------------------------------------------------------
+     ADS
+  ------------------------------------------------------------ */
   const { results: ads } = await env.DB_business.prepare(
     `SELECT * FROM business_ads
      WHERE business_id = ?
      ORDER BY created_at DESC`
   ).bind(business.id).all();
 
+  /* ------------------------------------------------------------
+     SPONSORSHIPS
+  ------------------------------------------------------------ */
   const { results: sponsorships } = await env.DB_business.prepare(
     `SELECT s.*, sk.discipline, sk.bio, u.name AS skater_name
      FROM sponsorships s
@@ -99,6 +121,9 @@ export async function businessDashboard(request, env, user) {
      ORDER BY s.created_at DESC`
   ).bind(business.id).all();
 
+  /* ------------------------------------------------------------
+     MESSAGE THREADS
+  ------------------------------------------------------------ */
   const { results: threads } = await env.DB_business.prepare(
     `SELECT mt.*, s.discipline, b.company_name
      FROM message_threads mt
@@ -107,12 +132,18 @@ export async function businessDashboard(request, env, user) {
      WHERE mt.business_id = ?`
   ).bind(business.id).all();
 
+  /* ------------------------------------------------------------
+     EVENTS
+  ------------------------------------------------------------ */
   const { results: events } = await env.DB_business.prepare(
     `SELECT * FROM events
      WHERE created_by_business_id = ?
      ORDER BY start_at DESC`
   ).bind(business.id).all();
 
+  /* ------------------------------------------------------------
+     SKATER OPPORTUNITIES
+  ------------------------------------------------------------ */
   const { results: skater_opportunities } = await env.DB_skaters.prepare(
     `SELECT s.id, s.bio, s.discipline, u.name
      FROM skaters s
@@ -122,6 +153,7 @@ export async function businessDashboard(request, env, user) {
 
   return apiJson({
     business,
+    revenue_cents,
     offers,
     contracts,
     ads,
