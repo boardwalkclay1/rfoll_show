@@ -25,6 +25,11 @@ html, body {
   overflow-x: hidden;
 }
 
+/* make body a stacking context so background image can sit behind content, not behind body */
+body {
+  position: relative;
+}
+
 img {
   max-width: 100%;
   display: block;
@@ -280,6 +285,11 @@ form textarea:focus {
   text-align: center;
   opacity: 0.8;
 }
+
+/* ============================================================
+   GLOBAL FULLSCREEN BACKGROUND
+   ============================================================ */
+
 .bg-landing {
   position: fixed;
   top: 0;
@@ -288,6 +298,8 @@ form textarea:focus {
   height: 100vh;
   object-fit: cover;
   object-position: center;
-  z-index: -1;
+
+  /* FIXED: must not be behind body background */
+  z-index: 0;
   pointer-events: none;
 }
