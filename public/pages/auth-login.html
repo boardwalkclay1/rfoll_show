@@ -9,6 +9,16 @@
 
   <!-- ICON -->
   <link rel="icon" href="/app/images/icons/icon-192.png">
+
+  <style>
+    /* MOBILE SCALING FIX — MATCH SIGNUP SIZE */
+    @media (max-width: 600px) {
+      .login-box {
+        transform: scale(1.25);
+        transform-origin: top center;
+      }
+    }
+  </style>
 </head>
 
 <body style="background:black;">
@@ -37,7 +47,7 @@
       padding:120px 20px;
     ">
 
-    <div style="
+    <div class="login-box" style="
         width:100%;
         max-width:420px;
         background:rgba(0,0,0,0.55);
@@ -49,7 +59,7 @@
 
       <h1 style="margin-bottom:20px;">Welcome Back</h1>
 
-      <!-- IMPORTANT: correct form ID -->
+      <!-- LOGIN FORM -->
       <form id="auth-login-form" style="display:flex; flex-direction:column; gap:15px;">
         <input type="email" name="email" placeholder="Email" required>
         <input type="password" name="password" placeholder="Password" required>
@@ -65,7 +75,7 @@
 
   </main>
 
-  <!-- IMPORTANT: load auth-login.js, NOT app.js -->
+  <!-- LOGIN JS -->
   <script type="module" src="/app/js/auth-login.js"></script>
 </body>
 </html>
