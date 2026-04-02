@@ -1,17 +1,114 @@
-<div class="buyer-dashboard-page">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show — Buyer Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <section class="dashboard-header">
-    <h1>Buyer Dashboard</h1>
-  </section>
+  <!-- FAVICON -->
+  <link rel="icon" href="/app/images/favicon.png">
+  <link rel="apple-touch-icon" href="/app/images/favicon.png">
+  <link rel="manifest" href="/manifest.webmanifest">
 
-  <section class="dashboard-grid">
+  <!-- PLATFORM CSS -->
+  <link rel="stylesheet" href="/app/styles/styles.css">
+  <link rel="stylesheet" href="/app/styles/dashboard.css">
+</head>
 
-    <a data-page="buyer-profile" class="dashboard-card">My Profile</a>
-    <a data-page="buyer-tickets" class="dashboard-card">My Tickets</a>
-    <a data-page="buyer-cards" class="dashboard-card">My Skate Cards</a>
-    <a data-page="buyer-music-library" class="dashboard-card">Music Library</a>
-    <a data-page="buyer-calendar" class="dashboard-card">My Calendar</a>
+<body class="rs-body">
 
-  </section>
+  <!-- FULLSCREEN CINEMATIC BACKGROUND -->
+  <img src="/app/images/backs/roll-show-gold.jpg" class="bg-landing" alt="Background">
 
-</div>
+  <main class="rs-dash-shell rs-dash-buyer">
+
+    <!-- HEADER -->
+    <header class="rs-dash-header">
+      <div>
+        <h1 class="rs-dash-title">Buyer Dashboard</h1>
+        <p class="rs-dash-sub">Your tickets, cards, music, and events — all in one place.</p>
+      </div>
+      <div class="rs-dash-stat" id="buyer-stat">$0.00</div>
+    </header>
+
+    <!-- NAV -->
+    <nav class="rs-dash-nav" id="buyer-nav">
+      <a href="/buyer-dashboard.html" class="rs-dash-nav-link active">Dashboard</a>
+      <a href="/buyer-profile.html" class="rs-dash-nav-link">Profile</a>
+      <a href="/buyer-tickets.html" class="rs-dash-nav-link">Tickets</a>
+      <a href="/buyer-cards.html" class="rs-dash-nav-link">Cards</a>
+      <a href="/buyer-music-library.html" class="rs-dash-nav-link">Music</a>
+      <a href="/buyer-calendar.html" class="rs-dash-nav-link">Calendar</a>
+      <a href="/buyer-feed.html" class="rs-dash-nav-link">Feed</a>
+      <a href="/purchase-history.html" class="rs-dash-nav-link">Purchases</a>
+    </nav>
+
+    <!-- GRID -->
+    <section class="rs-dash-grid">
+
+      <!-- PROFILE -->
+      <article class="rs-dash-card">
+        <h3>My Profile</h3>
+        <p>Manage your buyer account, preferences, and saved info.</p>
+        <a class="rs-dash-pill" href="/buyer-profile.html">Open Profile</a>
+      </article>
+
+      <!-- TICKETS -->
+      <article class="rs-dash-card">
+        <h3>My Tickets</h3>
+        <ul class="rs-dash-list" id="buyer-tickets-mini"></ul>
+        <a class="rs-dash-pill" href="/buyer-tickets.html">View All Tickets</a>
+        <a class="rs-dash-pill" href="/ticket-wallet.html">Ticket Wallet</a>
+      </article>
+
+      <!-- CARDS -->
+      <article class="rs-dash-card">
+        <h3>My Skate Cards</h3>
+        <ul class="rs-dash-list" id="buyer-cards-mini"></ul>
+        <a class="rs-dash-pill" href="/buyer-cards.html">Open Card Library</a>
+      </article>
+
+      <!-- MUSIC -->
+      <article class="rs-dash-card">
+        <h3>Music Library</h3>
+        <ul class="rs-dash-list" id="buyer-music-mini"></ul>
+        <a class="rs-dash-pill" href="/buyer-music-library.html">Open Music Library</a>
+      </article>
+
+      <!-- CALENDAR -->
+      <article class="rs-dash-card">
+        <h3>My Calendar</h3>
+        <p>See your upcoming shows, events, and reminders.</p>
+        <a class="rs-dash-pill" href="/buyer-calendar.html">Open Calendar</a>
+      </article>
+
+      <!-- FEED -->
+      <article class="rs-dash-card">
+        <h3>Skater Feed</h3>
+        <p>Follow your favorite skaters and see their latest posts.</p>
+        <a class="rs-dash-pill" href="/buyer-feed.html">Open Feed</a>
+      </article>
+
+      <!-- PURCHASE HISTORY -->
+      <article class="rs-dash-card">
+        <h3>Purchase History</h3>
+        <p>View your past purchases, receipts, and confirmations.</p>
+        <a class="rs-dash-pill" href="/purchase-history.html">View History</a>
+      </article>
+
+      <!-- CONFIRMATIONS -->
+      <article class="rs-dash-card">
+        <h3>Ticket Confirmations</h3>
+        <p>Access your confirmation codes and QR links.</p>
+        <a class="rs-dash-pill" href="/ticket-confirmation.html">Open Confirmations</a>
+      </article>
+
+    </section>
+
+    <p class="rs-dash-status" id="buyer-status"></p>
+  </main>
+
+  <!-- JS -->
+  <script type="module" src="/app/js/buyer/buyer-dashboard.js"></script>
+</body>
+</html>
