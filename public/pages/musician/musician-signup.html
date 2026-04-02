@@ -7,24 +7,52 @@
   <link rel="icon" href="/favicon.png">
   <link rel="stylesheet" href="/app/styles/styles.css">
 
-  <style>
-    .back-btn {
-      position:absolute; top:20px; left:20px;
-      background:rgba(0,0,0,0.55);
-      padding:10px 16px; border-radius:8px;
-      color:white; font-weight:600; text-decoration:none;
-      backdrop-filter:blur(4px); transition:.2s;
-    }
-    .back-btn:hover { background:rgba(0,0,0,0.75); }
+  <!-- REAL CURSIVE FONT -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 
-    .learn-btn {
-      display:block; margin-top:18px; text-align:center;
-      background:#a200ff; color:white;
-      padding:12px 18px; border-radius:8px;
-      font-weight:700; text-decoration:none;
+  <style>
+    /* BACK BUTTON */
+    .back-btn {
+      position:absolute;
+      top:20px;
+      left:20px;
+      background:rgba(0,0,0,0.55);
+      padding:10px 16px;
+      border-radius:8px;
+      color:white;
+      font-weight:600;
+      text-decoration:none;
+      backdrop-filter:blur(4px);
       transition:.2s;
+      font-family: "Dancing Script", cursive;
+      font-size: 22px;
     }
-    .learn-btn:hover { background:#bb33ff; }
+    .back-btn:hover {
+      background:rgba(0,0,0,0.75);
+    }
+
+    /* LEARN MORE BUTTON — DEEP RED + CURSIVE */
+    .learn-btn {
+      display:block;
+      margin-top:18px;
+      text-align:center;
+      background:#7a0000;         /* deep red */
+      color:white;
+      padding:12px 18px;
+      border-radius:8px;
+      font-weight:700;
+      text-decoration:none;
+      transition:.2s;
+      border:2px solid #000000;   /* black border */
+      font-family: "Dancing Script", cursive !important;
+      font-size:24px;
+      letter-spacing:0.5px;
+    }
+    .learn-btn:hover {
+      background:#a30000;
+    }
   </style>
 </head>
 
@@ -42,6 +70,7 @@
       <button type="submit">Create Account</button>
     </form>
 
+    <!-- RED + CURSIVE LEARN BUTTON -->
     <a href="/pages/learn/learn-musician.html" class="learn-btn">
       Learn More About Being an Artist
     </a>
