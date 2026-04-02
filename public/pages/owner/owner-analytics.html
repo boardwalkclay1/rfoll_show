@@ -2,35 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Owner Analytics • Roll Show</title>
-  <link rel="stylesheet" href="/css/global.css" />
-  <link rel="stylesheet" href="/css/owner.css" />
+  <title>Owner • Analytics</title>
+  <link rel="icon" href="/favicon.png" />
+  <link rel="stylesheet" href="/app/styles/styles.css" />
+  <link rel="stylesheet" href="/pages/owner/css/owner.css" />
+  <style>
+    .bg-landing { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: cover; filter: brightness(0.35); z-index: -2; }
+    .owner-shell { padding: 30px; max-width: 1500px; margin: 0 auto; color: white; }
+    .page-header h1 { font-size: 36px; font-weight: 800; margin-bottom: 5px; }
+    .page-header p { opacity: 0.8; margin-bottom: 25px; }
+    .section-title { margin: 25px 0 10px; font-size: 22px; font-weight: 700; border-left: 4px solid gold; padding-left: 10px; }
+    .panel { background: rgba(0,0,0,0.55); border-radius: 12px; border: 1px solid rgba(255,255,255,0.25); padding: 18px; backdrop-filter: blur(6px); }
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+    .chart-box { min-height: 220px; }
+    .chart-title { font-size: 14px; opacity: 0.8; margin-bottom: 8px; }
+    .chart-placeholder { border-radius: 10px; border: 1px dashed rgba(255,255,255,0.3); height: 180px; display: flex; align-items: center; justify-content: center; opacity: 0.7; font-size: 13px; }
+    .filters { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filters select { padding: 8px 10px; border-radius: 6px; border: none; }
+  </style>
 </head>
-
-<body class="bg-owner">
+<body>
+  <img src="/favicon.png" class="bg-landing" alt="Background" />
 
   <div class="owner-shell">
-
     <header class="page-header">
-      <h1>Platform Analytics</h1>
+      <h1>Analytics</h1>
+      <p>Deep metrics across users, shows, and revenue.</p>
     </header>
 
-    <main class="owner-main grid-2">
+    <h2 class="section-title">Time Range</h2>
+    <div class="panel">
+      <div class="filters">
+        <select id="analyticsRange">
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="90d">Last 90 days</option>
+          <option value="365d">Last 12 months</option>
+        </select>
+      </div>
+    </div>
 
-      <section class="owner-section">
-        <h2>Traffic</h2>
-        <div id="analytics-traffic" class="chart-box"></div>
-      </section>
-
-      <section class="owner-section">
-        <h2>Engagement</h2>
-        <div id="analytics-engagement" class="chart-box"></div>
-      </section>
-
-    </main>
-
+    <h2 class="section-title">Charts</h2>
+    <div class="charts-grid">
+      <div class="panel chart-box">
+        <div class="chart-title">User Growth</div>
+        <div id="chartUsers" class="chart-placeholder">User growth chart (JS renders data).</div>
+      </div>
+      <div class="panel chart-box">
+        <div class="chart-title">Ticket Sales</div>
+        <div id="chartTickets" class="chart-placeholder">Ticket sales chart (JS renders data).</div>
+      </div>
+      <div class="panel chart-box">
+        <div class="chart-title">Revenue Over Time</div>
+        <div id="chartRevenue" class="chart-placeholder">Revenue chart (JS renders data).</div>
+      </div>
+      <div class="panel chart-box">
+        <div class="chart-title">Active Shows</div>
+        <div id="chartShows" class="chart-placeholder">Shows chart (JS renders data).</div>
+      </div>
+    </div>
   </div>
 
-  <script type="module" src="/js/owner/owner-analytics.js"></script>
+  <script type="module" src="/app/js/owner/owner-analytics.js"></script>
 </body>
 </html>
