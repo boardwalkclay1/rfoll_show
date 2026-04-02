@@ -3,8 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <title>Owner Dashboard • Roll Show</title>
+
+  <!-- FAVICON (your platform standard) -->
+  <link rel="icon" href="/favicon.ico" />
+
+  <!-- GLOBAL + OWNER CSS -->
   <link rel="stylesheet" href="/css/global.css" />
   <link rel="stylesheet" href="/css/owner.css" />
+
+  <!-- BACKGROUND (your platform standard) -->
+  <style>
+    body.bg-owner {
+      background: url('/public/favicon.ico') no-repeat center center fixed;
+      background-size: cover;
+    }
+  </style>
 </head>
 
 <body class="bg-owner">
@@ -16,27 +29,15 @@
       <p>Platform-wide metrics, activity, and controls.</p>
     </header>
 
-    <main class="owner-main grid-3">
+    <main class="owner-main">
 
-      <!-- USERS -->
-      <section class="owner-section">
-        <h2>Users</h2>
-        <div id="owner-users" class="stats-box"></div>
+      <!-- OVERVIEW GRID -->
+      <section class="owner-section full-width">
+        <h2>Platform Overview</h2>
+        <div id="overview-grid" class="overview-grid"></div>
       </section>
 
-      <!-- SHOWS -->
-      <section class="owner-section">
-        <h2>Shows</h2>
-        <div id="owner-shows" class="stats-box"></div>
-      </section>
-
-      <!-- REVENUE -->
-      <section class="owner-section">
-        <h2>Revenue</h2>
-        <div id="owner-revenue" class="stats-box"></div>
-      </section>
-
-      <!-- MIGRATIONS -->
+      <!-- MIGRATION RUNNER -->
       <section class="owner-section full-width">
         <h2>Database Tools</h2>
 
@@ -51,33 +52,63 @@
 
   </div>
 
+  <!-- INLINE JS (NO BROKEN PATHS) -->
   <script type="module">
     /* ============================================================
-       OWNER DASHBOARD JS
+       LOAD OWNER OVERVIEW
     ============================================================ */
+    async function loadOwnerOverview() {
+      const user = JSON.parse(localStorage.getItem("rollshow_user"));
+      if (!user) return;
 
-    // Load basic stats (placeholder — your existing JS can fill this)
-    async function loadOwnerStats() {
-      const res = await fetch("/api/owner/overview?owner=1&user=" + localStorage.getItem("user_id"));
+      const res = await fetch(`/api/owner/overview?owner=1&user=${user.id}`);
+
+      if (!res.ok) {
+        console.error("Owner API failed:", await res.text());
+        return;
+      }
+
       const data = await res.json();
+      const grid = document.getElementById("overview-grid");
 
-      document.getElementById("owner-users").innerHTML = "Loading…";
-      document.getElementById("owner-shows").innerHTML = "Loading…";
-      document.getElementById("owner-revenue").innerHTML = "Loading…";
+      const items = [
+        { label: "Total Users", value: data.total_users },
+        { label: "Skaters", value: data.total_skaters },
+        { label: "Businesses", value: data.total_businesses },
+        { label: "Musicians", value: data.total_musicians },
+        { label: "Shows", value: data.total_shows },
+        { label: "Tickets Sold", value: data.total_tickets },
+        { label: "Purchases", value: data.total_purchases },
+        { label: "Revenue", value: "$" + data.total_revenue }
+      ];
+
+      grid.innerHTML = "";
+
+      items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <h3>${item.label}</h3>
+          <p>${item.value}</p>
+        `;
+        grid.appendChild(card);
+      });
     }
 
-    loadOwnerStats();
+    loadOwnerOverview();
+
 
     /* ============================================================
        RUN MIGRATIONS BUTTON
     ============================================================ */
     document.getElementById("runMigrationsBtn").addEventListener("click", async () => {
-      const userId = localStorage.getItem("user_id");
+      const user = JSON.parse(localStorage.getItem("rollshow_user"));
+      if (!user) return;
 
       document.getElementById("migrationResult").innerHTML =
         "<p>Running migrations…</p>";
 
-      const res = await fetch(`/api/owner/run-migrations?owner=1&user=${userId}`, {
+      const res = await fetch(`/api/owner/run-migrations?owner=1&user=${user.id}`, {
         method: "POST"
       });
 
