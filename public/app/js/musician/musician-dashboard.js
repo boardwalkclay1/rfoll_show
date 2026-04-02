@@ -58,3 +58,14 @@ function renderMessages(msgs) {
 }
 
 loadMusicianDashboard();
+// REMOVE LOADING SCREEN WHEN DASHBOARD IS READY
+function hideMusicianLoader() {
+  const loader = document.getElementById("musician-loading");
+  if (loader) loader.classList.add("rs-hidden");
+}
+
+// Run when everything is loaded
+window.addEventListener("DOMContentLoaded", () => {
+  // Give the UI a moment to render
+  setTimeout(hideMusicianLoader, 300);
+});
