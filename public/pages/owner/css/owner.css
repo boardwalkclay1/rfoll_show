@@ -194,3 +194,25 @@
     margin-left: 260px;
   }
 }
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  margin: 40px 0;
+}
+
+.tile {
+  background: rgba(0,0,0,0.55);
+  padding: 30px;
+  border-radius: 14px;
+  text-align: center;
+  color: white;
+  text-decoration: none;
+  backdrop-filter: blur(6px);
+  transition: 0.2s;
+}
+
+.tile:hover {
+  background: rgba(0,0,0,0.75);
+  transform: scale(1.03);
+}
