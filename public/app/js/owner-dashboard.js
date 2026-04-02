@@ -2,9 +2,7 @@ async function loadOwnerOverview() {
   const user = JSON.parse(localStorage.getItem("rollshow_user"));
   if (!user) return;
 
-  const res = await fetch("/api/owner/overview", {
-    headers: { "x-owner-id": user.id }
-  });
+  const res = await fetch(`/api/owner/overview?owner=1&user=${user.id}`);
 
   if (!res.ok) {
     console.error("Owner API failed:", await res.text());
@@ -39,3 +37,21 @@ async function loadOwnerOverview() {
 }
 
 loadOwnerOverview();
+
+document.getElementById("runMigrationsBtn").addEventListener("click", async () => {
+  const user = JSON.parse(localStorage.getItem("rollshow_user"));
+  if (!user) return;
+
+  const output = document.getElementById("migrationResult");
+  output.innerHTML = "<p>Running migrations…</p>";
+
+  const res = await fetch(`/api/owner/run-migrations?owner=1&user=${user.id}`, {
+    method: "POST"
+  });
+
+  const data = await res.json();
+
+  output.innerHTML = `
+    <pre>${JSON.stringify(data, null, 2)}</pre>
+  `;
+});
