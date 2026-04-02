@@ -269,52 +269,56 @@
       color: rgba(255,255,255,0.8);
     }
 
-    /* LOADING OVERLAY WITH MUSIC NOTES */
-    .rs-loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 55%),
-                  rgba(0,0,0,0.75);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      z-index: 50;
-      color: #fff;
-      font-size: 14px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
+   /* LOADING OVERLAY WITH MUSIC NOTES — FINAL VERSION */
+.rs-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, rgba(255,255,255,0.08), transparent 55%),
+              rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 9999;
+  color: #fff;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 
-    .rs-loading-notes {
-      font-size: 32px;
-      margin-bottom: 10px;
-      animation: rs-notes 1.2s infinite ease-in-out;
-    }
+  /* fade-out support */
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
 
-    @keyframes rs-notes {
-      0% { transform: translateY(0); opacity: 0.4; }
-      50% { transform: translateY(-6px); opacity: 1; }
-      100% { transform: translateY(0); opacity: 0.4; }
-    }
+.rs-loading-notes {
+  font-size: 32px;
+  margin-bottom: 10px;
+  animation: rs-notes 1.2s infinite ease-in-out;
+}
 
-    .rs-loading-overlay.rs-hidden {
-      display: none;
-    }
+@keyframes rs-notes {
+  0% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(-6px); opacity: 1; }
+  100% { transform: translateY(0); opacity: 0.4; }
+}
 
-    /* RESPONSIVE */
-    @media (max-width: 900px) {
-      .rs-dash-shell {
-        margin-top: 80px;
-      }
-      .rs-dash-grid {
-        grid-template-columns: minmax(0, 1fr);
-      }
-    }
-  </style>
-</head>
+/* JS adds this when data is ready */
+.rs-loading-overlay.rs-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
 
-<body class="rs-body">
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .rs-dash-shell {
+    margin-top: 80px;
+  }
+  .rs-dash-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 
   <!-- BACKGROUND -->
   <img src="/app/images/backs/Roll-music.jpg" class="bg-landing" alt="Background">
