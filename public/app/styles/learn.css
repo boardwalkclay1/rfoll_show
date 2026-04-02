@@ -1,0 +1,324 @@
+/* ========== BASE RESET ========== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "Helvetica Neue", Arial, sans-serif;
+  color: #ffffff;
+}
+
+/* No default blue/purple links ever */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ========== GENERIC LEARN LAYOUT ========== */
+
+.learn-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 120px 20px 60px;
+  text-align: center;
+}
+
+.learn-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+
+.learn-subtitle {
+  font-size: 17px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  opacity: 0.9;
+}
+
+.learn-text {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 18px;
+  opacity: 0.95;
+}
+
+.learn-list {
+  text-align: left;
+  margin: 20px 0 28px;
+  padding-left: 20px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.learn-list li {
+  margin-bottom: 8px;
+}
+
+/* ========== BACK BUTTON (TOP LEFT) ========== */
+
+.learn-back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  backdrop-filter: blur(6px);
+  transition: background 0.2s, transform 0.2s;
+  z-index: 10;
+}
+
+.learn-back:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: translateY(-1px);
+}
+
+/* ========== BUTTONS (GLOBAL STYLE) ========== */
+
+.learn-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Primary CTA */
+.learn-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+/* Secondary / ghost CTA */
+.learn-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+/* Hover motion */
+.learn-btn-primary:hover,
+.learn-btn-ghost:hover {
+  transform: translateY(-1px);
+}
+
+/* ========== ROLE THEMES (COLORS ONLY) ========== */
+/* Attach these to <body> or a top wrapper: 
+   .learn-main, .learn-musician, .learn-business, .learn-skater, .learn-buyer
+*/
+
+/* MAIN / GENERIC (white & black) */
+.learn-main .learn-shell,
+.learn-skater .learn-shell {
+  color: #ffffff;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
+}
+
+.learn-main .learn-title,
+.learn-skater .learn-title {
+  color: #ffffff;
+}
+
+.learn-main .learn-btn-primary,
+.learn-skater .learn-btn-primary {
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.learn-main .learn-btn-primary:hover,
+.learn-skater .learn-btn-primary:hover {
+  background: #f5f5f5;
+}
+
+.learn-main .learn-btn-ghost,
+.learn-skater .learn-btn-ghost {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.learn-main .learn-btn-ghost:hover,
+.learn-skater .learn-btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+/* MUSICIAN — PURPLE */
+.learn-musician .learn-shell {
+  color: #f7e9ff;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
+}
+
+.learn-musician .learn-title {
+  color: #fbe6ff;
+}
+
+.learn-musician .learn-btn-primary {
+  background: #a200ff;
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(162, 0, 255, 0.6);
+}
+
+.learn-musician .learn-btn-primary:hover {
+  background: #bb33ff;
+}
+
+.learn-musician .learn-btn-ghost {
+  color: #f7e9ff;
+  border-color: rgba(247, 233, 255, 0.7);
+  background: rgba(10, 0, 20, 0.6);
+}
+
+.learn-musician .learn-btn-ghost:hover {
+  background: rgba(10, 0, 20, 0.9);
+}
+
+/* BUSINESS — GOLD */
+.learn-business .learn-shell {
+  color: #fff7dd;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
+}
+
+.learn-business .learn-title {
+  color: #ffe9a3;
+}
+
+.learn-business .learn-btn-primary {
+  background: #f5b400;
+  color: #1a1200;
+  box-shadow: 0 10px 30px rgba(245, 180, 0, 0.6);
+}
+
+.learn-business .learn-btn-primary:hover {
+  background: #ffca33;
+}
+
+.learn-business .learn-btn-ghost {
+  color: #ffe9a3;
+  border-color: rgba(255, 233, 163, 0.8);
+  background: rgba(15, 8, 0, 0.7);
+}
+
+.learn-business .learn-btn-ghost:hover {
+  background: rgba(15, 8, 0, 0.95);
+}
+
+/* BUYER — TICKET STYLE */
+.learn-buyer .learn-shell {
+  color: #ffffff;
+  text-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
+}
+
+/* Ticket container for main CTA */
+.learn-buyer .ticket-cta {
+  position: relative;
+  margin-top: 26px;
+  padding: 14px 20px;
+  border-radius: 16px;
+  background: #ff0050;
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(255, 0, 80, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Perforation effect */
+.learn-buyer .ticket-cta::before,
+.learn-buyer .ticket-cta::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #000000;
+  transform: translateY(-50%);
+}
+
+.learn-buyer .ticket-cta::before {
+  left: -7px;
+}
+
+.learn-buyer .ticket-cta::after {
+  right: -7px;
+}
+
+.learn-buyer .ticket-label {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.learn-buyer .ticket-main {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Secondary buyer button */
+.learn-buyer .learn-btn-ghost {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.learn-buyer .learn-btn-ghost:hover {
+  background: rgba(0, 0, 0, 0.85);
+}
+
+/* ========== MOBILE TWEAKS ========== */
+
+@media (max-width: 600px) {
+  .learn-shell {
+    padding-top: 96px;
+    transform: scale(1.05);
+    transform-origin: top center;
+  }
+
+  .learn-back {
+    top: 14px;
+    left: 14px;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+}
