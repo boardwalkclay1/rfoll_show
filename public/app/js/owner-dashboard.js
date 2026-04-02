@@ -1,57 +1,86 @@
-async function loadOwnerOverview() {
-  const user = JSON.parse(localStorage.getItem("rollshow_user"));
-  if (!user) return;
+// OWNER DASHBOARD JS
+// - Burger toggle
+// - Overview stats
+// - Run migrations button
 
-  const res = await fetch(`/api/owner/overview?owner=1&user=${user.id}`);
+document.addEventListener("DOMContentLoaded", () => {
+  setupBurger();
+  loadOverviewStats();
+  wireMigrations();
+});
 
-  if (!res.ok) {
-    console.error("Owner API failed:", await res.text());
-    return;
-  }
+function setupBurger() {
+  const burger = document.querySelector(".burger");
+  const sidebar = document.querySelector(".sidebar");
+  if (!burger || !sidebar) return;
 
-  const data = await res.json();
-  const grid = document.getElementById("overview-grid");
-
-  const items = [
-    { label: "Total Users", value: data.total_users },
-    { label: "Skaters", value: data.total_skaters },
-    { label: "Businesses", value: data.total_businesses },
-    { label: "Musicians", value: data.total_musicians },
-    { label: "Shows", value: data.total_shows },
-    { label: "Tickets Sold", value: data.total_tickets },
-    { label: "Purchases", value: data.total_purchases },
-    { label: "Revenue", value: "$" + data.total_revenue }
-  ];
-
-  grid.innerHTML = "";
-
-  items.forEach(item => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.innerHTML = `
-      <h3>${item.label}</h3>
-      <p>${item.value}</p>
-    `;
-    grid.appendChild(card);
+  burger.addEventListener("click", () => {
+    sidebar.classList.toggle("active");
   });
 }
 
-loadOwnerOverview();
+async function loadOverviewStats() {
+  const container = document.getElementById("overview-grid");
+  if (!container) return;
 
-document.getElementById("runMigrationsBtn").addEventListener("click", async () => {
-  const user = JSON.parse(localStorage.getItem("rollshow_user"));
-  if (!user) return;
+  container.innerHTML = `<div class="stat-card"><div class="stat-label">Loading</div><div class="stat-value">...</div></div>`;
 
+  try {
+    // Adjust endpoint to whatever your Worker exposes
+    const res = await fetch("/owner/overview", { method: "GET" });
+    if (!res.ok) throw new Error("Bad response");
+    const data = await res.json();
+
+    const stats = [
+      { label: "Total Users", value: data.totalUsers },
+      { label: "Skaters", value: data.totalSkaters },
+      { label: "Businesses", value: data.totalBusinesses },
+      { label: "Musicians", value: data.totalMusicians },
+      { label: "Active Shows", value: data.activeShows },
+      { label: "Pending Apps", value: data.pendingApplications },
+    ].filter(s => s.value !== undefined);
+
+    if (!stats.length) {
+      container.innerHTML = `<div class="stat-card"><div class="stat-label">No Data</div><div class="stat-value">—</div></div>`;
+      return;
+    }
+
+    container.innerHTML = "";
+    stats.forEach(stat => {
+      const card = document.createElement("div");
+      card.className = "stat-card";
+      card.innerHTML = `
+        <div class="stat-label">${stat.label}</div>
+        <div class="stat-value">${stat.value}</div>
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    container.innerHTML = `<div class="stat-card"><div class="stat-label">Error</div><div class="stat-value">!</div></div>`;
+  }
+}
+
+function wireMigrations() {
+  const btn = document.getElementById("runMigrationsBtn");
   const output = document.getElementById("migrationResult");
-  output.innerHTML = "<p>Running migrations…</p>";
+  if (!btn || !output) return;
 
-  const res = await fetch(`/api/owner/run-migrations?owner=1&user=${user.id}`, {
-    method: "POST"
+  btn.addEventListener("click", async () => {
+    output.textContent = "Running migrations...";
+    btn.disabled = true;
+
+    try {
+      // Adjust endpoint to your existing migration route
+      const res = await fetch("/owner/run-migrations", {
+        method: "POST",
+      });
+
+      const text = await res.text();
+      output.textContent = text || "Migrations completed.";
+    } catch (err) {
+      output.textContent = "Error running migrations.";
+    } finally {
+      btn.disabled = false;
+    }
   });
-
-  const data = await res.json();
-
-  output.innerHTML = `
-    <pre>${JSON.stringify(data, null, 2)}</pre>
-  `;
-});
+}
