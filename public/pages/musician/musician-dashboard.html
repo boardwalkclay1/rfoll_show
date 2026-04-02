@@ -8,12 +8,85 @@
   <link rel="icon" href="/app/images/favicon.png">
   <link rel="stylesheet" href="/app/styles/styles.css">
   <link rel="stylesheet" href="/app/styles/dashboard.css">
+
+  <style>
+    /* LIGHT PURPLE DASHBOARD ACCENTS */
+    .rs-dash-musician .rs-dash-header,
+    .rs-dash-musician .rs-dash-card {
+      background: rgba(120, 60, 180, 0.45); /* translucent purple */
+      border: 1px solid rgba(255,255,255,0.25);
+      backdrop-filter: blur(6px);
+    }
+
+    .rs-dash-musician .rs-dash-title {
+      color: #f3d9ff; /* soft lavender */
+    }
+
+    .rs-dash-musician .rs-dash-sub {
+      color: #e8caff;
+    }
+
+    .rs-dash-musician .rs-dash-pill {
+      background: #b46cff;
+      border: 2px solid #000;
+      color: #fff;
+    }
+
+    .rs-dash-musician .rs-dash-pill:hover {
+      background: #c98aff;
+    }
+
+    /* TOP NAVIGATION — ROLL SHOW STYLE */
+    .rs-top-nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: center;
+      gap: 22px;
+      z-index: 20;
+      background: rgba(0,0,0,0.45);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+    }
+
+    .rs-top-nav a {
+      color: #fff;
+      font-family: "Dancing Script", cursive;
+      font-size: 24px;
+      text-decoration: none;
+      padding: 6px 12px;
+      transition: 0.2s;
+    }
+
+    .rs-top-nav a:hover {
+      color: #ffd8ff;
+      transform: translateY(-2px);
+    }
+  </style>
+
+  <!-- CURSIVE FONT -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+
 </head>
 
 <body class="rs-body">
 
-  <!-- FULLSCREEN CINEMATIC BACKGROUND (GOOD VERSION) -->
+  <!-- BACKGROUND -->
   <img src="/app/images/backs/Roll-music.jpg" class="bg-landing" alt="Background">
+
+  <!-- TOP NAVIGATION (ROLL SHOW STYLE) -->
+  <nav class="rs-top-nav">
+    <a href="/pages/skater/skater-dashboard.html">🛹🛼 Skater</a>
+    <a href="/pages/musician/musician-dashboard.html">🎤🎵 Artist</a>
+    <a href="/pages/business/business-dashboard.html">💼 Business</a>
+    <a href="/pages/buyer/buyer-dashboard.html">🎫✨ Buyer</a>
+    <a href="/pages/owner/owner-dashboard.html">👑 Owner</a>
+  </nav>
 
   <main class="rs-dash-shell rs-dash-musician">
 
