@@ -1,86 +1,51 @@
-// OWNER DASHBOARD JS
-// - Burger toggle
-// - Overview stats
-// - Run migrations button
+// /app/js/owner-dashboard.js
+import API from "/app/js/api.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-  setupBurger();
-  loadOverviewStats();
-  wireMigrations();
-});
+const analyticsEl = document.getElementById("analytics");
+const runBtn = document.getElementById("runMigrationsBtn");
+const resultEl = document.getElementById("migrationResult");
 
-function setupBurger() {
-  const burger = document.querySelector(".burger");
-  const sidebar = document.querySelector(".sidebar");
-  if (!burger || !sidebar) return;
+async function loadAnalytics() {
+  const res = await API.get("/api/owner/overview");
 
-  burger.addEventListener("click", () => {
-    sidebar.classList.toggle("active");
-  });
+  if (!res.success || !res.data) {
+    analyticsEl.innerHTML = `<p>Error loading analytics</p>`;
+    return;
+  }
+
+  const stats = res.data;
+
+  const cards = [
+    { label: "Total Users", value: stats.total_users },
+    { label: "Skaters", value: stats.total_skaters },
+    { label: "Businesses", value: stats.total_businesses },
+    { label: "Musicians", value: stats.total_musicians },
+    { label: "Tickets Sold", value: stats.tickets_sold },
+    { label: "Revenue", value: `$${stats.revenue}` },
+    { label: "Active Shows", value: stats.active_shows },
+    { label: "Pending Verifications", value: stats.pending_verifications }
+  ];
+
+  analyticsEl.innerHTML = cards.map(c => `
+    <div class="card">
+      <h3>${c.label}</h3>
+      <div class="value">${c.value}</div>
+    </div>
+  `).join("");
 }
 
-async function loadOverviewStats() {
-  const container = document.getElementById("overview-grid");
-  if (!container) return;
+async function runMigrations() {
+  resultEl.textContent = "Running migrations...";
 
-  container.innerHTML = `<div class="stat-card"><div class="stat-label">Loading</div><div class="stat-value">...</div></div>`;
+  const res = await API.post("/api/owner/run-migrations");
 
-  try {
-    // Adjust endpoint to whatever your Worker exposes
-    const res = await fetch("/owner/overview", { method: "GET" });
-    if (!res.ok) throw new Error("Bad response");
-    const data = await res.json();
-
-    const stats = [
-      { label: "Total Users", value: data.totalUsers },
-      { label: "Skaters", value: data.totalSkaters },
-      { label: "Businesses", value: data.totalBusinesses },
-      { label: "Musicians", value: data.totalMusicians },
-      { label: "Active Shows", value: data.activeShows },
-      { label: "Pending Apps", value: data.pendingApplications },
-    ].filter(s => s.value !== undefined);
-
-    if (!stats.length) {
-      container.innerHTML = `<div class="stat-card"><div class="stat-label">No Data</div><div class="stat-value">—</div></div>`;
-      return;
-    }
-
-    container.innerHTML = "";
-    stats.forEach(stat => {
-      const card = document.createElement("div");
-      card.className = "stat-card";
-      card.innerHTML = `
-        <div class="stat-label">${stat.label}</div>
-        <div class="stat-value">${stat.value}</div>
-      `;
-      container.appendChild(card);
-    });
-  } catch (err) {
-    container.innerHTML = `<div class="stat-card"><div class="stat-label">Error</div><div class="stat-value">!</div></div>`;
+  if (res.success) {
+    resultEl.textContent = res.data.output || "Migrations complete.";
+  } else {
+    resultEl.textContent = res.error?.message || "Migration failed.";
   }
 }
 
-function wireMigrations() {
-  const btn = document.getElementById("runMigrationsBtn");
-  const output = document.getElementById("migrationResult");
-  if (!btn || !output) return;
+runBtn.addEventListener("click", runMigrations);
 
-  btn.addEventListener("click", async () => {
-    output.textContent = "Running migrations...";
-    btn.disabled = true;
-
-    try {
-      // Adjust endpoint to your existing migration route
-      const res = await fetch("/owner/run-migrations", {
-        method: "POST",
-      });
-
-      const text = await res.text();
-      output.textContent = text || "Migrations completed.";
-    } catch (err) {
-      output.textContent = "Error running migrations.";
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
+loadAnalytics();
