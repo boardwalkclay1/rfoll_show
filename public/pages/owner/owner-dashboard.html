@@ -18,25 +18,76 @@
 
     <main class="owner-main grid-3">
 
+      <!-- USERS -->
       <section class="owner-section">
         <h2>Users</h2>
         <div id="owner-users" class="stats-box"></div>
       </section>
 
+      <!-- SHOWS -->
       <section class="owner-section">
         <h2>Shows</h2>
         <div id="owner-shows" class="stats-box"></div>
       </section>
 
+      <!-- REVENUE -->
       <section class="owner-section">
         <h2>Revenue</h2>
         <div id="owner-revenue" class="stats-box"></div>
+      </section>
+
+      <!-- MIGRATIONS -->
+      <section class="owner-section full-width">
+        <h2>Database Tools</h2>
+
+        <button id="runMigrationsBtn" class="danger-btn">
+          Run All Migrations
+        </button>
+
+        <div id="migrationResult" class="migration-output"></div>
       </section>
 
     </main>
 
   </div>
 
-  <script type="module" src="/js/owner/owner-dashboard.js"></script>
+  <script type="module">
+    /* ============================================================
+       OWNER DASHBOARD JS
+    ============================================================ */
+
+    // Load basic stats (placeholder — your existing JS can fill this)
+    async function loadOwnerStats() {
+      const res = await fetch("/api/owner/overview?owner=1&user=" + localStorage.getItem("user_id"));
+      const data = await res.json();
+
+      document.getElementById("owner-users").innerHTML = "Loading…";
+      document.getElementById("owner-shows").innerHTML = "Loading…";
+      document.getElementById("owner-revenue").innerHTML = "Loading…";
+    }
+
+    loadOwnerStats();
+
+    /* ============================================================
+       RUN MIGRATIONS BUTTON
+    ============================================================ */
+    document.getElementById("runMigrationsBtn").addEventListener("click", async () => {
+      const userId = localStorage.getItem("user_id");
+
+      document.getElementById("migrationResult").innerHTML =
+        "<p>Running migrations…</p>";
+
+      const res = await fetch(`/api/owner/run-migrations?owner=1&user=${userId}`, {
+        method: "POST"
+      });
+
+      const data = await res.json();
+
+      document.getElementById("migrationResult").innerHTML = `
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      `;
+    });
+  </script>
+
 </body>
 </html>
