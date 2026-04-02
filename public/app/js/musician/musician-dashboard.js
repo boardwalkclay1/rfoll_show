@@ -1,5 +1,5 @@
 // /app/js/musician/musician-dashboard.js
-import { apiGet } from "/app/js/utils.js";
+import { apiGet } from "/app/js/api.js";
 
 /* ============================================================
    DOM HELPERS
@@ -134,24 +134,29 @@ function renderProfile(profile) {
 ============================================================ */
 async function loadMusicianDashboard() {
   try {
-    // AUTH
-    const me = await apiGet("/api/auth/me");
+    const userRaw = localStorage.getItem("user");
+    if (!userRaw) {
+      window.location.href = "/login.html";
+      return;
+    }
+
+    const user = JSON.parse(userRaw);
+
+    const me = await apiGet("/api/auth/me", user);
     if (!me || me.role !== "musician") {
       window.location.href = "/login.html";
       return;
     }
 
-    // Basic name fallback
     setText("artist-name", me.name || me.email || "Artist");
 
-    // PARALLEL LOADS
     const [profileRes, tracksRes, collabsRes, messagesRes, licensesRes] =
       await Promise.allSettled([
-        apiGet("/api/musician/profile"),
-        apiGet("/api/musician/tracks"),
-        apiGet("/api/musician/collabs"),
-        apiGet("/api/musician/messages"),
-        apiGet("/api/musician/licenses"),
+        apiGet("/api/musician/profile", user),
+        apiGet("/api/musician/tracks", user),
+        apiGet("/api/musician/collabs", user),
+        apiGet("/api/musician/messages", user),
+        apiGet("/api/musician/licenses", user),
       ]);
 
     const profile =
@@ -170,6 +175,7 @@ async function loadMusicianDashboard() {
     renderLicenses(licenses);
     renderCollabs(collabs);
     renderMessages(messages);
+
   } catch (err) {
     console.error("Musician Dashboard Error:", err);
     const statusEl = $("artist-status");
