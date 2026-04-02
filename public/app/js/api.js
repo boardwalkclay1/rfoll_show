@@ -1,4 +1,4 @@
-// js/api.js — FINAL UNIFIED API CLIENT WITH REAL-TIME POLLING
+// js/api.js — FINAL UNIFIED API CLIENT
 
 const API_BASE = "https://rollshow.boardwalkclay1.workers.dev";
 
@@ -9,12 +9,13 @@ async function safeJson(res) {
   const text = await res.text();
   const type = res.headers.get("content-type") || "";
 
+  // Worker sometimes returns HTML on errors → catch it
   if (!type.includes("application/json")) {
     return {
       success: false,
       status: res.status,
       data: null,
-      error: { message: "Non‑JSON response from server" }
+      error: { message: "Server returned non‑JSON response" }
     };
   }
 
@@ -25,7 +26,7 @@ async function safeJson(res) {
       success: false,
       status: res.status,
       data: null,
-      error: { message: "Invalid JSON" }
+      error: { message: "Invalid JSON from server" }
     };
   }
 }
@@ -33,15 +34,17 @@ async function safeJson(res) {
 /* ------------------------------------------------------------
    INTERNAL REQUEST HANDLER
 ------------------------------------------------------------ */
-async function request(method, path, payload, extraHeaders = {}) {
+async function request(method, path, payload = null, extraHeaders = {}) {
   const headers = { ...extraHeaders };
   const options = { method, headers };
 
+  // JSON payload
   if (payload && !(payload instanceof FormData)) {
     headers["Content-Type"] = "application/json";
     options.body = JSON.stringify(payload);
   }
 
+  // FormData payload
   if (payload instanceof FormData) {
     options.body = payload;
   }
@@ -92,6 +95,7 @@ const API = {
     return request("POST", path, formData, headers);
   },
 
+  // Attach user headers to any request
   withUser(user) {
     if (!user || !user.id || !user.role) return {};
     return {
@@ -100,16 +104,16 @@ const API = {
     };
   },
 
-  /**
-   * REAL-TIME POLLING
-   * Usage:
-   *   const stop = API.poll("/api/notifications", {
-   *     interval: 5000,
-   *     headers: API.withUser(user),
-   *     onData: (res) => { ... }
-   *   });
-   *   // later: stop();
-   */
+  /* ------------------------------------------------------------
+     REAL-TIME POLLING
+     Usage:
+       const stop = API.poll("/api/notifications", {
+         interval: 5000,
+         headers: API.withUser(user),
+         onData: (res) => { ... }
+       });
+       // later: stop();
+  ------------------------------------------------------------ */
   poll(path, { interval = 5000, headers = {}, onData } = {}) {
     let stopped = false;
 
