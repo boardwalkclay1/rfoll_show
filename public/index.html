@@ -14,7 +14,18 @@
   <link rel="stylesheet" href="/app/styles/landing.css">
 
   <style>
-    /* LEARN MORE BUTTON (HEADER) */
+    /* GLOBAL CURSIVE FONT FOR ALL BUTTONS */
+    .btn-ticket-main,
+    .btn-ticket-ghost,
+    .btn-skater-main,
+    .btn-skater-ghost,
+    .btn-side,
+    .btn-side-ghost {
+      font-family: "Brush Script MT", cursive !important;
+      letter-spacing: 0.5px;
+    }
+
+    /* HEADER LEARN MORE BUTTON */
     .btn-ticket-ghost {
       display: inline-block;
       padding: 12px 20px;
@@ -24,7 +35,7 @@
       font-weight: 600;
       text-decoration: none;
       backdrop-filter: blur(6px);
-      border: 1px solid rgba(255,255,255,0.25);
+      border: 2px solid rgba(255,255,255,0.35);
       transition: 0.2s;
     }
     .btn-ticket-ghost:hover {
@@ -36,58 +47,82 @@
        ARTIST ENTRY — DEEP RED + BLACK
     ============================================================ */
     .side-card:nth-child(1) .btn-side {
-      background: #7a0000; /* deep red */
+      background: #7a0000;
       color: #ffffff;
-      border: 1px solid #000000;
+      border: 2px solid #000000;
     }
     .side-card:nth-child(1) .btn-side:hover {
       background: #a30000;
     }
     .side-card:nth-child(1) .btn-side-ghost {
-      border-color: rgba(255,0,0,0.45);
+      border: 2px solid #7a0000;
       color: #ffb3b3;
-      background: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.45);
     }
     .side-card:nth-child(1) .btn-side-ghost:hover {
-      background: rgba(0,0,0,0.55);
+      background: rgba(0,0,0,0.65);
     }
 
     /* ============================================================
-       BUSINESS ENTRY — GOLD (unchanged from your last request)
+       BUSINESS ENTRY — GOLD
     ============================================================ */
     .side-card:nth-child(2) .btn-side {
       background: #f5b400;
       color: #1a1200;
+      border: 2px solid #1a1200;
     }
     .side-card:nth-child(2) .btn-side:hover {
       background: #ffca33;
     }
     .side-card:nth-child(2) .btn-side-ghost {
-      border-color: rgba(245,180,0,0.6);
+      border: 2px solid #f5b400;
       color: #ffe9a3;
+      background: rgba(0,0,0,0.45);
     }
     .side-card:nth-child(2) .btn-side-ghost:hover {
-      background: rgba(245,180,0,0.25);
+      background: rgba(0,0,0,0.65);
     }
 
     /* ============================================================
-       BUYER ENTRY — YELLOW + BLACK
+       BUYER ENTRY — WHITE + BLACK (MAIN) + YELLOW/BLACK (GHOST)
     ============================================================ */
     .side-card:nth-child(3) .btn-side {
-      background: #ffd500; /* bright ticket yellow */
+      background: #ffffff;
       color: #000000;
-      border: 1px solid #000000;
+      border: 2px solid #000000;
     }
     .side-card:nth-child(3) .btn-side:hover {
-      background: #ffea4d;
+      background: #f2f2f2;
     }
+
     .side-card:nth-child(3) .btn-side-ghost {
-      border-color: rgba(255,213,0,0.6);
+      border: 2px solid #ffd500;
       color: #fff7b3;
-      background: rgba(0,0,0,0.35);
+      background: rgba(0,0,0,0.45);
     }
     .side-card:nth-child(3) .btn-side-ghost:hover {
-      background: rgba(0,0,0,0.55);
+      background: rgba(0,0,0,0.65);
+    }
+
+    /* ============================================================
+       SKATER BUTTON — DO NOT TURN YELLOW EVER
+    ============================================================ */
+    .btn-skater-main {
+      background: #ffffff;
+      color: #000000;
+      border: 2px solid #000000;
+    }
+    .btn-skater-main:hover {
+      background: #e6e6e6; /* stays white/gray — NEVER yellow */
+    }
+
+    .btn-skater-ghost {
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      background: rgba(0,0,0,0.45);
+    }
+    .btn-skater-ghost:hover {
+      background: rgba(0,0,0,0.65);
     }
   </style>
 </head>
@@ -165,7 +200,7 @@
           <a href="/pages/auth-login.html?role=business" class="btn-side-ghost">Login</a>
         </div>
 
-        <!-- BUYER (YELLOW + BLACK) -->
+        <!-- BUYER (WHITE + BLACK MAIN, YELLOW/BLACK GHOST) -->
         <div class="side-card">
           <h3>Ticket Buyer</h3>
           <p>Watch shows and support the culture.</p>
