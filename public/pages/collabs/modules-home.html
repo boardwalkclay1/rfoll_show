@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Modules</title>
+
+  <link rel="icon" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/modules.css" />
+
+  <style>
+    :root {
+      --modules-bg-image: url('/assets/backgrounds/modules-bg.jpg');
+    }
+
+    body.modules-home-page {
+      background-image: var(--modules-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .modules-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .modules-main {
+      flex: 1;
+      padding: 1rem 1.5rem 5rem;
+    }
+
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill,minmax(160px,1fr));
+      gap: 1rem;
+    }
+
+    .module-tile {
+      background: rgba(255,255,255,0.05);
+      border-radius: 14px;
+      padding: 1rem;
+      border: 1px solid rgba(255,255,255,0.08);
+      cursor: pointer;
+      transition: 0.15s ease-out;
+    }
+
+    .module-tile:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateY(-2px);
+    }
+
+    .module-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .module-sub {
+      font-size: 0.75rem;
+      opacity: 0.75;
+    }
+  </style>
+</head>
+
+<body class="modules-home-page">
+  <div class="modules-shell">
+
+    <header class="collabs-header">
+      <div class="brand-title">Roll Show · Modules</div>
+      <span class="pill">Dynamic</span>
+    </header>
+
+    <main class="modules-main">
+
+      <div class="modules-grid" id="modules-grid">
+        <div class="module-tile" data-module="flow_sessions">
+          <div class="module-title">Flow Sessions</div>
+          <div class="module-sub">Track your dancer sessions</div>
+        </div>
+
+        <div class="module-tile" data-module="dance_combos">
+          <div class="module-title">Dance Combos</div>
+          <div class="module-sub">Save and organize combos</div>
+        </div>
+
+        <div class="module-tile" data-module="music_sync">
+          <div class="module-title">Music Sync</div>
+          <div class="module-sub">Pair runs with tracks</div>
+        </div>
+
+        <div class="module-tile" data-module="spot_finder">
+          <div class="Clay — I’m on it.  
+I’m going to keep pushing forward with the **next batch of five HTML pages**, all real, all cinematic, all production‑ready, all matching the Roll Show brand, all with:
+
+- favicon  
+- background hook  
+- dashboard.css  
+- category‑specific CSS  
+- clean modular structure  
+- ready for JS wiring later  
+
+You already have:
+
+1. events-list  
+2. event-detail  
+3. event-create  
+4. event-checkin  
+5. collab-offers  
+6. collab-start-inperson  
+7. collab-start-stitch  
+8. collab-session  
+9. collab-result  
+10. modules-home  
+11. module-detail  
+
+Now we continue with the next **FIVE**:
+
+---
+
+# ⭐ NEXT 5 PAGES (12–16)
+
+### 12. `/public/pages/modules/module-flow-sessions.html`  
+### 13. `/public/pages/modules/module-dance-combos.html`  
+### 14. `/public/pages/modules/module-music-sync.html`  
+### 15. `/public/pages/modules/module-spot-finder.html`  
+### 16. `/public/pages/modules/module-dancer-events.html`  
+
+These complete the **core dancer module set**.
+
+Let’s go.
+
+---
+
+# 12️⃣ **module-flow-sessions.html**
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Flow Sessions</title>
+
+  <link rel="icon" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/modules.css" />
+
+  <style>
+    :root {
+      --modules-bg-image: url('/assets/backgrounds/flow-sessions-bg.jpg');
+    }
+
+    body.flow-sessions-page {
+      background-image: var(--modules-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .module-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .module-main {
+      flex: 1;
+      padding: 1rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.2fr);
+      gap: 1.25rem;
+    }
+
+    .panel {
+      background: rgba(10,10,15,0.9);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .session-card {
+      padding: 0.75rem 0.85rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 0.75rem;
+    }
+
+    .session-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .session-meta {
+      font-size: 0.75rem;
+      opacity: 0.75;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg,#ffb86c,#ff6b6b);
+      border: none;
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      color: #0b0b10;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.75rem;
+    }
+  </style>
+</head>
+
+<body class="flow-sessions-page">
+  <div class="module-shell">
+
+    <header class="collabs-header">
+      <div class="brand-title">Roll Show · Flow Sessions</div>
+      <span class="pill">Dancer</span>
+    </header>
+
+    <main class="module-main">
+
+      <section class="panel">
+        <div class="panel-title">Your Sessions</div>
+
+        <div id="flow-sessions-list">
+          <div class="session-card">
+            <div class="session-title">Sunset BeltLine Run</div>
+            <div class="session-meta">Yesterday · 42 minutes · 3 combos logged</div>
+          </div>
+
+          <div class="session-card">
+            <div class="session-title">Morning Flow · Piedmont Park</div>
+            <div class="session-meta">2 days ago · 28 minutes · 1 combo logged</div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="new-session-btn">Start New Session</button>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-title">Session Analytics</div>
+
+        <p style="opacity:0.85; font-size:0.8rem;">
+          Track your dancer sessions over time. Flow Sessions help you build consistency, combos, and cinematic lines.
+        </p>
+
+        <ul style="opacity:0.8; font-size:0.8rem; line-height:1.5;">
+          <li>Session streaks</li>
+          <li>Combo frequency</li>
+          <li>Spot history</li>
+          <li>Time spent dancing</li>
+        </ul>
+      </aside>
+
+    </main>
+
+  </div>
+</body>
+</html>
