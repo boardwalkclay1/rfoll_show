@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Module Detail</title>
+
+  <link rel="icon" type="image/png" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/modules.css" />
+
+  <style>
+    :root {
+      --modules-bg-image: url('/assets/backgrounds/module-detail-bg.jpg');
+    }
+
+    body.module-detail-page {
+      background-image: var(--modules-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .module-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .module-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+    }
+
+    .module-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #ffd29f, #ff7b54, #3b1f2b);
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      opacity: 0.8;
+    }
+
+    .module-main {
+      flex: 1;
+      padding: 1rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.1fr);
+      gap: 1.25rem;
+    }
+
+    .panel {
+      background: rgba(10, 10, 15, 0.9);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+
+    .module-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .module-description {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-bottom: 0.75rem;
+    }
+
+    .module-content {
+      min-height: 260px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      padding: 0.75rem 0.85rem;
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+
+    .sidebar-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .sidebar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+
+    .sidebar-item span {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 0.5rem 1.5rem 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+      backdrop-filter: blur(16px);
+    }
+
+    .bottom-nav-btn {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+
+    .bottom-nav-btn.primary {
+      background: linear-gradient(135deg, #ffb86c, #ff6b6b);
+      border-color: transparent;
+      color: #0b0b10;
+      font-weight: 600;
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body class="module-detail-page">
+  <div class="module-shell">
+    <header class="module-header">
+      <div class="module-header-left">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-title">Roll Show</div>
+          <div style="font-size: 0.75rem; opacity: 0.7;" id="module-breadcrumb">
+            Modules · <span id="module-breadcrumb-name">Flow Sessions</span>
+          </div>
+        </div>
+      </div>
+      <div class="module-header-right">
+        <span class="pill" id="module-role-pill">Skater</span>
+      </div>
+    </header>
+
+    <main class="module-main">
+      <!-- LEFT: Dynamic module content -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Module</div>
+          <span class="pill" id="module-tag-pill">Dynamic</span>
+        </div>
+
+        <h1 class="module-name" id="module-name">Flow Sessions</h1>
+        <p class="module-description" id="module-description">
+          This module tracks your dancer sessions—spots, streaks, and time on board.
+        </p>
+
+        <div class="module-content" id="module-content">
+          <!-- JS will inject module‑specific layout here (tables, cards, charts, etc.) -->
+          Module content goes here.
+        </div>
+      </section>
+
+      <!-- RIGHT: Context / Help -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Module Guide</div>
+          <span class="pill">Context</span>
+        </div>
+
+        <section class="sidebar-section">
+          <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 0.35rem;">What this module does</div>
+          <div class="sidebar-list" id="module-guide-list">
+            <div class="sidebar-item">
+              Purpose
+              <span>Explain what this module is for.</span>
+            </div>
+            <div class="sidebar-item">
+              Inputs
+              <span>What data the module expects (sessions, combos, tracks, etc.).</span>
+            </div>
+            <div class="sidebar-item">
+              Outputs
+              <span>What the module gives back (analytics, views, exports).</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="bottom-nav-btn" id="nav-module-back">Back</button>
+      <button class="bottom-nav-btn primary" id="nav-module-primary">Primary Action</button>
+      <button class="bottom-nav-btn" id="nav-module-secondary">Secondary</button>
+    </nav>
+  </div>
+
+  <!-- JS later: read ?module= from URL, load config, populate name/description/content/guide -->
+</body>
+</html>
