@@ -1,6 +1,5 @@
 // /app/js/buyer/buyer-dashboard.js
-import { apiGet } from "/app/js/api.js";
-
+import API from "/app/js/api.js";
 /* ============================================================
    LOADER CONTROL
 ============================================================ */
