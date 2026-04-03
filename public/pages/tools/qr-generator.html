@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show — QR Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-logo">ROLL SHOW</div>
+      <h1 class="page-title">QR Generator</h1>
+    </header>
+
+    <main class="qr-generator-layout">
+      <!-- LEFT: OPTIONS -->
+      <aside class="qr-options">
+        <h2>Create a QR Code</h2>
+
+        <div class="field">
+          <label>QR Type</label>
+          <select id="qr-type">
+            <option value="profile">My Profile</option>
+            <option value="product">Product</option>
+            <option value="service">Service</option>
+            <option value="event">Event</option>
+            <option value="ticket">Ticket</option>
+            <option value="page">Custom Page</option>
+            <option value="payment">Payment Link</option>
+            <option value="referral">Referral Link</option>
+            <option value="message">Message Request</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Target</label>
+          <select id="qr-target">
+            <!-- dynamically filled based on type -->
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Expiration</label>
+          <select id="qr-expiration">
+            <option value="never">Never</option>
+            <option value="1d">1 Day</option>
+            <option value="7d">7 Days</option>
+            <option value="30d">30 Days</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Tracking</label>
+          <select id="qr-tracking">
+            <option value="none">None</option>
+            <option value="referral">Referral Tracking</option>
+            <option value="analytics">Analytics Only</option>
+          </select>
+        </div>
+
+        <button id="qr-generate-btn" class="btn-primary">Generate QR</button>
+      </aside>
+
+      <!-- RIGHT: QR OUTPUT -->
+      <section class="qr-output">
+        <div id="qr-preview" class="qr-preview hidden">
+          <h2>Your QR Code</h2>
+          <canvas id="qr-canvas"></canvas>
+
+          <div class="qr-actions">
+            <button id="qr-download-btn" class="btn-primary">Download</button>
+            <button id="qr-copy-btn" class="btn-secondary">Copy Link</button>
+          </div>
+
+          <div id="qr-link" class="qr-link"></div>
+        </div>
+
+        <div id="qr-empty" class="qr-empty">
+          <p>Select options and generate a QR code.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="/app/js/qr-generator.js"></script>
+</body>
+</html>
