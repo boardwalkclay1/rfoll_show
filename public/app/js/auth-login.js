@@ -1,4 +1,4 @@
-// auth-login.js — CLEAN REBUILD
+// auth-login.js — FINAL FIXED VERSION
 import API from "./api.js";
 
 const form = document.getElementById("auth-login-form");
@@ -13,7 +13,6 @@ form.addEventListener("submit", async (e) => {
   };
 
   try {
-    // POST to Worker backend
     const res = await API.post("/api/login", payload);
 
     if (!res.success || !res.user) {
@@ -23,16 +22,23 @@ form.addEventListener("submit", async (e) => {
 
     const user = res.user;
 
-    // Save user session
-    localStorage.setItem("rollshow_user", JSON.stringify(user));
+    // 🔥 STORE ONLY WHAT THE DASHBOARDS NEED
+    const session = {
+      id: user.id,
+      role: user.role,
+      is_owner: user.is_owner || false
+    };
 
-    // Role-based redirect
+    // 🔥 STORE UNDER THE CORRECT KEY
+    localStorage.setItem("user", JSON.stringify(session));
+
+    // 🔥 ROLE-BASED REDIRECT
     let target = "/";
 
-    if (user.is_owner) {
+    if (session.is_owner) {
       target = "/pages/owner/owner-dashboard.html";
     } else {
-      switch (user.role) {
+      switch (session.role) {
         case "skater":
           target = "/pages/skater/skater-dashboard.html";
           break;
