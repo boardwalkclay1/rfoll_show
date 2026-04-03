@@ -1,4 +1,4 @@
-// worker.js — FULL CLEAN REBUILD WITH AUTO MIGRATION RUNNER
+// worker.js — FULL CLEAN REBUILD WITH AUTH PIPELINE + OWNER OVERRIDE + MIGRATIONS
 
 import {
   cors,
@@ -77,6 +77,28 @@ function logRequest(request, extra = {}) {
 }
 
 /* ============================================================
+   AUTH HEADER INJECTION (FRONTEND → WORKER)
+   - Frontend sends: x-user: JSON.stringify(user)
+   - Worker needs:   x-user-id, x-user-role
+============================================================ */
+function attachAuthHeaders(request) {
+  const raw = request.headers.get("x-user");
+  if (!raw) return request;
+
+  try {
+    const user = JSON.parse(raw);
+
+    const newHeaders = new Headers(request.headers);
+    if (user.id) newHeaders.set("x-user-id", user.id);
+    if (user.role) newHeaders.set("x-user-role", user.role);
+
+    return new Request(request, { headers: newHeaders });
+  } catch {
+    return request;
+  }
+}
+
+/* ============================================================
    OWNER OVERRIDE
 ============================================================ */
 async function withOwnerOverride(request, env, allowedRoles, handler) {
@@ -108,10 +130,8 @@ async function runAllMigrations(request, env, user) {
   const base = new URL(request.url);
   const listUrl = new URL("/migrations/", base).toString();
 
-  // Cloudflare serves folder index as HTML
   const indexHtml = await fetch(listUrl).then(r => r.text());
 
-  // Extract all .sql filenames
   const files = [...indexHtml.matchAll(/>(\d+[^<]+\.sql)</g)]
     .map(m => m[1])
     .sort();
@@ -135,6 +155,9 @@ async function runAllMigrations(request, env, user) {
 export default {
   async fetch(request, env, ctx) {
     try {
+      // Inject auth headers from x-user
+      request = attachAuthHeaders(request);
+
       const url = new URL(request.url);
       const path = url.pathname;
       const method = request.method;
