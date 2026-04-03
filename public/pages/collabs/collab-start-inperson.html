@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Start In‑Person Collab</title>
+
+  <link rel="icon" type="image/png" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/collabs.css" />
+
+  <style>
+    :root {
+      --collabs-bg-image: url('/assets/backgrounds/collabs-inperson-bg.jpg');
+    }
+
+    body.collab-start-inperson-page {
+      background-image: var(--collabs-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .collabs-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .collabs-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+    }
+
+    .collabs-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #ffd29f, #ff7b54, #3b1f2b);
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .collabs-main {
+      flex: 1;
+      padding: 1rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.1fr);
+      gap: 1.25rem;
+    }
+
+    .panel {
+      background: rgba(10, 10, 15, 0.9);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      opacity: 0.8;
+    }
+
+    .collab-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.8;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 0.5rem 0.7rem;
+      color: #f9fafb;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-row-inline {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .form-help {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: transparent;
+      color: #f9fafb;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ffb86c, #ff6b6b);
+      border-color: transparent;
+      color: #0b0b10;
+      font-weight: 600;
+    }
+
+    .sidebar-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .sidebar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+
+    .sidebar-item span {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 0.5rem 1.5rem 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+      backdrop-filter: blur(16px);
+    }
+
+    .bottom-nav-btn {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+
+    .bottom-nav-btn.primary {
+      background: linear-gradient(135deg, #ffb86c, #ff6b6b);
+      border-color: transparent;
+      color: #0b0b10;
+      font-weight: 600;
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body class="collab-start-inperson-page">
+  <div class="collabs-shell">
+    <header class="collabs-header">
+      <div class="collabs-header-left">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-title">Roll Show</div>
+          <div style="font-size: 0.75rem; opacity: 0.7;">Start In‑Person Collab</div>
+        </div>
+      </div>
+      <div class="collabs-header-right">
+        <span class="pill">Skater</span>
+      </div>
+    </header>
+
+    <main class="collabs-main">
+      <!-- LEFT: Form -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">In‑Person Collab</div>
+          <span class="pill">Meet & Film</span>
+        </div>
+
+        <form class="collab-form" id="collab-inperson-form">
+          <div class="form-row">
+            <label class="form-label" for="collab-target-skater">Skater</label>
+            <input class="form-input" id="collab-target-skater" name="target_skater" placeholder="@skaterhandle" />
+            <div class="form-help">Later: this becomes a searchable dropdown of skaters.</div>
+          </div>
+
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label class="form-label" for="collab-date">Date</label>
+              <input class="form-input" id="collab-date" name="date" type="date" />
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="collab-time">Time</label>
+              <input class="form-input" id="collab-time" name="time" type="time" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="collab-location">Spot</label>
+            <input class="form-input" id="collab-location" name="location" placeholder="BeltLine · Eastside Trail" />
+            <div class="form-help">Later: this can hook into Spot Finder / map.</div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="collab-intent">Intent</label>
+            <textarea class="form-textarea" id="collab-intent" name="intent" placeholder="Describe the collab: style, vibe, what you want to film."></textarea>
+          </div>
+
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label class="form-label" for="collab-role-focus">Focus</label>
+              <select class="form-select" id="collab-role-focus" name="focus">
+                <option value="flow">Flow Session</option>
+                <option value="combo">Combo Showcase</option>
+                <option value="battle">Friendly Battle</option>
+                <option value="cinematic">Cinematic Edit</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="collab-duration">Duration</label>
+              <select class="form-select" id="collab-duration" name="duration">
+                <option value="30">~30 minutes</option>
+                <option value="60">~1 hour</option>
+                <option value="90">~1.5 hours</option>
+                <option value="120">~2 hours</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn" id="collab-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="collab-send">Send Collab Offer</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- RIGHT: Guidance -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">In‑Person Blueprint</div>
+          <span class="pill">Collab Guide</span>
+        </div>
+
+        <section class="sidebar-section">
+          <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 0.35rem;">Best Practices</div>
+          <div class="sidebar-list">
+            <div class="sidebar-item">
+              Clear Intent
+              <span>Tell the other skater what you want to create together.</span>
+            </div>
+            <div class="sidebar-item">
+              Realistic Time
+              <span>Pick a duration that matches the complexity of the collab.</span>
+            </div>
+            <div class="sidebar-item">
+              Safe Spots
+              <span>Choose locations that are safe, legal, and flow‑friendly.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="sidebar-section">
+          <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 0.35rem;">What Happens Next</div>
+          <div class="sidebar-list">
+            <div class="sidebar-item">
+              Offer Sent
+              <span>The other skater sees this in their Collab Offers.</span>
+            </div>
+            <div class="sidebar-item">
+              Accept or Decline
+              <span>They can accept, decline, or propose changes later.</span>
+            </div>
+            <div class="sidebar-item">
+              Session
+              <span>Once accepted, the collab session can be tracked and posted.</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="bottom-nav-btn" id="nav-collabs-back">Back to Collabs</button>
+      <button class="bottom-nav-btn primary" id="nav-collabs-send">Send Offer</button>
+    </nav>
+  </div>
+
+  <!-- JS later: submit to /api/collabs, validation, navigation -->
+</body>
+</html>
