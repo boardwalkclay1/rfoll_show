@@ -4,16 +4,29 @@ compatibility_date = "2024-01-01"
 
 assets = { directory = "./public" }
 
+# ============================================================
+# D1 DATABASE
+# ============================================================
 [[d1_databases]]
 binding = "DB_users"
 database_name = "roll_show"
 database_id = "862b2a72-249e-4d39-bf02-55d721a41985"
 
-[observability]
-enabled = false
+# ============================================================
+# R2 BUCKET FOR REAL MEDIA (MUSIC, VIDEO, PHOTOS)
+# ============================================================
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "rollshow"
+preview_bucket_name = "rollshow"
 
-[observability.logs]
-invocation_logs = true
+# ============================================================
+# KV NAMESPACE FOR METADATA + CACHING
+# ============================================================
+[[kv_namespaces]]
+binding = "KV"
+id = "rollshow_kv"
+preview_id = "rollshow_kv"
 
 # ============================================================
 # SERVICE BINDING TO AUTH WORKER
@@ -21,3 +34,9 @@ invocation_logs = true
 [[services]]
 binding = "AUTH"
 service = "rollshow-auth"
+
+[observability]
+enabled = false
+
+[observability.logs]
+invocation_logs = true
