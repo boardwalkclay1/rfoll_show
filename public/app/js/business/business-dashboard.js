@@ -1,6 +1,5 @@
 // /app/js/business/business-dashboard.js
-import { apiGet } from "/app/js/api.js";
-
+import API from "/app/js/api.js";
 /* ============================================================
    DOM HELPERS
 ============================================================ */
