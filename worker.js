@@ -1,4 +1,4 @@
-// worker.js — FULL CLEAN REBUILD WITH AUTH PIPELINE + OWNER OVERRIDE + MIGRATIONS
+// worker.js — FULL CLEAN REBUILD WITH AUTH PIPELINE + OWNER OVERRIDE + MIGRATIONS + MEDIA (R2 + KV)
 
 import {
   cors,
@@ -150,6 +150,121 @@ async function runAllMigrations(request, env, user) {
 }
 
 /* ============================================================
+   MEDIA HELPERS (R2 + KV)
+============================================================ */
+async function saveMediaMeta(env, id, meta) {
+  await env.KV.put(`media:${id}`, JSON.stringify(meta));
+}
+
+async function getMediaMeta(env, id) {
+  const raw = await env.KV.get(`media:${id}`);
+  if (!raw) return null;
+  return JSON.parse(raw);
+}
+
+/* ============================================================
+   MEDIA: INIT UPLOAD (CREATE ID + KEY + METADATA SHELL)
+   body: { type: "music"|"video"|"photo", filename, contentType, size }
+============================================================ */
+async function mediaInitUpload(request, env, user) {
+  const { type, filename, contentType, size } = await request.json();
+
+  if (!type || !filename || !contentType) {
+    return apiJson({ message: "Missing fields" }, 400);
+  }
+
+  const allowed = ["music", "video", "photo"];
+  if (!allowed.includes(type)) {
+    return apiJson({ message: "Invalid type" }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  const key = `${type}/${id}-${filename}`;
+  const created_at = new Date().toISOString();
+
+  const meta = {
+    id,
+    key,
+    type,
+    filename,
+    contentType,
+    size: size || null,
+    user_id: user.id,
+    created_at
+  };
+
+  await saveMediaMeta(env, id, meta);
+
+  return apiJson({
+    media: meta,
+    uploadPath: `/api/media/upload/${id}`
+  });
+}
+
+/* ============================================================
+   MEDIA: UPLOAD FILE BODY TO R2
+   PUT /api/media/upload/:id  (body = file)
+============================================================ */
+async function mediaUpload(request, env, user, id) {
+  const meta = await getMediaMeta(env, id);
+  if (!meta) {
+    return apiJson({ message: "Media not initialized" }, 404);
+  }
+
+  // Optional: enforce owner of media
+  if (meta.user_id !== user.id && user.role !== "owner") {
+    return apiJson({ message: "Forbidden" }, 403);
+  }
+
+  const contentType =
+    meta.contentType ||
+    request.headers.get("Content-Type") ||
+    "application/octet-stream";
+
+  await env.R2.put(meta.key, request.body, {
+    httpMetadata: { contentType }
+  });
+
+  return apiJson({ message: "Uploaded", id, key: meta.key });
+}
+
+/* ============================================================
+   MEDIA: GET METADATA
+   GET /api/media/meta/:id
+============================================================ */
+async function mediaGetMeta(request, env, user, id) {
+  const meta = await getMediaMeta(env, id);
+  if (!meta) {
+    return apiJson({ message: "Not found" }, 404);
+  }
+
+  return apiJson({ media: meta });
+}
+
+/* ============================================================
+   MEDIA: STREAM FILE FROM R2
+   GET /api/media/file/:id
+============================================================ */
+async function mediaGetFile(request, env, user, id) {
+  const meta = await getMediaMeta(env, id);
+  if (!meta) {
+    return apiJson({ message: "Not found" }, 404);
+  }
+
+  const obj = await env.R2.get(meta.key);
+  if (!obj) {
+    return apiJson({ message: "File missing" }, 404);
+  }
+
+  const headers = {
+    "Content-Type": obj.httpMetadata?.contentType || "application/octet-stream",
+    "Cache-Control": "public, max-age=3600"
+  };
+
+  return new Response(obj.body, { status: 200, headers });
+}
+
+/* ============================================================
    MAIN ROUTER
 ============================================================ */
 export default {
@@ -194,6 +309,53 @@ export default {
       if (path.startsWith("/api/shows/") && method === "GET") {
         const id = path.split("/").pop();
         return getShow(env, id);
+      }
+
+      /* ============================================================
+         MEDIA (R2 + KV)
+      ============================================================ */
+
+      // INIT UPLOAD (create media id + key + metadata shell)
+      if (path === "/api/media/init-upload" && method === "POST") {
+        return requireRole(
+          request.clone(),
+          env,
+          ["musician", "skater", "business", "owner"],
+          mediaInitUpload
+        );
+      }
+
+      // UPLOAD FILE BODY
+      if (path.startsWith("/api/media/upload/") && method === "PUT") {
+        const id = path.split("/").pop();
+        return requireRole(
+          request.clone(),
+          env,
+          ["musician", "skater", "business", "owner"],
+          (req, envInner, user) => mediaUpload(req, envInner, user, id)
+        );
+      }
+
+      // GET METADATA
+      if (path.startsWith("/api/media/meta/") && method === "GET") {
+        const id = path.split("/").pop();
+        return requireRole(
+          request.clone(),
+          env,
+          ["musician", "skater", "business", "buyer", "owner"],
+          (req, envInner, user) => mediaGetMeta(req, envInner, user, id)
+        );
+      }
+
+      // STREAM FILE
+      if (path.startsWith("/api/media/file/") && method === "GET") {
+        const id = path.split("/").pop();
+        return requireRole(
+          request.clone(),
+          env,
+          ["musician", "skater", "business", "buyer", "owner"],
+          (req, envInner, user) => mediaGetFile(req, envInner, user, id)
+        );
       }
 
       /* ============================================================
