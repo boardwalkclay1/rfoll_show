@@ -10,7 +10,7 @@ assets = { directory = "./public" }
 [[d1_databases]]
 binding = "roll_show"
 database_name = "roll_show"
-database_id = "35817a7d-6156-46ee-9ded-6c70548698b1"
+database_id = "a3ed12b5-3905-4751-bf56-20d7c3e15cf2"
 
 # ============================================================
 # R2 BUCKET FOR REAL MEDIA (MUSIC, VIDEO, PHOTOS)
