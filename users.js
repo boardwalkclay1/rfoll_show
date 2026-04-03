@@ -48,10 +48,9 @@ export function apiJson(body, status = 200) {
 }
 
 /* ============================================================
-   USER ID EXTRACTION (FIXED)
+   USER ID EXTRACTION
 ============================================================ */
 export function getUserId(request) {
-  // Only return the actual user ID header
   return request.headers.get("x-user-id");
 }
 
@@ -121,8 +120,8 @@ export async function signupBase(env, { name, email, password, role }) {
   const hashed = await hash(password, env);
 
   await env.DB_users.prepare(
-    `INSERT INTO users (id, name, email, password_hash, role, created_at, "owner-1")
-     VALUES (?, ?, ?, ?, ?, ?, 0)`
+    `INSERT INTO users (id, name, email, password_hash, role, is_owner, created_at)
+     VALUES (?, ?, ?, ?, ?, 0, ?)`
   ).bind(id, name, email, hashed, role, created).run();
 
   return {
@@ -135,7 +134,7 @@ export async function signupBase(env, { name, email, password, role }) {
 }
 
 /* ============================================================
-   LOGIN (MATCHES FRONTEND EXPECTATIONS)
+   LOGIN (MATCHES NEW DB)
 ============================================================ */
 export async function login(request, env) {
   try {
@@ -156,8 +155,8 @@ export async function login(request, env) {
 
     const is_owner =
       row.role === "owner" ||
-      row["owner-1"] == 1 ||
-      row["owner-1"] === true;
+      row.is_owner == 1 ||
+      row.is_owner === true;
 
     return apiJson({
       user: {
@@ -200,15 +199,13 @@ export async function requireRole(request, env, allowedRoles, handler) {
 
     const is_owner =
       user.role === "owner" ||
-      user["owner-1"] == 1 ||
-      user["owner-1"] === true;
+      user.is_owner == 1 ||
+      user.is_owner === true;
 
-    // OWNER OVERRIDE
     if (is_owner) {
       return handler(request, env, user);
     }
 
-    // NORMAL ROLE CHECK
     if (!allowedRoles.includes(user.role)) {
       return apiJson({ message: "Forbidden" }, 403);
     }
