@@ -38,7 +38,6 @@ const brandFavicon = document.getElementById("brand-favicon");
 const brandBackground = document.getElementById("brand-background");
 
 const btnSaveBranding = document.getElementById("btn-save-branding");
-const btnResetBranding = document.getElementById("btn-reset-branding");
 const btnUploadBrandAssets = document.getElementById("btn-upload-brand-assets");
 
 /* Load branding settings */
@@ -65,18 +64,6 @@ btnSaveBranding.addEventListener("click", async () => {
 
   const res = await API.post("/api/owner/settings/branding", payload, API.withUser(user));
   alert(res.success ? "Branding saved" : "Error saving branding");
-});
-
-/* Reset branding */
-btnResetBranding.addEventListener("click", async () => {
-  const res = await API.post("/api/owner/settings/branding", {
-    primary_color: "#ff4b8b",
-    secondary_color: "#ffb347",
-    accent_color: "#ffffff",
-    theme_mode: "cinematic"
-  }, API.withUser(user));
-
-  if (res.success) loadBranding();
 });
 
 /* Upload logo / favicon / background */
