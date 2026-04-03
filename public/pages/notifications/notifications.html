@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show — Notifications</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-logo">ROLL SHOW</div>
+      <h1 class="page-title">Notifications</h1>
+    </header>
+
+    <main class="notifications-layout">
+      <aside class="notifications-sidebar">
+        <h2>Filters</h2>
+        <div class="field">
+          <label>Type</label>
+          <select id="notifications-type-filter">
+            <option value="">All</option>
+            <option value="message">Messages</option>
+            <option value="request">Message Requests</option>
+            <option value="system">System</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Status</label>
+          <select id="notifications-status-filter">
+            <option value="">All</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+          </select>
+        </div>
+      </aside>
+
+      <section class="notifications-list-panel">
+        <div id="notifications-list" class="notifications-list">
+          <!-- notifications injected by JS -->
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
