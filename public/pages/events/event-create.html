@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Create Event</title>
+
+  <link rel="icon" type="image/png" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/events.css" />
+
+  <style>
+    :root {
+      --events-bg-image: url('/assets/backgrounds/events-create-bg.jpg');
+    }
+
+    body.event-create-page {
+      background-image: var(--events-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .events-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(10px);
+    }
+
+    .events-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+    }
+
+    .events-header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #ffd29f, #ff7b54, #3b1f2b);
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .events-main {
+      flex: 1;
+      padding: 1rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(0, 1.1fr);
+      gap: 1.25rem;
+    }
+
+    .panel {
+      background: rgba(10, 10, 15, 0.9);
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.9;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      opacity: 0.8;
+    }
+
+    .event-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    .form-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .form-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.8;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 0.5rem 0.7rem;
+      color: #f9fafb;
+      font-size: 0.8rem;
+      outline: none;
+    }
+
+    .form-textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .form-row-inline {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .form-help {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    .form-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.5rem 0.7rem;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.8rem;
+    }
+
+    .form-toggle-label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .form-toggle-label span:last-child {
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    .form-toggle-input {
+      width: 40px;
+      height: 20px;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: transparent;
+      color: #f9fafb;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ffb86c, #ff6b6b);
+      border-color: transparent;
+      color: #0b0b10;
+      font-weight: 600;
+    }
+
+    .sidebar-section {
+      margin-bottom: 1.25rem;
+    }
+
+    .sidebar-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+
+    .sidebar-item span {
+      display: block;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 0.5rem 1.5rem 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+      backdrop-filter: blur(16px);
+    }
+
+    .bottom-nav-btn {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+
+    .bottom-nav-btn.primary {
+      background: linear-gradient(135deg, #ffb86c, #ff6b6b);
+      border-color: transparent;
+      color: #0b0b10;
+      font-weight: 600;
+      opacity: 1;
+    }
+  </style>
+</head>
+
+<body class="event-create-page">
+  <div class="events-shell">
+    <header class="events-header">
+      <div class="events-header-left">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-title">Roll Show</div>
+          <div style="font-size: 0.75rem; opacity: 0.7;">Create Event · Owner</div>
+        </div>
+      </div>
+      <div class="events-header-right">
+        <span class="pill">
+          Owner
+        </span>
+      </div>
+    </header>
+
+    <main class="events-main">
+      <!-- LEFT: Form -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">New Event</div>
+          <span class="pill">Owner Only</span>
+        </div>
+
+        <form class="event-form" id="event-create-form">
+          <div class="form-row">
+            <label class="form-label" for="event-title">Title</label>
+            <input class="form-input" id="event-title" name="title" placeholder="Sunset Dancer Jam · BeltLine" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="event-category">Category</label>
+            <select class="form-select" id="event-category" name="category">
+              <option value="skater">Skater Event</option>
+              <option value="business">Business Event</option>
+              <option value="buyer">Buyer Event</option>
+            </select>
+            <div class="form-help">This controls how the event is surfaced to different roles.</div>
+          </div>
+
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label class="form-label" for="event-date">Date</label>
+              <input class="form-input" id="event-date" name="date" type="date" />
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="event-time">Time</label>
+              <input class="form-input" id="event-time" name="time" type="time" />
+            </div>
+          </div>
+
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label class="form-label" for="event-city">City</label>
+              <input class="form-input" id="event-city" name="city" placeholder="Atlanta, GA" />
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="event-location">Location</label>
+              <input class="form-input" id="event-location" name="location" placeholder="BeltLine · Eastside Trail" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label" for="event-description">Description</label>
+            <textarea class="form-textarea" id="event-description" name="description" placeholder="Describe the vibe, purpose, and expectations for this event."></textarea>
+          </div>
+
+          <div class="form-row-inline">
+            <div class="form-row">
+              <label class="form-label" for="event-role-target">Primary Role Target</label>
+              <select class="form-select" id="event-role-target" name="role_target">
+                <option value="skater">Skaters</option>
+                <option value="business">Businesses</option>
+                <option value="buyer">Buyers</option>
+                <option value="all">All Roles</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="event-capacity">Capacity (optional)</label>
+              <input class="form-input" id="event-capacity" name="capacity" type="number" min="0" placeholder="Leave blank for open" />
+            </div>
+          </div>
+
+          <div class="form-toggle-row">
+            <div class="form-toggle-label">
+              <span>QR Check‑In</span>
+              <span>Enable QR for attendance, rewards, and access control.</span>
+            </div>
+            <input class="form-toggle-input" id="event-qr-enabled" name="qr_enabled" type="checkbox" />
+          </div>
+
+          <div class="form-toggle-row">
+            <div class="form-toggle-label">
+              <span>Featured</span>
+              <span>Pin this event to the top of the events list and highlights.</span>
+            </div>
+            <input class="form-toggle-input" id="event-featured" name="featured" type="checkbox" />
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn" id="event-cancel">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="event-save">Create Event</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- RIGHT: Guidance -->
+      <aside class="panel">
+        <div class="panel-header">
+          <div class="panel-title">Event Blueprint</div>
+          <span class="pill">Owner Guide</span>
+        </div>
+
+        <section class="sidebar-section">
+          <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 0.35rem;">Categories</div>
+          <div class="sidebar-list">
+            <div class="sidebar-item">
+              Business Events
+              <span>Launches, collabs, showcases, pop‑ups, sponsorship activations.</span>
+            </div>
+            <div class="sidebar-item">
+              Skater Events
+              <span>Jams, sessions, battles, meetups, cinematic runs.</span>
+            </div>
+            <div class="sidebar-item">
+              Buyer Events
+              <span>Merch drops, access events, QR‑only experiences.</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="sidebar-section">
+          <div style="font-size: 0.8rem; opacity: 0.8; margin-bottom: 0.35rem;">QR Strategy</div>
+          <div class="sidebar-list">
+            <div class="sidebar-item">
+              Attendance
+              <span>Track who shows up and how often.</span>
+            </div>
+            <div class="sidebar-item">
+              Rewards
+              <span>Unlock badges, invites, and perks for repeat attendees.</span>
+            </div>
+            <div class="sidebar-item">
+              Access
+              <span>Gate certain events behind QR for exclusivity.</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="bottom-nav-btn" id="nav-events-back">Back to Events</button>
+      <button class="bottom-nav-btn primary" id="nav-events-save">Save Event</button>
+    </nav>
+  </div>
+
+  <!-- JS later: submit to /api/business/events or /api/owner/events, validation, redirects -->
+</body>
+</html>
