@@ -1,6 +1,5 @@
 // /app/js/musician/musician-dashboard.js
-import { apiGet } from "/app/js/api.js";
-
+import API from "/app/js/api.js";
 /* ============================================================
    DOM HELPERS
 ============================================================ */
