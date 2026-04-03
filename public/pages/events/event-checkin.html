@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Event Check‑In</title>
+
+  <link rel="icon" type="image/png" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/events.css" />
+
+  <style>
+    :root {
+      --events-bg-image: url('/assets/backgrounds/events-checkin-bg.jpg');
+    }
+
+    body.event-checkin-page {
+      background-image: var(--events-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .checkin-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .checkin-card {
+      max-width: 420px;
+      width: 100%;
+      background: rgba(10, 10, 15, 0.9);
+      border-radius: 18px;
+      padding: 1.5rem 1.4rem;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      margin: 0 auto 0.75rem;
+      background: radial-gradient(circle at 30% 30%, #ffd29f, #ff7b54, #3b1f2b);
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.25rem;
+    }
+
+    .checkin-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.8;
+      margin-bottom: 0.75rem;
+    }
+
+    .event-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .event-meta {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin-bottom: 0.75rem;
+    }
+
+    .checkin-status {
+      margin: 0.75rem 0;
+      padding: 0.6rem 0.8rem;
+      border-radius: 12px;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.6);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+    }
+
+    .checkin-status span:first-child {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: #22c55e;
+    }
+
+    .checkin-message {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-bottom: 0.75rem;
+    }
+
+    .checkin-badges {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      margin-bottom: 0.75rem;
+    }
+
+    .checkin-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: transparent;
+      color: #f9fafb;
+      width: 100%;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ffb86c, #ff6b6b);
+      border-color: transparent;
+      color: #0b0b10;
+      font-weight: 600;
+    }
+
+    .checkin-footer {
+      margin-top: 0.75rem;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+
+<body class="event-checkin-page">
+  <div class="checkin-shell">
+    <div class="checkin-card" id="checkin-card">
+      <div class="brand-mark"></div>
+      <div class="brand-title">Roll Show</div>
+      <div class="checkin-title">Event Check‑In</div>
+
+      <div class="event-name" id="checkin-event-name">
+        Sunset Dancer Jam · BeltLine
+      </div>
+      <div class="event-meta" id="checkin-event-meta">
+        Today · 6:30 PM · Atlanta, GA
+      </div>
+
+      <div class="checkin-status" id="checkin-status">
+        <span></span>
+        <span>Check‑in successful. Welcome to the event.</span>
+      </div>
+
+      <div class="checkin-message" id="checkin-message">
+        Your attendance has been recorded. This helps us unlock future invites, rewards, and badges for you.
+      </div>
+
+      <div class="checkin-badges" id="checkin-badges">
+        Potential unlocks: <strong>Session Badge</strong>, <strong>Event Streak</strong>, <strong>Early Access Invites</strong>.
+      </div>
+
+      <div class="checkin-actions">
+        <button class="btn btn-primary" id="checkin-open-feed">Open Event Feed</button>
+        <button class="btn" id="checkin-open-profile">View My Profile</button>
+      </div>
+
+      <div class="checkin-footer">
+        If this doesn’t look right, close this tab and re‑scan the QR code.
+      </div>
+    </div>
+  </div>
+
+  <!-- JS later: validate token, mark attendance, show dynamic status -->
+</body>
+</html>
