@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Dance Combos</title>
+
+  <link rel="icon" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/modules.css" />
+
+  <style>
+    :root {
+      --modules-bg-image: url('/assets/backgrounds/dance-combos-bg.jpg');
+    }
+
+    body.dance-combos-page {
+      background-image: var(--modules-bg-image);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    .combo-card {
+      padding: 0.75rem 0.85rem;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 0.75rem;
+    }
+
+    .combo-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .combo-meta {
+      font-size: 0.75rem;
+      opacity: 0.75;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg,#ffb86c,#ff6b6b);
+      border: none;
+      padding: 0.5rem 0.9rem;
+      border-radius: 999px;
+      color: #0b0b10;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.75rem;
+    }
+  </style>
+</head>
+
+<body class="dance-combos-page">
+  <div class="module-shell">
+
+    <header class="collabs-header">
+      <div class="brand-title">Roll Show · Dance Combos</div>
+      <span class="pill">Dancer</span>
+    </header>
+
+    <main class="module-main">
+
+      <section class="panel">
+        <div class="panel-title">Saved Combos</div>
+
+        <div id="combo-list">
+          <div class="combo-card">
+            <div class="combo-title">Cross-Step → Peter Pan → Ghostride</div>
+            <div class="combo-meta">Saved 3 days ago · 12 sec</div>
+          </div>
+
+          <div class="combo-card">
+            <div class="combo-title">Chop the Wood → Tiger Claw</div>
+            <div class="combo-meta">Saved last week · 8 sec</div>
+          </div>
+        </div>
+
+        <button class="btn-primary" id="new-combo-btn">Add New Combo</button>
+      </section>
+
+      <aside class="panel">
+        <div class="panel-title">Combo Library</div>
+
+        <p style="opacity:0.85; font-size:0.8rem;">
+          Build your personal combo library. Save, organize, and refine your dancer lines.
+        </p>
+
+        <ul style="opacity:0.8; font-size:0.8rem; line-height:1.5;">
+          <li>Save combos from sessions</li>
+          <li>Attach video clips</li>
+          <li>Tag difficulty</li>
+          <li>Track progression</li>
+        </ul>
+      </aside>
+
+    </main>
+
+  </div>
+</body>
+</html>
