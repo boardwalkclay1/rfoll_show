@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Roll Show – Create Post</title>
+  <link rel="icon" type="image/png" href="/assets/icons/rollshow-favicon.png" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <link rel="stylesheet" href="/assets/css/feed.css" />
+</head>
+<body class="feed-create-post-page">
+  <div class="shell">
+    <header class="app-header">
+      <div class="brand-left">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-title">Roll Show</div>
+          <div class="brand-sub">Create Post</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <section class="panel">
+        <form id="feed-create-form" class="form-vertical">
+          <label>
+            <span>Caption</span>
+            <textarea name="caption" rows="3" required></textarea>
+          </label>
+
+          <label>
+            <span>Clip</span>
+            <input type="file" name="clip" accept="video/*" required />
+          </label>
+
+          <label>
+            <span>Music (optional)</span>
+            <input type="text" name="music" placeholder="Track or mood" />
+          </label>
+
+          <button type="submit" class="btn-primary">Post</button>
+        </form>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="bottom-nav-btn" id="nav-create-cancel">Cancel</button>
+    </nav>
+  </div>
+
+  <script src="/assets/js/shared.js"></script>
+  <script src="/assets/js/feed.js"></script>
+</body>
+</html>
