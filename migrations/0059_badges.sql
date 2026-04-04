@@ -1,0 +1,10 @@
+-- BADGES TABLE
+CREATE TABLE IF NOT EXISTS badges (
+  id TEXT PRIMARY KEY,
+  key TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  icon_url TEXT,
+  category TEXT NOT NULL,
+  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+);
