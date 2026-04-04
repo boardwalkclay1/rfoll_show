@@ -60,14 +60,16 @@ export function getUserId(request) {
 async function safeAuthJson(res) {
   const text = await res.text();
 
-  if (!res.headers.get("content-type")?.includes("application/json")) {
-    throw new Error("AUTH worker returned non‑JSON");
+  // FIX: allow text/json OR application/json
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("json")) {
+    throw new Error("AUTH worker returned non‑JSON: " + ct);
   }
 
   try {
     return JSON.parse(text);
-  } catch {
-    throw new Error("AUTH worker returned invalid JSON");
+  } catch (err) {
+    throw new Error("AUTH worker returned invalid JSON: " + text);
   }
 }
 
@@ -82,6 +84,12 @@ export async function hash(str, env) {
   });
 
   const data = await safeAuthJson(res);
+
+  // FIX: AUTH worker returns { hashed: "..." }
+  if (!data.hashed) {
+    throw new Error("AUTH worker missing 'hashed' field");
+  }
+
   return data.hashed;
 }
 
@@ -96,6 +104,12 @@ export async function verify(str, hashed, env) {
   });
 
   const data = await safeAuthJson(res);
+
+  // FIX: AUTH worker returns { ok: true/false }
+  if (typeof data.ok !== "boolean") {
+    throw new Error("AUTH worker missing 'ok' field");
+  }
+
   return data.ok;
 }
 
@@ -134,11 +148,17 @@ export async function signupBase(env, { name, email, password, role }) {
 }
 
 /* ============================================================
-   LOGIN (MATCHES NEW DB)
+   LOGIN (FIXED + WORKING)
 ============================================================ */
 export async function login(request, env) {
   try {
-    const { email, password } = await request.json();
+    const body = await request.json();
+    const email = body.email;
+    const password = body.password;
+
+    if (!email || !password) {
+      return apiJson({ message: "Missing credentials" }, 400);
+    }
 
     const row = await env.DB_users.prepare(
       "SELECT * FROM users WHERE email = ?"
@@ -148,7 +168,13 @@ export async function login(request, env) {
       return apiJson({ message: "Invalid credentials" }, 401);
     }
 
+    // FIX: ensure password_hash exists
+    if (!row.password_hash) {
+      return apiJson({ message: "User has no password_hash" }, 500);
+    }
+
     const valid = await verify(password, row.password_hash, env);
+
     if (!valid) {
       return apiJson({ message: "Invalid credentials" }, 401);
     }
