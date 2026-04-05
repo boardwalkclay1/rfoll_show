@@ -1,4 +1,4 @@
-import API from "../api.js";
+import API from "/app/js/api.js";
 
 async function loadSkaters() {
   const data = await API.get("/api/feed/skaters");

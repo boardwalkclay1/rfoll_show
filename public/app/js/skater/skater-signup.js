@@ -1,5 +1,5 @@
 // app/js/skater/skater-signup.js
-import API from "../api.js";
+import API from "/app/js/api.js";
 
 const form = document.getElementById("skater-signup-form");
 

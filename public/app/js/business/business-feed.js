@@ -1,4 +1,4 @@
-import API from "../api.js";
+import API from "/app/js/api.js";
 
 const list = document.getElementById("skater-feed");
 

@@ -1,5 +1,5 @@
 // auth-login.js — FINAL FIXED VERSION
-import API from "./api.js";
+import API from "/app/js/api.js";
 
 const form = document.getElementById("auth-login-form");
 

@@ -1,5 +1,5 @@
 // /app/js/legal/agreement-sign.js
-import API from "../api.js";
+import API from "/app/js/api.js";
 import { getUserIdFromQuery } from "../utils.js";
 
 (function initAgreementSign() {

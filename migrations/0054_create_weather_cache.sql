@@ -1,7 +1,6 @@
 CREATE TABLE weather_cache (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id TEXT NOT NULL,
-  date TEXT NOT NULL,
+  id TEXT PRIMARY KEY,
+  location TEXT NOT NULL,
   data TEXT NOT NULL,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)
+  expires_at TEXT NOT NULL
+);

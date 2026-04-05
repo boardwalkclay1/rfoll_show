@@ -1,5 +1,5 @@
 // /app/js/payouts.js
-import API from "./api.js";
+import API from "/app/js/api.js";
 import { getUserIdFromQuery } from "./utils.js";
 
 const userId = getUserIdFromQuery();

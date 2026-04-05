@@ -1,4 +1,4 @@
-import API from "../api.js";
+import API from "/app/js/api.js";
 import { getUserIdFromQuery } from "../utils.js";
 
 const form = document.getElementById("upload-video-form");

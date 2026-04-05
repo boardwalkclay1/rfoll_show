@@ -1,5 +1,5 @@
 // rights-engine.js
-import API from "./api.js";
+import API from "/app/js/api.js";
 
 const RightsEngine = {
   async handleSignupWithAgreement({

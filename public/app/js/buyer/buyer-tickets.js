@@ -1,4 +1,4 @@
-import { api } from "/js/core/api.js";
+import API from "/app/js/api.js";
 
 export async function init() {
   const list = document.getElementById("buyer-ticket-list");

@@ -1,1 +1,1 @@
-ALTER TABLE products ADD COLUMN qr_enabled INTEGER DEFAULT 1
+ALTER TABLE merch_items ADD COLUMN qr_enabled INTEGER DEFAULT 0;

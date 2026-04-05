@@ -6,4 +6,4 @@ CREATE TABLE qr_codes (
   tracking_mode TEXT DEFAULT 'none',
   expiration_at TEXT,
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)
+);

@@ -1,2 +1,2 @@
-ALTER TABLE tickets ADD COLUMN qr_id TEXT
-ALTER TABLE tickets ADD COLUMN verified_at TEXT
+ALTER TABLE tickets ADD COLUMN qr_id TEXT;
+ALTER TABLE tickets ADD COLUMN verified_at TEXT;
