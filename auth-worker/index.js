@@ -7,7 +7,7 @@ export default {
 
     if (path === "/hash") {
       const { password } = await request.json();
-      const hashed = await bcrypt.hash(password, 10);
+      const hashed = await bcrypt.hash(password, 12);
       return new Response(JSON.stringify({ hashed }), {
         headers: { "Content-Type": "application/json" }
       });
