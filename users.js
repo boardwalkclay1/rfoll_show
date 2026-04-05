@@ -1,3 +1,7 @@
+// users.js — AUTH WORKER + BCRYPT COST 12
+
+const AUTH_URL = "https://rollshow-auth.boardwalkclay1.workers.dev";
+
 /* ============================================================
    CORS HEADERS
 ============================================================ */
@@ -12,7 +16,7 @@ export function cors() {
 /* ============================================================
    LOGGING
 ============================================================ */
-export function logRequest(request, extra = {}) {
+function logRequest(request, extra = {}) {
   const url = new URL(request.url);
   console.log(JSON.stringify({
     path: url.pathname,
@@ -67,10 +71,10 @@ async function safeAuthJson(res) {
 }
 
 /* ============================================================
-   PASSWORD HASHING (AUTH WORKER)
+   PASSWORD HASHING (AUTH WORKER, BCRYPT COST 12)
 ============================================================ */
 export async function hash(password, env) {
-  const res = await env.AUTH.fetch("/hash", {
+  const res = await env.AUTH.fetch(`${AUTH_URL}/hash`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password })
@@ -86,13 +90,13 @@ export async function hash(password, env) {
 }
 
 /* ============================================================
-   PASSWORD VERIFY (AUTH WORKER)
+   PASSWORD VERIFY (AUTH WORKER, BCRYPT COST 12)
 ============================================================ */
-export async function verify(password, hash, env) {
-  const res = await env.AUTH.fetch("/verify", {
+export async function verify(password, hashValue, env) {
+  const res = await env.AUTH.fetch(`${AUTH_URL}/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password, hash })
+    body: JSON.stringify({ password, hash: hashValue })
   });
 
   const data = await safeAuthJson(res);
@@ -139,7 +143,7 @@ export async function signupBase(env, { name, email, password, role }) {
 }
 
 /* ============================================================
-   LOGIN (FIXED FOR owner-1 COLUMN)
+   LOGIN (USES AUTH WORKER + owner-1)
 ============================================================ */
 export async function login(request, env) {
   try {
@@ -191,7 +195,7 @@ export async function login(request, env) {
 }
 
 /* ============================================================
-   ROLE GUARD (FIXED FOR owner-1 COLUMN)
+   ROLE GUARD (OWNER OVERRIDE VIA owner-1)
 ============================================================ */
 export async function requireRole(request, env, allowedRoles, handler) {
   try {
