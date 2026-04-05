@@ -2,7 +2,19 @@ name = "rollshow"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
+# ============================================================
+# STATIC ASSETS (YOUR PAGES SITE)
+# ============================================================
 assets = { directory = "./public" }
+
+# ============================================================
+# ROUTING: SEND /api/* FROM PAGES → WORKER
+# ============================================================
+# This is the missing piece that caused login to fail.
+# It forces all /api/* calls on roll-show.pages.dev to hit your Worker.
+[[routes]]
+pattern = "roll-show.pages.dev/api/*"
+script = "rollshow"
 
 # ============================================================
 # D1 DATABASE
@@ -13,7 +25,7 @@ database_name = "DB_users"
 database_id = "4688d694-1a33-4055-b2a4-6f5c2231a356"
 
 # ============================================================
-# R2 BUCKET FOR REAL MEDIA (MUSIC, VIDEO, PHOTOS)
+# R2 BUCKET FOR REAL MEDIA
 # ============================================================
 [[r2_buckets]]
 binding = "R2"
@@ -21,7 +33,7 @@ bucket_name = "rollshow"
 preview_bucket_name = "rollshow"
 
 # ============================================================
-# KV NAMESPACE FOR METADATA + CACHING
+# KV NAMESPACE
 # ============================================================
 [[kv_namespaces]]
 binding = "KV"
@@ -29,12 +41,15 @@ id = "94027daf38234d6a914cfd48c91e55f3"
 preview_id = "94027daf38234d6a914cfd48c91e55f3"
 
 # ============================================================
-# SERVICE BINDING TO AUTH WORKER
+# AUTH WORKER SERVICE BINDING
 # ============================================================
 [[services]]
 binding = "AUTH"
 service = "rollshow-auth"
 
+# ============================================================
+# LOGGING
+# ============================================================
 [observability]
 enabled = false
 
