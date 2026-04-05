@@ -1,4 +1,6 @@
-import API from "/js/api.js";
+// ---------------------------------------------
+// AUTH LOGIN (NO IMPORTS, NO MODULES)
+// ---------------------------------------------
 
 const form = document.getElementById("auth-login-form");
 
@@ -6,15 +8,16 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const fd = new FormData(form);
+
   const payload = {
     email: fd.get("email"),
     password: fd.get("password")
   };
 
-  // 🔥 CORRECT PATH — DO NOT CHANGE
+  // 🔥 CORRECT PATH — DO NOT TOUCH
   const res = await API.post("/login", payload);
 
-  if (!res.success || !res.user) {
+  if (!res || !res.success || !res.user) {
     alert("Login failed. Check your email and password.");
     return;
   }
@@ -29,6 +32,9 @@ form.addEventListener("submit", async (e) => {
 
   localStorage.setItem("user", JSON.stringify(session));
 
+  // ---------------------------------------------
+  // REDIRECT BASED ON ROLE
+  // ---------------------------------------------
   let target = "/";
 
   if (session.is_owner) {
