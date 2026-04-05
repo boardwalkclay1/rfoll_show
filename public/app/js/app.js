@@ -4,20 +4,20 @@
 const API_BASE = "https://rollshow.boardwalkclay1.workers.dev";
 
 // ===============================
-// USER STORAGE
+// USER STORAGE (UNIFIED)
 // ===============================
 function saveUser(user) {
-  localStorage.setItem("rollshow_user", JSON.stringify(user));
+  localStorage.setItem("user", JSON.stringify(user));
 }
 
 function getUser() {
-  const raw = localStorage.getItem("rollshow_user");
+  const raw = localStorage.getItem("user");
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
 
 function logout() {
-  localStorage.removeItem("rollshow_user");
+  localStorage.removeItem("user");
   window.location.href = "/pages/auth-login.html";
 }
 
