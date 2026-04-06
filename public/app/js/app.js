@@ -4,6 +4,28 @@
 const API_BASE = "https://rollshow.boardwalkclay1.workers.dev";
 
 // ===============================
+// SIMPLE API HELPER
+// ===============================
+const API = {
+  async get(path) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    return res.json();
+  },
+
+  async post(path, body) {
+    const res = await fetch(`${API_BASE}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    return res.json();
+  }
+};
+
+// ===============================
 // USER STORAGE (UNIFIED)
 // ===============================
 function saveUser(user) {
@@ -13,7 +35,11 @@ function saveUser(user) {
 function getUser() {
   const raw = localStorage.getItem("user");
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
 }
 
 function logout() {
@@ -38,13 +64,79 @@ function requireUser(roles = null) {
   return user;
 }
 
-// Attach logout buttons
+// ===============================
+// GLOBAL: ATTACH LOGOUT BUTTONS
+// ===============================
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".logout-btn").forEach(btn => {
     btn.addEventListener("click", e => {
       e.preventDefault();
       logout();
     });
+  });
+});
+
+// ===============================
+// AUTH LOGIN HANDLER
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("auth-login-form");
+  if (!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const fd = new FormData(form);
+    const payload = {
+      email: fd.get("email"),
+      password: fd.get("password")
+    };
+
+    let res;
+    try {
+      res = await API.post("/api/login", payload);
+    } catch (err) {
+      alert("Network error. Try again.");
+      return;
+    }
+
+    if (!res || !res.success || !res.user) {
+      alert(res?.error?.message || "Login failed. Check your email and password.");
+      return;
+    }
+
+    const user = res.user;
+
+    const session = {
+      id: user.id,
+      role: user.role,
+      is_owner: !!user.is_owner
+    };
+
+    saveUser(session);
+
+    let target = "/";
+
+    if (session.is_owner) {
+      target = "/pages/owner/owner-dashboard.html";
+    } else {
+      switch (session.role) {
+        case "skater":
+          target = "/pages/skater/skater-dashboard.html";
+          break;
+        case "musician":
+          target = "/pages/musician/musician-dashboard.html";
+          break;
+        case "business":
+          target = "/pages/business/business-dashboard.html";
+          break;
+        case "buyer":
+          target = "/pages/buyer/buyer-dashboard.html";
+          break;
+      }
+    }
+
+    window.location.href = target;
   });
 });
 
@@ -57,8 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (!featured && !grid) return;
 
-  fetch(`${API_BASE}/api/shows`)
-    .then(res => res.json())
+  API.get("/api/shows")
     .then(shows => {
       if (!Array.isArray(shows) || shows.length === 0) {
         if (featured) featured.innerHTML = "<p>No shows yet.</p>";
@@ -79,6 +170,10 @@ document.addEventListener("DOMContentLoaded", () => {
           grid.innerHTML += showCard(show);
         });
       }
+    })
+    .catch(() => {
+      if (featured) featured.innerHTML = "<p>Error loading shows.</p>";
+      if (grid) grid.innerHTML = "<p>Error loading shows.</p>";
     });
 });
 
@@ -113,20 +208,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const showId = url.searchParams.get("id");
   if (!showId) return;
 
-  fetch(`${API_BASE}/api/shows/${showId}`)
-    .then(res => res.json())
+  API.get(`/api/shows/${showId}`)
     .then(show => {
-      header.innerHTML = `
-        <h1>${show.title}</h1>
-        <p>${show.description || ""}</p>
-      `;
+      if (!show) return;
 
-      preview.innerHTML = `
-        <img src="${show.thumbnail}" class="video-thumb">
-      `;
+      if (header) {
+        header.innerHTML = `
+          <h1>${show.title}</h1>
+          <p>${show.description || ""}</p>
+        `;
+      }
 
-      priceDisplay.textContent = `$${(show.price_cents / 100).toFixed(2)}`;
-      desc.textContent = show.description || "";
+      if (preview) {
+        preview.innerHTML = `
+          <img src="${show.thumbnail}" class="video-thumb">
+        `;
+      }
+
+      if (priceDisplay) {
+        priceDisplay.textContent = `$${(show.price_cents / 100).toFixed(2)}`;
+      }
+
+      if (desc) {
+        desc.textContent = show.description || "";
+      }
     });
 
   if (buyBtn) {
@@ -170,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
   })
     .then(res => res.json())
     .then(tickets => {
-      if (!tickets.length) {
+      if (!tickets || !tickets.length) {
         wallet.innerHTML = "<p>No tickets yet.</p>";
         return;
       }
@@ -186,11 +291,14 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
       });
+    })
+    .catch(() => {
+      wallet.innerHTML = "<p>Error loading tickets.</p>";
     });
 });
 
 function viewTicket(id) {
-  window.location.href = `/pages/ticket-view.html?id=${id}`;
+  window.location.href = `/pages/ticket-view.html?id=${encodeURIComponent(id)}`;
 }
 
 // ===============================
@@ -208,7 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
   })
     .then(res => res.json())
     .then(rows => {
-      if (!rows.length) {
+      if (!rows || !rows.length) {
         history.innerHTML = "<p>No purchases yet.</p>";
         return;
       }
@@ -224,5 +332,8 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
       });
+    })
+    .catch(() => {
+      history.innerHTML = "<p>Error loading purchases.</p>";
     });
 });
