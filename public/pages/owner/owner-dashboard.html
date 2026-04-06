@@ -11,9 +11,6 @@
   <link rel="stylesheet" href="/pages/owner/css/owner.css" />
 
   <style>
-    /* ============================================================
-       BACKGROUND — CLEAR, SLIGHT DARK, CINEMATIC
-    ============================================================ */
     .bg-landing {
       position: fixed;
       inset: 0;
@@ -25,9 +22,6 @@
       pointer-events: none;
     }
 
-    /* ============================================================
-       MAIN WRAPPER
-    ============================================================ */
     .owner-shell {
       padding: 30px;
       max-width: 1500px;
@@ -37,9 +31,6 @@
       z-index: 5;
     }
 
-    /* ============================================================
-       BURGER MENU
-    ============================================================ */
     .burger {
       position: fixed;
       top: 20px;
@@ -58,9 +49,6 @@
       transition: 0.3s;
     }
 
-    /* ============================================================
-       SIDEBAR — GLASS, NOT BLACK
-    ============================================================ */
     .sidebar {
       position: fixed;
       top: 0;
@@ -99,9 +87,6 @@
       opacity: 1;
     }
 
-    /* ============================================================
-       PAGE HEADER
-    ============================================================ */
     .page-header h1 {
       font-size: 42px;
       font-weight: 800;
@@ -113,9 +98,6 @@
       margin-bottom: 30px;
     }
 
-    /* ============================================================
-       SECTION TITLES
-    ============================================================ */
     .section-title {
       margin-top: 40px;
       margin-bottom: 15px;
@@ -125,9 +107,6 @@
       padding-left: 12px;
     }
 
-    /* ============================================================
-       TILE GRID — GLASS CARDS
-    ============================================================ */
     .tile-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -153,9 +132,6 @@
       transform: translateY(-3px);
     }
 
-    /* ============================================================
-       ANALYTICS CARDS — GLASS
-    ============================================================ */
     .analytics-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -182,9 +158,6 @@
       font-weight: 800;
     }
 
-    /* ============================================================
-       RIGHT FEED — GLASS
-    ============================================================ */
     .right-feed {
       position: fixed;
       top: 100px;
@@ -213,4 +186,86 @@
     }
 
     .feed-label {
-      font-size: 12px
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .feed-value {
+      font-size: 20px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+
+  <img src="/app/images/backgrounds/owner-bg.jpg" class="bg-landing" alt="Background">
+
+  <div class="burger" id="burger">
+    <div></div><div></div><div></div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>Owner Modules</h2>
+    <a href="/pages/owner/users.html">Users</a>
+    <a href="/pages/owner/skaters.html">Skaters</a>
+    <a href="/pages/owner/businesses.html">Businesses</a>
+    <a href="/pages/owner/musicians.html">Musicians</a>
+    <a href="/pages/owner/shows.html">Shows</a>
+    <a href="/pages/owner/contracts.html">Contracts</a>
+    <a href="/pages/owner/music.html">Music Library</a>
+    <a href="/pages/owner/business-application.html">Applications</a>
+    <a href="/pages/owner/owner-verifications.html">Verifications</a>
+    <a href="/pages/owner/owner-payout.html">Payouts</a>
+    <a href="/pages/owner/owner-analytics.html">Analytics</a>
+    <a href="/pages/owner/settings.html">Settings</a>
+  </div>
+
+  <div class="right-feed" id="rightFeed">
+    <h3>Live Metrics</h3>
+  </div>
+
+  <div class="owner-shell">
+
+    <header class="page-header">
+      <h1>Owner Dashboard</h1>
+      <p>Platform-wide metrics, activity, and controls.</p>
+    </header>
+
+    <h2 class="section-title">Dashboards</h2>
+    <section class="tile-grid">
+      <a class="tile" href="/pages/business/business-dashboard.html"><h3>Business Dashboard</h3></a>
+      <a class="tile" href="/pages/skater/skater-dashboard.html"><h3>Skater Dashboard</h3></a>
+      <a class="tile" href="/pages/musician/musician-dashboard.html"><h3>Musician Dashboard</h3></a>
+      <a class="tile" href="/pages/buyer/buyer-dashboard.html"><h3>Buyer Dashboard</h3></a>
+    </section>
+
+    <h2 class="section-title">Platform Analytics</h2>
+    <section id="analytics" class="analytics-grid"></section>
+
+    <h2 class="section-title">System Modules</h2>
+    <section class="tile-grid">
+      <a class="tile" href="/pages/system/messages.html"><h3>Messages</h3></a>
+      <a class="tile" href="/pages/system/notifications.html"><h3>Notifications</h3></a>
+      <a class="tile" href="/pages/system/search.html"><h3>Search</h3></a>
+      <a class="tile" href="/pages/system/map.html"><h3>Map</h3></a>
+      <a class="tile" href="/pages/system/qr.html"><h3>QR Scanner</h3></a>
+      <a class="tile" href="/pages/system/settings.html"><h3>System Settings</h3></a>
+    </section>
+
+  </div>
+
+  <script src="/app/js/app.js"></script>
+  <script src="/app/js/owner-dashboard.js"></script>
+
+  <script>
+    const burger = document.getElementById("burger");
+    const sidebar = document.getElementById("sidebar");
+
+    burger.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+    });
+  </script>
+
+</body>
+</html>
