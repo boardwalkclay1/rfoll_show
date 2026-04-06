@@ -2,19 +2,7 @@ name = "rollshow"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
-# ============================================================
-# STATIC ASSETS (YOUR PAGES SITE)
-# ============================================================
 assets = { directory = "./public" }
-
-# ============================================================
-# ROUTING: SEND /api/* FROM PAGES → WORKER
-# ============================================================
-# This is the missing piece that caused login to fail.
-# It forces all /api/* calls on roll-show.pages.dev to hit your Worker.
-[[routes]]
-pattern = "roll-show.pages.dev/api/*"
-script = "rollshow"
 
 # ============================================================
 # D1 DATABASE
@@ -47,9 +35,6 @@ preview_id = "94027daf38234d6a914cfd48c91e55f3"
 binding = "AUTH"
 service = "rollshow-auth"
 
-# ============================================================
-# LOGGING
-# ============================================================
 [observability]
 enabled = false
 
