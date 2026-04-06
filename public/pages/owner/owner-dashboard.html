@@ -11,28 +11,35 @@
   <link rel="stylesheet" href="/pages/owner/css/owner.css" />
 
   <style>
-    /* BACKGROUND */
+    /* ============================================================
+       BACKGROUND — CLEAR, SLIGHT DARK, CINEMATIC
+    ============================================================ */
     .bg-landing {
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100vh;
       object-fit: cover;
-      filter: brightness(0.30);
+      filter: brightness(0.65) saturate(115%);
       z-index: -2;
       pointer-events: none;
     }
 
-    /* MAIN WRAPPER */
+    /* ============================================================
+       MAIN WRAPPER
+    ============================================================ */
     .owner-shell {
       padding: 30px;
       max-width: 1500px;
       margin: 0 auto;
       color: white;
       position: relative;
+      z-index: 5;
     }
 
-    /* BURGER MENU */
+    /* ============================================================
+       BURGER MENU
+    ============================================================ */
     .burger {
       position: fixed;
       top: 20px;
@@ -40,7 +47,7 @@
       width: 40px;
       height: 32px;
       cursor: pointer;
-      z-index: 20;
+      z-index: 30;
     }
 
     .burger div {
@@ -51,19 +58,21 @@
       transition: 0.3s;
     }
 
-    /* SIDEBAR */
+    /* ============================================================
+       SIDEBAR — GLASS, NOT BLACK
+    ============================================================ */
     .sidebar {
       position: fixed;
       top: 0;
       left: -260px;
       width: 260px;
       height: 100vh;
-      background: rgba(0,0,0,0.65);
-      backdrop-filter: blur(10px);
-      border-right: 1px solid rgba(255,255,255,0.25);
+      background: rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(14px);
+      border-right: 1px solid rgba(255,255,255,0.12);
       padding: 30px 20px;
       transition: 0.3s;
-      z-index: 19;
+      z-index: 25;
     }
 
     .sidebar.open {
@@ -83,14 +92,16 @@
       text-decoration: none;
       opacity: 0.85;
       font-size: 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
     }
 
     .sidebar a:hover {
       opacity: 1;
     }
 
-    /* PAGE HEADER */
+    /* ============================================================
+       PAGE HEADER
+    ============================================================ */
     .page-header h1 {
       font-size: 42px;
       font-weight: 800;
@@ -98,11 +109,13 @@
     }
 
     .page-header p {
-      opacity: 0.8;
+      opacity: 0.85;
       margin-bottom: 30px;
     }
 
-    /* SECTION TITLES */
+    /* ============================================================
+       SECTION TITLES
+    ============================================================ */
     .section-title {
       margin-top: 40px;
       margin-bottom: 15px;
@@ -112,7 +125,9 @@
       padding-left: 12px;
     }
 
-    /* TILE GRID */
+    /* ============================================================
+       TILE GRID — GLASS CARDS
+    ============================================================ */
     .tile-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -121,24 +136,26 @@
     }
 
     .tile {
-      background: rgba(255,255,255,0.10);
+      background: rgba(0, 0, 0, 0.18);
       padding: 22px;
       border-radius: 12px;
       text-align: center;
       color: white;
       text-decoration: none;
       transition: 0.2s;
-      border: 1px solid rgba(255,255,255,0.25);
-      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
       font-weight: 600;
     }
 
     .tile:hover {
-      background: rgba(255,255,255,0.18);
+      background: rgba(0, 0, 0, 0.28);
       transform: translateY(-3px);
     }
 
-    /* ANALYTICS CARDS */
+    /* ============================================================
+       ANALYTICS CARDS — GLASS
+    ============================================================ */
     .analytics-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -147,11 +164,11 @@
     }
 
     .card {
-      background: rgba(0,0,0,0.45);
+      background: rgba(0, 0, 0, 0.18);
       padding: 20px;
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.25);
-      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
     }
 
     .card h3 {
@@ -165,20 +182,22 @@
       font-weight: 800;
     }
 
-    /* RIGHT FEED */
+    /* ============================================================
+       RIGHT FEED — GLASS
+    ============================================================ */
     .right-feed {
       position: fixed;
       top: 100px;
       right: 20px;
       width: 240px;
       height: 400px;
-      background: rgba(0,0,0,0.45);
+      background: rgba(0, 0, 0, 0.18);
       border-radius: 12px;
-      border: 1px solid rgba(255,255,255,0.25);
-      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(12px);
       padding: 15px;
       overflow-y: auto;
-      z-index: 10;
+      z-index: 20;
     }
 
     .right-feed h3 {
@@ -194,108 +213,4 @@
     }
 
     .feed-label {
-      font-size: 12px;
-      opacity: 0.7;
-    }
-
-    .feed-value {
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    /* SYSTEM MODULES */
-    .system-section {
-      margin-top: 60px;
-    }
-  </style>
-</head>
-
-<body>
-
-  <!-- BACKGROUND -->
-  <img src="/favicon.png" class="bg-landing" alt="Background">
-
-  <!-- BURGER -->
-  <div class="burger" id="burger">
-    <div></div><div></div><div></div>
-  </div>
-
-  <!-- SIDEBAR -->
-  <div class="sidebar" id="sidebar">
-    <h2>Owner Modules</h2>
-    <a href="/pages/owner/users.html">Users</a>
-    <a href="/pages/owner/skaters.html">Skaters</a>
-    <a href="/pages/owner/businesses.html">Businesses</a>
-    <a href="/pages/owner/musicians.html">Musicians</a>
-    <a href="/pages/owner/shows.html">Shows</a>
-    <a href="/pages/owner/contracts.html">Contracts</a>
-    <a href="/pages/owner/music.html">Music Library</a>
-    <a href="/pages/owner/business-application.html">Applications</a>
-    <a href="/pages/owner/owner-verifications.html">Verifications</a>
-    <a href="/pages/owner/owner-payout.html">Payouts</a>
-    <a href="/pages/owner/owner-analytics.html">Analytics</a>
-    <a href="/pages/owner/settings.html">Settings</a>
-  </div>
-
-  <!-- RIGHT FEED -->
-  <div class="right-feed" id="rightFeed">
-    <h3>Live Metrics</h3>
-  </div>
-
-  <div class="owner-shell">
-
-    <header class="page-header">
-      <h1>Owner Dashboard</h1>
-      <p>Platform-wide metrics, activity, and controls.</p>
-    </header>
-
-    <!-- DASHBOARDS AT TOP -->
-    <h2 class="section-title">Dashboards</h2>
-    <section class="tile-grid">
-      <a class="tile" href="/pages/business/business-dashboard.html"><h3>Business Dashboard</h3></a>
-      <a class="tile" href="/pages/skater/skater-dashboard.html"><h3>Skater Dashboard</h3></a>
-      <a class="tile" href="/pages/musician/musician-dashboard.html"><h3>Musician Dashboard</h3></a>
-      <a class="tile" href="/pages/buyer/buyer-dashboard.html"><h3>Buyer Dashboard</h3></a>
-    </section>
-
-    <!-- ANALYTICS CARDS -->
-    <h2 class="section-title">Platform Analytics</h2>
-    <section id="analytics" class="analytics-grid"></section>
-
-    <!-- SYSTEM MODULES -->
-    <div class="system-section">
-      <h2 class="section-title">System Modules</h2>
-      <section class="tile-grid">
-        <a class="tile" href="/pages/system/messages.html"><h3>Messages</h3></a>
-        <a class="tile" href="/pages/system/notifications.html"><h3>Notifications</h3></a>
-        <a class="tile" href="/pages/system/search.html"><h3>Search</h3></a>
-        <a class="tile" href="/pages/system/map.html"><h3>Map</h3></a>
-        <a class="tile" href="/pages/system/qr.html"><h3>QR Scanner</h3></a>
-        <a class="tile" href="/pages/system/settings.html"><h3>System Settings</h3></a>
-      </section>
-    </div>
-
-  </div>
-
-  <!-- LOAD UNIFIED ENGINE -->
-  <script src="/app/js/app.js"></script>
-
-  <!-- OWNER GUARD + BURGER -->
-  <script>
-    // Require logged-in owner
-    requireUser(["owner"]);
-
-    // Burger toggle
-    const burger = document.getElementById("burger");
-    const sidebar = document.getElementById("sidebar");
-
-    burger.addEventListener("click", () => {
-      sidebar.classList.toggle("open");
-    });
-  </script>
-
-  <!-- OWNER DASHBOARD MODULE -->
-  <script type="module" src="/app/js/owner-dashboard.js"></script>
-
-</body>
-</html>
+      font-size: 12px
