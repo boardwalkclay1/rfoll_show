@@ -1,659 +1,1158 @@
-import { apiJson } from "./users.js";
-import { signupBase } from "./users.js";
+// skaters.js
+// Roll Show – Skater, Group, Shows, Music, Collabs, Merch, Cards, Messaging, Analytics
+// All SQL is aligned with your actual D1 schema as pasted.
 
-/* ============================================================
-   SKATER SIGNUP
-============================================================ */
-export async function signupSkater(request, env) {
-  const body = await request.json();
-  body.role = "skater";
+// This module expects a D1 database instance (Cloudflare D1 style) passed in as `db`.
+// Example wiring from a Worker:
+//   import { makeSkatersApi } from './skaters.js';
+//   const api = makeSkatersApi(env.DB_users);
 
-  const base = await signupBase(env, body);
-  if (base.error) return apiJson({ message: base.error }, 400);
+import { randomUUID } from 'crypto';
 
-  await env.DB_users
-    .prepare(
-      `INSERT INTO skaters (id, user_id, bio, discipline, profile_image, clip_url, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(
-      crypto.randomUUID(),
-      base.id,
-      body.bio || null,
-      body.discipline || null,
-      body.profile_image || null,
-      body.clip_url || null,
-      base.created_at
-    )
-    .run();
+// ---------- helpers ----------
 
-  return apiJson({ user: base });
+function nowIso() {
+  return new Date().toISOString();
 }
 
-/* ============================================================
-   PUBLIC SHOW FEED
-============================================================ */
-export async function listShows(env) {
-  const { results } = await env.DB_users
-    .prepare(
-      `SELECT s.*, sk.discipline, sk.bio
-       FROM shows s
-       JOIN skaters sk ON s.skater_id = sk.id
-       ORDER BY s.created_at DESC`
-    )
-    .all();
-
-  return apiJson({ shows: results });
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
 }
 
-/* ============================================================
-   GET SINGLE SHOW
-============================================================ */
-export async function getShow(env, id) {
-  const row = await env.DB_users
-    .prepare(
-      `SELECT s.*, sk.discipline, sk.bio
-       FROM shows s
-       JOIN skaters sk ON s.skater_id = sk.id
-       WHERE s.id = ?`
-    )
-    .bind(id)
-    .first();
-
-  if (!row) return apiJson({ message: "Show not found" }, 404);
-
-  return apiJson({ show: row });
+// D1 helpers
+async function one(db, sql, ...params) {
+  const res = await db.prepare(sql).bind(...params).first();
+  return res || null;
 }
 
-/* ============================================================
-   SKATER DASHBOARD
-============================================================ */
-export async function skaterDashboard(request, env, user) {
-  const skater = await env.DB_users
-    .prepare("SELECT * FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater profile not found" }, 404);
-
-  const { results: shows } = await env.DB_users
-    .prepare("SELECT * FROM shows WHERE skater_id = ? ORDER BY created_at DESC")
-    .bind(skater.id)
-    .all();
-
-  const { results: lessons } = await env.DB_users
-    .prepare("SELECT * FROM lessons WHERE skater_id = ? ORDER BY created_at DESC")
-    .bind(skater.id)
-    .all();
-
-  const { results: lessonRequests } = await env.DB_users
-    .prepare(
-      `SELECT lr.*, l.title AS lesson_title, u.name AS buyer_name
-       FROM lesson_requests lr
-       JOIN lessons l ON lr.lesson_id = l.id
-       JOIN users u ON lr.buyer_id = u.id
-       WHERE l.skater_id = ?
-       ORDER BY lr.created_at DESC`
-    )
-    .bind(skater.id)
-    .all();
-
-  const { results: offers } = await env.DB_users
-    .prepare(
-      `SELECT o.*, u.name AS sender_name
-       FROM offers o
-       JOIN users u ON o.from_user_id = u.id
-       WHERE o.to_user_id = ? OR o.from_user_id = ?
-       ORDER BY o.created_at DESC`
-    )
-    .bind(user.id, user.id)
-    .all();
-
-  const { results: contracts } = await env.DB_users
-    .prepare(
-      `SELECT c.*, o.type, o.terms
-       FROM contracts c
-       JOIN offers o ON c.offer_id = o.id
-       WHERE o.to_user_id = ? OR o.from_user_id = ?
-       ORDER BY c.created_at DESC`
-    )
-    .bind(user.id, user.id)
-    .all();
-
-  const { results: participants } = await env.DB_users
-    .prepare(
-      `SELECT cp.*, u.name
-       FROM contract_participants cp
-       JOIN users u ON cp.user_id = u.id
-       WHERE cp.user_id = ?`
-    )
-    .bind(user.id)
-    .all();
-
-  const { results: licenses } = await env.DB_users
-    .prepare(
-      `SELECT l.*, t.title
-       FROM track_licenses l
-       JOIN tracks t ON l.track_id = t.id
-       WHERE l.skater_id = ?
-       ORDER BY l.created_at DESC`
-    )
-    .bind(skater.id)
-    .all();
-
-  return apiJson({
-    skater,
-    shows,
-    lessons,
-    lessonRequests,
-    offers,
-    contracts,
-    participants,
-    licenses
-  });
+async function all(db, sql, ...params) {
+  const res = await db.prepare(sql).bind(...params).all();
+  return res.results || [];
 }
 
-/* ============================================================
-   LIST SKATER SHOWS
-============================================================ */
-export async function listSkaterShows(request, env, user) {
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const { results } = await env.DB_users
-    .prepare("SELECT * FROM shows WHERE skater_id = ? ORDER BY created_at DESC")
-    .bind(skater.id)
-    .all();
-
-  return apiJson({ shows: results });
+async function run(db, sql, ...params) {
+  return db.prepare(sql).bind(...params).run();
 }
 
-/* ============================================================
-   CREATE SHOW
-============================================================ */
-export async function createShow(request, env, user) {
-  const {
-    title,
-    description,
-    premiere_date,
-    price_cents,
-    thumbnail,
-    video_url
-  } = await request.json();
-
-  if (!title) return apiJson({ message: "Missing title" }, 400);
-
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  await env.DB_users
-    .prepare(
-      `INSERT INTO shows (id, skater_id, title, description, price_cents, thumbnail, video_url, premiere_date, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-    .bind(
-      id,
-      skater.id,
-      title,
-      description || null,
-      price_cents || null,
-      thumbnail || null,
-      video_url || null,
-      premiere_date || null,
-      now
-    )
-    .run();
-
-  return apiJson({ showId: id });
-}
-
-/* ============================================================
-   UPDATE SKATER PROFILE
-============================================================ */
-export async function updateSkaterProfile(request, env, user) {
-  const { discipline, bio, profile_image, clip_url } = await request.json();
-
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  await env.DB_users
-    .prepare(
-      `UPDATE skaters
-       SET discipline = ?, bio = ?, profile_image = ?, clip_url = ?
-       WHERE id = ?`
-    )
-    .bind(
-      discipline || null,
-      bio || null,
-      profile_image || null,
-      clip_url || null,
-      skater.id
-    )
-    .run();
-
-  return apiJson({ success: true });
-}
-
-/* ============================================================
-   CREATE LESSON (OFFERING)
-============================================================ */
-export async function createLesson(request, env, user) {
-  const { title, description, price_cents } = await request.json();
-
-  if (!title) return apiJson({ message: "Missing title" }, 400);
-
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  await env.DB_users
-    .prepare(
-      `INSERT INTO lessons (id, skater_id, title, description, price_cents, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    )
-    .bind(id, skater.id, title, description || null, price_cents || null, now)
-    .run();
-
-  return apiJson({ lessonId: id });
-}
-
-/* ============================================================
-   RESPOND TO LESSON REQUEST
-============================================================ */
-export async function respondLessonRequest(request, env, user) {
-  const { requestId, status } = await request.json();
-
-  const valid = ["accepted", "declined", "completed"];
-  if (!valid.includes(status)) {
-    return apiJson({ message: "Invalid status" }, 400);
-  }
-
-  const row = await env.DB_users
-    .prepare(
-      `SELECT lr.id
-       FROM lesson_requests lr
-       JOIN lessons l ON lr.lesson_id = l.id
-       JOIN skaters s ON l.skater_id = s.id
-       WHERE lr.id = ? AND s.user_id = ?`
-    )
-    .bind(requestId, user.id)
-    .first();
-
-  if (!row) {
-    return apiJson({ message: "Unauthorized or request not found" }, 403);
-  }
-
-  await env.DB_users
-    .prepare("UPDATE lesson_requests SET status = ? WHERE id = ?")
-    .bind(status, requestId)
-    .run();
-
-  return apiJson({ success: true });
-}
-
-/* ============================================================
-   SKATER: LIST BUSINESSES
-============================================================ */
-export async function skaterBusinesses(request, env, user) {
-  const skater = await env.DB_users
-    .prepare("SELECT id, signed_to_label FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater || !skater.signed_to_label) {
-    return apiJson(
-      { message: "You must be signed to the label to access businesses." },
-      403
-    );
-  }
-
-  const { results: businesses } = await env.DB_users
-    .prepare(
-      `SELECT b.id, b.company_name, b.website, b.verified
-       FROM businesses b
-       WHERE b.verified = 1
-       ORDER BY b.company_name ASC`
-    )
-    .all();
-
-  const { results: sponsorships } = await env.DB_users
-    .prepare(
-      `SELECT s.*, b.company_name
-       FROM sponsorships s
-       JOIN businesses b ON s.business_id = b.id
-       WHERE s.skater_id = ?`
-    )
-    .bind(skater.id)
-    .all();
-
-  return apiJson({
-    businesses,
-    sponsorships
-  });
-}
-
-/* ============================================================
-   SKATER: CONTACT BUSINESS
-============================================================ */
-export async function skaterContactBusiness(request, env, user) {
-  const { businessId, message } = await request.json();
-
-  const skater = await env.DB_users
-    .prepare("SELECT id, signed_to_label FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater || !skater.signed_to_label) {
-    return apiJson(
-      { message: "You must be signed to the label to contact businesses." },
-      403
-    );
-  }
-
-  const business = await env.DB_users
-    .prepare("SELECT id FROM businesses WHERE id = ? AND verified = 1")
-    .bind(businessId)
-    .first();
-
-  if (!business) return apiJson({ message: "Business not found." }, 404);
-
-  let thread = await env.DB_users
-    .prepare(
-      `SELECT * FROM message_threads
-       WHERE skater_id = ? AND business_id = ?`
-    )
-    .bind(skater.id, business.id)
-    .first();
-
-  const now = new Date().toISOString();
-
-  if (!thread) {
-    const threadId = crypto.randomUUID();
-    await env.DB_users
-      .prepare(
-        `INSERT INTO message_threads (id, skater_id, business_id, sponsorship_id, created_at)
-         VALUES (?, ?, ?, NULL, ?)`
-      )
-      .bind(threadId, skater.id, business.id, now)
-      .run();
-
-    thread = { id: threadId };
-  }
-
-  const msgId = crypto.randomUUID();
-
-  await env.DB_users
-    .prepare(
-      `INSERT INTO messages (id, thread_id, from_user_id, to_user_id, body, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    )
-    .bind(
-      msgId,
-      thread.id,
-      user.id,
-      null,
-      message || "Let's talk branding.",
-      now
-    )
-    .run();
-
-  return apiJson({ threadId: thread.id, messageId: msgId });
-}
-
-/* ============================================================
-   SKATER OFFERINGS (LESSONS)
-============================================================ */
-export async function listSkaterOfferings(request, env, user) {
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const { results } = await env.DB_users
-    .prepare(
-      `SELECT id, title, description, price_cents, created_at
-       FROM lessons
-       WHERE skater_id = ?
-       ORDER BY created_at DESC`
-    )
-    .bind(skater.id)
-    .all();
-
-  return apiJson({ offerings: results });
-}
-
-/* ============================================================
-   SKATER CALENDAR (SHOWS + LESSONS)
-============================================================ */
-export async function skaterCalendar(request, env, user) {
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const { results: shows } = await env.DB_users
-    .prepare(
-      `SELECT id, title, premiere_date AS date, 'show' AS type
-       FROM shows
-       WHERE skater_id = ?
-       ORDER BY premiere_date DESC`
-    )
-    .bind(skater.id)
-    .all();
-
-  const { results: lessons } = await env.DB_users
-    .prepare(
-      `SELECT id, title, created_at AS date, 'lesson' AS type
-       FROM lessons
-       WHERE skater_id = ?
-       ORDER BY created_at DESC`
-    )
-    .bind(skater.id)
-    .all();
-
-  return apiJson({ items: [...shows, ...lessons] });
-}
-
-/* ============================================================
-   SKATER CAMPAIGNS (SPONSORSHIPS)
-============================================================ */
-export async function skaterCampaigns(request, env, user) {
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const { results } = await env.DB_users
-    .prepare(
-      `SELECT s.*, b.company_name
-       FROM sponsorships s
-       JOIN businesses b ON s.business_id = b.id
-       WHERE s.skater_id = ?
-       ORDER BY s.created_at DESC`
-    )
-    .bind(skater.id)
-    .all();
-
-  return apiJson({ campaigns: results });
-}
-
-/* ============================================================
-   SKATER CARDS (CONTRACTS AS CARDS)
-============================================================ */
-export async function skaterCards(request, env, user) {
-  const { results } = await env.DB_users
-    .prepare(
-      `SELECT c.id, c.status, c.created_at, o.type, o.terms
-       FROM contracts c
-       JOIN offers o ON c.offer_id = o.id
-       WHERE o.to_user_id = ? OR o.from_user_id = ?
-       ORDER BY c.created_at DESC`
-    )
-    .bind(user.id, user.id)
-    .all();
-
-  return apiJson({ cards: results });
-}
-
-/* ============================================================
-   SKATER MUSIC (LICENSED TRACKS)
-============================================================ */
-export async function skaterMusic(request, env, user) {
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const { results } = await env.DB_users
-    .prepare(
-      `SELECT l.id, l.created_at, t.title, t.artist_name
-       FROM track_licenses l
-       JOIN tracks t ON l.track_id = t.id
-       WHERE l.skater_id = ?
-       ORDER BY l.created_at DESC`
-    )
-    .bind(skater.id)
-    .all();
-
-  return apiJson({ tracks: results });
-}
-
-/* ============================================================
-   SKATER BRANDING ASSETS (PROFILE + CLIP)
-============================================================ */
-export async function skaterBrandingAssets(request, env, user) {
-  const skater = await env.DB_users
-    .prepare(
-      "SELECT profile_image, clip_url, discipline, bio FROM skaters WHERE user_id = ?"
-    )
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const assets = [];
-
-  if (skater.profile_image) {
-    assets.push({
-      id: "profile_image",
-      asset_type: "image",
-      asset_url: skater.profile_image,
-      label: "Profile Image"
-    });
-  }
-
-  if (skater.clip_url) {
-    assets.push({
-      id: "clip_url",
-      asset_type: "video",
-      asset_url: skater.clip_url,
-      label: "Intro Clip"
-    });
-  }
-
-  return apiJson({ assets });
-}
-
-/* ============================================================
-   SKATER ANALYTICS
-============================================================ */
-export async function skaterAnalytics(request, env, user) {
-  const url = new URL(request.url);
-  const range = parseInt(url.searchParams.get("range") || "7", 10);
-
-  const skater = await env.DB_users
-    .prepare("SELECT id FROM skaters WHERE user_id = ?")
-    .bind(user.id)
-    .first();
-
-  if (!skater) return apiJson({ message: "Skater not found" }, 404);
-
-  const since = new Date(Date.now() - range * 24 * 60 * 60 * 1000).toISOString();
-
-  const { results: shows } = await env.DB_users
-    .prepare(
-      `SELECT * FROM shows
-       WHERE skater_id = ? AND created_at >= ?
-       ORDER BY created_at DESC`
-    )
-    .bind(skater.id, since)
-    .all();
-
-  const { results: lessons } = await env.DB_users
-    .prepare(
-      `SELECT * FROM lessons
-       WHERE skater_id = ? AND created_at >= ?
-       ORDER BY created_at DESC`
-    )
-    .bind(skater.id, since)
-    .all();
-
-  const { results: lessonRequests } = await env.DB_users
-    .prepare(
-      `SELECT lr.*
-       FROM lesson_requests lr
-       JOIN lessons l ON lr.lesson_id = l.id
-       WHERE l.skater_id = ? AND lr.created_at >= ?
-       ORDER BY lr.created_at DESC`
-    )
-    .bind(skater.id, since)
-    .all();
-
-  const { results: licenses } = await env.DB_users
-    .prepare(
-      `SELECT l.*, t.title
-       FROM track_licenses l
-       JOIN tracks t ON l.track_id = t.id
-       WHERE l.skater_id = ? AND l.created_at >= ?
-       ORDER BY l.created_at DESC`
-    )
-    .bind(skater.id, since)
-    .all();
-
-  const overview = {
-    shows: shows.length,
-    lessons: lessons.length,
-    lesson_requests: lessonRequests.length,
-    track_licenses: licenses.length
+// ---------- main factory ----------
+
+export function makeSkatersApi(db) {
+  return {
+    // identity
+    createSkaterProfile,
+    updateSkaterProfile,
+    getSkaterProfile,
+    requestDisciplineChange,
+    approveDisciplineChange,
+
+    // groups
+    createSkaterGroup,
+    addSkaterToGroup,
+    removeSkaterFromGroup,
+    listSkaterGroupsForSkater,
+
+    // offerings (lessons, etc.)
+    createSkaterOffering,
+    updateSkaterOffering,
+    listSkaterOfferings,
+
+    // music (skater side)
+    uploadTrackForSkater,
+    addTrackToSkaterLibrary,
+    removeTrackFromSkaterLibrary,
+    listSkaterMusicLibrary,
+
+    // shows
+    createShowForSkaterOrGroup,
+    updateShow,
+    cancelShow,
+    listShowsForHost,
+
+    // collabs
+    sendCollabRequest,
+    respondToCollabRequest,
+    postCollabChatMessage,
+    listCollabChat,
+    listCollabsForUser,
+
+    // merch
+    createMerchItem,
+    updateMerchItem,
+    listMerchItemsForSkater,
+
+    // skate cards
+    createSkateCard,
+    listSkateCardsForSkater,
+
+    // messaging
+    sendMessage,
+    listMessagesForUserByRole,
+
+    // analytics
+    getSkaterFinancialAnalytics,
   };
 
-  const top_content = [...shows, ...lessons].slice(0, 10).map(item => ({
-    id: item.id,
-    title: item.title,
-    created_at: item.created_at
-  }));
+  // ---------- SKATER IDENTITY ----------
 
-  return apiJson({
-    overview,
-    top_content
-  });
+  async function createSkaterProfile(userId, {
+    display_name,
+    bio,
+    discipline,
+    subclass,
+    avatar_url,
+    city,
+    state,
+    booking_fee_cents = 0,
+    home_rink = null,
+  }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    // discipline/subclass are free at signup
+    await run(
+      db,
+      `
+      INSERT INTO skater_profiles (
+        id, user_id, display_name, bio,
+        discipline, subclass,
+        avatar_url, city, state,
+        booking_fee_cents, home_rink,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      id,
+      userId,
+      display_name || null,
+      bio || null,
+      discipline || null,
+      subclass || null,
+      avatar_url || null,
+      city || null,
+      state || null,
+      booking_fee_cents,
+      home_rink,
+      created_at,
+    );
+
+    return await getSkaterProfileById(id);
+  }
+
+  async function updateSkaterProfile(skaterId, {
+    display_name,
+    bio,
+    avatar_url,
+    city,
+    state,
+    booking_fee_cents,
+    home_rink,
+  }) {
+    const profile = await getSkaterProfileById(skaterId);
+    assert(profile, 'Skater profile not found');
+
+    await run(
+      db,
+      `
+      UPDATE skater_profiles
+      SET
+        display_name = COALESCE(?, display_name),
+        bio = COALESCE(?, bio),
+        avatar_url = COALESCE(?, avatar_url),
+        city = COALESCE(?, city),
+        state = COALESCE(?, state),
+        booking_fee_cents = COALESCE(?, booking_fee_cents),
+        home_rink = COALESCE(?, home_rink)
+      WHERE id = ?
+      `,
+      display_name ?? null,
+      bio ?? null,
+      avatar_url ?? null,
+      city ?? null,
+      state ?? null,
+      booking_fee_cents ?? null,
+      home_rink ?? null,
+      skaterId,
+    );
+
+    return await getSkaterProfileById(skaterId);
+  }
+
+  async function getSkaterProfile(userId) {
+    return await one(
+      db,
+      `SELECT * FROM skater_profiles WHERE user_id = ?`,
+      userId,
+    );
+  }
+
+  async function getSkaterProfileById(skaterId) {
+    return await one(
+      db,
+      `SELECT * FROM skater_profiles WHERE id = ?`,
+      skaterId,
+    );
+  }
+
+  // Discipline/subclass change: use contracts as a generic approval record.
+  // template_slug = 'discipline_change', role = 'skater', profile_id = skater_profiles.id
+  async function requestDisciplineChange(skaterId, { new_discipline, new_subclass, terms_json }) {
+    const profile = await getSkaterProfileById(skaterId);
+    assert(profile, 'Skater profile not found');
+
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO contracts (
+        id, template_slug, role, profile_id, status, signed_at, terms_json, created_at
+      )
+      VALUES (?, 'discipline_change', 'skater', ?, 'pending', NULL, ?, ?)
+      `,
+      id,
+      skaterId,
+      JSON.stringify({
+        current_discipline: profile.discipline,
+        current_subclass: profile.subclass,
+        requested_discipline: new_discipline,
+        requested_subclass: new_subclass,
+        meta: terms_json || null,
+      }),
+      created_at,
+    );
+
+    return { contract_id: id, status: 'pending' };
+  }
+
+  async function approveDisciplineChange(contractId, { approved_by_owner }) {
+    assert(approved_by_owner === true, 'Owner approval required');
+
+    const contract = await one(
+      db,
+      `SELECT * FROM contracts WHERE id = ? AND template_slug = 'discipline_change'`,
+      contractId,
+    );
+    assert(contract, 'Discipline change contract not found');
+
+    const terms = contract.terms_json ? JSON.parse(contract.terms_json) : null;
+    assert(terms, 'Invalid contract terms_json');
+
+    const { requested_discipline, requested_subclass } = terms;
+    assert(requested_discipline, 'Missing requested_discipline');
+    assert(requested_subclass, 'Missing requested_subclass');
+
+    const signed_at = nowIso();
+
+    await run(
+      db,
+      `
+      UPDATE contracts
+      SET status = 'approved', signed_at = ?
+      WHERE id = ?
+      `,
+      signed_at,
+      contractId,
+    );
+
+    await run(
+      db,
+      `
+      UPDATE skater_profiles
+      SET discipline = ?, subclass = ?
+      WHERE id = ?
+      `,
+      requested_discipline,
+      requested_subclass,
+      contract.profile_id,
+    );
+
+    return { contract_id: contractId, status: 'approved' };
+  }
+
+  // ---------- GROUPS (FULL MODE) ----------
+
+  async function createSkaterGroup(created_by_skater_id, { name, description, avatar_url, visibility = 'public' }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO skater_groups (
+        id, name, description, avatar_url, visibility, created_by_skater_id, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+      id,
+      name,
+      description || null,
+      avatar_url || null,
+      visibility,
+      created_by_skater_id,
+      created_at,
+    );
+
+    // auto-add creator as leader
+    const memberId = randomUUID();
+    await run(
+      db,
+      `
+      INSERT INTO skater_group_members (
+        id, group_id, skater_id, role, joined_at
+      )
+      VALUES (?, ?, ?, 'leader', ?)
+      `,
+      memberId,
+      id,
+      created_by_skater_id,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM skater_groups WHERE id = ?`, id);
+  }
+
+  async function addSkaterToGroup(group_id, skater_id, role = 'member') {
+    const joined_at = nowIso();
+    const id = randomUUID();
+
+    await run(
+      db,
+      `
+      INSERT INTO skater_group_members (
+        id, group_id, skater_id, role, joined_at
+      )
+      VALUES (?, ?, ?, ?, ?)
+      `,
+      id,
+      group_id,
+      skater_id,
+      role,
+      joined_at,
+    );
+
+    return await all(
+      db,
+      `SELECT * FROM skater_group_members WHERE group_id = ?`,
+      group_id,
+    );
+  }
+
+  async function removeSkaterFromGroup(group_id, skater_id) {
+    await run(
+      db,
+      `
+      DELETE FROM skater_group_members
+      WHERE group_id = ? AND skater_id = ?
+      `,
+      group_id,
+      skater_id,
+    );
+
+    return await all(
+      db,
+      `SELECT * FROM skater_group_members WHERE group_id = ?`,
+      group_id,
+    );
+  }
+
+  async function listSkaterGroupsForSkater(skater_id) {
+    return await all(
+      db,
+      `
+      SELECT g.*
+      FROM skater_groups g
+      JOIN skater_group_members m ON m.group_id = g.id
+      WHERE m.skater_id = ?
+      `,
+      skater_id,
+    );
+  }
+
+  // ---------- OFFERINGS (LESSONS, ETC.) ----------
+
+  async function createSkaterOffering(skater_id, {
+    offering_type,
+    title,
+    description,
+    base_price_cents,
+    duration_minutes,
+    is_active = 1,
+  }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO skater_offerings (
+        id, skater_id, offering_type, title, description,
+        base_price_cents, duration_minutes, is_active, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      id,
+      skater_id,
+      offering_type,
+      title,
+      description || null,
+      base_price_cents,
+      duration_minutes || null,
+      is_active,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM skater_offerings WHERE id = ?`, id);
+  }
+
+  async function updateSkaterOffering(offering_id, {
+    title,
+    description,
+    base_price_cents,
+    duration_minutes,
+    is_active,
+  }) {
+    await run(
+      db,
+      `
+      UPDATE skater_offerings
+      SET
+        title = COALESCE(?, title),
+        description = COALESCE(?, description),
+        base_price_cents = COALESCE(?, base_price_cents),
+        duration_minutes = COALESCE(?, duration_minutes),
+        is_active = COALESCE(?, is_active)
+      WHERE id = ?
+      `,
+      title ?? null,
+      description ?? null,
+      base_price_cents ?? null,
+      duration_minutes ?? null,
+      is_active ?? null,
+      offering_id,
+    );
+
+    return await one(db, `SELECT * FROM skater_offerings WHERE id = ?`, offering_id);
+  }
+
+  async function listSkaterOfferings(skater_id) {
+    return await all(
+      db,
+      `SELECT * FROM skater_offerings WHERE skater_id = ? AND is_active = 1`,
+      skater_id,
+    );
+  }
+
+  // ---------- MUSIC (SKATER SIDE) ----------
+
+  // NOTE: tracks.musician_id references musician_profiles.id.
+  // For skater self‑music, the caller must pass a musician_id that belongs to them
+  // (e.g., a linked musician profile). This keeps schema honest.
+  async function uploadTrackForSkater(musician_id, {
+    title,
+    description,
+    genre,
+    bpm,
+    duration_seconds,
+    r2_key,
+    artwork_r2_key,
+    isrc,
+    visibility = 'public',
+    price_cents = 100,
+    license_to_rollshow = 0,
+    royalty_split_json = null,
+  }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO tracks (
+        id, musician_id, title, description, genre, bpm, duration_seconds,
+        r2_key, artwork_r2_key, isrc, visibility,
+        price_cents, license_to_rollshow, royalty_split_json,
+        status, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)
+      `,
+      id,
+      musician_id,
+      title,
+      description || null,
+      genre || null,
+      bpm || null,
+      duration_seconds || null,
+      r2_key,
+      artwork_r2_key || null,
+      isrc || null,
+      visibility,
+      price_cents,
+      license_to_rollshow,
+      royalty_split_json ? JSON.stringify(royalty_split_json) : null,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM tracks WHERE id = ?`, id);
+  }
+
+  async function addTrackToSkaterLibrary(skater_id, track_id) {
+    const id = randomUUID();
+    const added_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO skater_music_library (
+        id, skater_id, track_id, added_at
+      )
+      VALUES (?, ?, ?, ?)
+      `,
+      id,
+      skater_id,
+      track_id,
+      added_at,
+    );
+
+    return await listSkaterMusicLibrary(skater_id);
+  }
+
+  async function removeTrackFromSkaterLibrary(skater_id, track_id) {
+    await run(
+      db,
+      `
+      DELETE FROM skater_music_library
+      WHERE skater_id = ? AND track_id = ?
+      `,
+      skater_id,
+      track_id,
+    );
+
+    return await listSkaterMusicLibrary(skater_id);
+  }
+
+  async function listSkaterMusicLibrary(skater_id) {
+    return await all(
+      db,
+      `
+      SELECT sml.*, t.title, t.genre, t.duration_seconds, t.r2_key, t.artwork_r2_key
+      FROM skater_music_library sml
+      JOIN tracks t ON t.id = sml.track_id
+      WHERE sml.skater_id = ?
+      ORDER BY sml.added_at DESC
+      `,
+      skater_id,
+    );
+  }
+
+  // ---------- SHOWS (HOSTED BY SKATER OR GROUP) ----------
+
+  async function createShowForSkaterOrGroup({
+    host_type,          // 'skater' | 'group'
+    host_id,            // skater_profiles.id or skater_groups.id
+    title,
+    description,
+    show_type,          // public | private | virtual | premier | roll_show | ...
+    location_name,
+    address,
+    city,
+    state,
+    country,
+    latitude,
+    longitude,
+    virtual_link,
+    start_time,
+    end_time,
+    base_price_cents = 0,
+    booking_fee_cents = 0,
+    funding_goal_cents = 0,
+  }) {
+    assert(host_type === 'skater' || host_type === 'group', 'Invalid host_type');
+
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO shows (
+        id, host_type, host_id,
+        title, description, show_type,
+        location_name, address, city, state, country,
+        latitude, longitude,
+        virtual_link,
+        start_time, end_time,
+        base_price_cents, booking_fee_cents,
+        funding_goal_cents, funding_status,
+        weather_snapshot_json,
+        qr_code_url,
+        status,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'none', NULL, NULL, 'active', ?)
+      `,
+      id,
+      host_type,
+      host_id,
+      title,
+      description || null,
+      show_type,
+      location_name || null,
+      address || null,
+      city || null,
+      state || null,
+      country || null,
+      latitude || null,
+      longitude || null,
+      virtual_link || null,
+      start_time,
+      end_time || null,
+      base_price_cents,
+      booking_fee_cents,
+      funding_goal_cents,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM shows WHERE id = ?`, id);
+  }
+
+  async function updateShow(show_id, {
+    title,
+    description,
+    show_type,
+    location_name,
+    address,
+    city,
+    state,
+    country,
+    latitude,
+    longitude,
+    virtual_link,
+    start_time,
+    end_time,
+    base_price_cents,
+    booking_fee_cents,
+    funding_goal_cents,
+    status,
+  }) {
+    await run(
+      db,
+      `
+      UPDATE shows
+      SET
+        title = COALESCE(?, title),
+        description = COALESCE(?, description),
+        show_type = COALESCE(?, show_type),
+        location_name = COALESCE(?, location_name),
+        address = COALESCE(?, address),
+        city = COALESCE(?, city),
+        state = COALESCE(?, state),
+        country = COALESCE(?, country),
+        latitude = COALESCE(?, latitude),
+        longitude = COALESCE(?, longitude),
+        virtual_link = COALESCE(?, virtual_link),
+        start_time = COALESCE(?, start_time),
+        end_time = COALESCE(?, end_time),
+        base_price_cents = COALESCE(?, base_price_cents),
+        booking_fee_cents = COALESCE(?, booking_fee_cents),
+        funding_goal_cents = COALESCE(?, funding_goal_cents),
+        status = COALESCE(?, status)
+      WHERE id = ?
+      `,
+      title ?? null,
+      description ?? null,
+      show_type ?? null,
+      location_name ?? null,
+      address ?? null,
+      city ?? null,
+      state ?? null,
+      country ?? null,
+      latitude ?? null,
+      longitude ?? null,
+      virtual_link ?? null,
+      start_time ?? null,
+      end_time ?? null,
+      base_price_cents ?? null,
+      booking_fee_cents ?? null,
+      funding_goal_cents ?? null,
+      status ?? null,
+      show_id,
+    );
+
+    return await one(db, `SELECT * FROM shows WHERE id = ?`, show_id);
+  }
+
+  async function cancelShow(show_id) {
+    await run(
+      db,
+      `
+      UPDATE shows
+      SET status = 'cancelled'
+      WHERE id = ?
+      `,
+      show_id,
+    );
+
+    return await one(db, `SELECT * FROM shows WHERE id = ?`, show_id);
+  }
+
+  async function listShowsForHost(host_type, host_id) {
+    return await all(
+      db,
+      `
+      SELECT * FROM shows
+      WHERE host_type = ? AND host_id = ?
+      ORDER BY start_time DESC
+      `,
+      host_type,
+      host_id,
+    );
+  }
+
+  // NOTE: Your current schema does NOT have a show_collaborators table.
+  // Multi‑skater collab shows + per‑show splits must be represented via:
+  //   - collabs / collab_results (for creative collab)
+  //   - royalty_accounts / royalty_events (for money)
+  // If you want explicit show‑level collaborator rows, we’ll need a new table.
+
+  // ---------- COLLABS ----------
+
+  async function sendCollabRequest(from_user_id, to_user_id, {
+    type,      // inperson | stitch
+    message,
+    spot,
+    date,
+    time,
+    deadline,
+  }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO collabs (
+        id, from_user, to_user, type, status, message, spot, date, time, deadline, created_at
+      )
+      VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?)
+      `,
+      id,
+      from_user_id,
+      to_user_id,
+      type,
+      message || null,
+      spot || null,
+      date || null,
+      time || null,
+      deadline || null,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM collabs WHERE id = ?`, id);
+  }
+
+  async function respondToCollabRequest(collab_id, { status, note }) {
+    assert(['accepted', 'declined', 'cancelled'].includes(status), 'Invalid collab status');
+
+    await run(
+      db,
+      `
+      UPDATE collabs
+      SET status = ?
+      WHERE id = ?
+      `,
+      status,
+      collab_id,
+    );
+
+    const historyId = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO collab_history (
+        id, collab_id, status, note, created_at
+      )
+      VALUES (?, ?, ?, ?, ?)
+      `,
+      historyId,
+      collab_id,
+      status,
+      note || null,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM collabs WHERE id = ?`, collab_id);
+  }
+
+  async function postCollabChatMessage(collab_id, user_id, text) {
+    const id = randomUUID();
+    const timestamp = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO collab_chat (
+        id, collab_id, user_id, text, timestamp
+      )
+      VALUES (?, ?, ?, ?, ?)
+      `,
+      id,
+      collab_id,
+      user_id,
+      text,
+      timestamp,
+    );
+
+    return await listCollabChat(collab_id);
+  }
+
+  async function listCollabChat(collab_id) {
+    return await all(
+      db,
+      `
+      SELECT c.*, u.username
+      FROM collab_chat c
+      LEFT JOIN users u ON u.id = c.user_id
+      WHERE c.collab_id = ?
+      ORDER BY c.timestamp ASC
+      `,
+      collab_id,
+    );
+  }
+
+  async function listCollabsForUser(user_id) {
+    return await all(
+      db,
+      `
+      SELECT *
+      FROM collabs
+      WHERE from_user = ? OR to_user = ?
+      ORDER BY created_at DESC
+      `,
+      user_id,
+      user_id,
+    );
+  }
+
+  // ---------- MERCH ----------
+
+  async function createMerchItem(skater_id, {
+    title,
+    description,
+    price_cents,
+    image_url,
+  }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO merch_items (
+        id, skater_id, title, description, price_cents, image_url, created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+      id,
+      skater_id,
+      title,
+      description || null,
+      price_cents,
+      image_url || null,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM merch_items WHERE id = ?`, id);
+  }
+
+  async function updateMerchItem(merch_id, {
+    title,
+    description,
+    price_cents,
+    image_url,
+  }) {
+    await run(
+      db,
+      `
+      UPDATE merch_items
+      SET
+        title = COALESCE(?, title),
+        description = COALESCE(?, description),
+        price_cents = COALESCE(?, price_cents),
+        image_url = COALESCE(?, image_url)
+      WHERE id = ?
+      `,
+      title ?? null,
+      description ?? null,
+      price_cents ?? null,
+      image_url ?? null,
+      merch_id,
+    );
+
+    return await one(db, `SELECT * FROM merch_items WHERE id = ?`, merch_id);
+  }
+
+  async function listMerchItemsForSkater(skater_id) {
+    return await all(
+      db,
+      `
+      SELECT * FROM merch_items
+      WHERE skater_id = ?
+      ORDER BY created_at DESC
+      `,
+      skater_id,
+    );
+  }
+
+  // ---------- SKATE CARDS ----------
+
+  async function createSkateCard(skater_id, {
+    title,
+    description,
+    image_url,
+    rarity,
+    edition_size,
+    price_cents,
+    card_type = 'standard',
+    qr_code_url,
+  }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO skate_cards (
+        id, skater_id, title, description,
+        image_url, rarity, edition_size, price_cents,
+        card_type, qr_code_url,
+        created_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      id,
+      skater_id,
+      title,
+      description || null,
+      image_url || null,
+      rarity || null,
+      edition_size || null,
+      price_cents || null,
+      card_type,
+      qr_code_url || null,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM skate_cards WHERE id = ?`, id);
+  }
+
+  async function listSkateCardsForSkater(skater_id) {
+    return await all(
+      db,
+      `
+      SELECT * FROM skate_cards
+      WHERE skater_id = ?
+      ORDER BY created_at DESC
+      `,
+      skater_id,
+    );
+  }
+
+  // ---------- MESSAGING ----------
+
+  // NOTE: You asked for separate buyer/musician/skater inboxes.
+  // We implement that by filtering on sender_role / receiver_role.
+
+  async function sendMessage({
+    sender_user_id,
+    receiver_user_id,
+    sender_role,
+    receiver_role,
+    message_type = 'chat',
+    content,
+    media_url,
+    media_type,
+    is_request = 0,
+    request_type,
+  }) {
+    const id = randomUUID();
+    const created_at = nowIso();
+
+    await run(
+      db,
+      `
+      INSERT INTO messages (
+        id,
+        sender_user_id, receiver_user_id,
+        sender_role, receiver_role,
+        message_type,
+        content, media_url, media_type,
+        is_request, request_type, request_status,
+        created_at, read_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, NULL)
+      `,
+      id,
+      sender_user_id,
+      receiver_user_id,
+      sender_role,
+      receiver_role,
+      message_type,
+      content || null,
+      media_url || null,
+      media_type || null,
+      is_request ? 1 : 0,
+      request_type || null,
+      created_at,
+    );
+
+    return await one(db, `SELECT * FROM messages WHERE id = ?`, id);
+  }
+
+  async function listMessagesForUserByRole(user_id, roleFilter) {
+    // roleFilter: 'buyer' | 'musician' | 'skater' etc.
+    return await all(
+      db,
+      `
+      SELECT *
+      FROM messages
+      WHERE receiver_user_id = ?
+        AND sender_role = ?
+      ORDER BY created_at DESC
+      `,
+      user_id,
+      roleFilter,
+    );
+  }
+
+  // ---------- ANALYTICS (CONTRACTS, ROYALTIES, SPLITS, REVENUE) ----------
+
+  // This aggregates:
+  // - royalty_accounts / royalty_events
+  // - tickets (show revenue)
+  // - merch_orders (merch revenue)
+  // - skate_card_sales (card revenue)
+  // for a given skater_profile.id
+
+  async function getSkaterFinancialAnalytics(skater_id) {
+    // 1) royalty account for this skater
+    const royaltyAccount = await one(
+      db,
+      `
+      SELECT *
+      FROM royalty_accounts
+      WHERE role = 'skater' AND profile_id = ?
+      `,
+      skater_id,
+    );
+
+    let royaltyBalance = 0;
+    let royaltyEvents = [];
+    if (royaltyAccount) {
+      royaltyBalance = royaltyAccount.balance_cents;
+      royaltyEvents = await all(
+        db,
+        `
+        SELECT *
+        FROM royalty_events
+        WHERE account_id = ?
+        ORDER BY created_at DESC
+        `,
+        royaltyAccount.id,
+      );
+    }
+
+    // 2) show revenue via tickets
+    const showRevenueRows = await all(
+      db,
+      `
+      SELECT
+        s.id AS show_id,
+        s.title,
+        SUM(t.price_cents) AS total_ticket_cents,
+        COUNT(t.id) AS ticket_count
+      FROM shows s
+      JOIN tickets t ON t.show_id = s.id
+      WHERE s.host_type = 'skater'
+        AND s.host_id = ?
+        AND t.status IN ('charged')
+      GROUP BY s.id, s.title
+      `,
+      skater_id,
+    );
+
+    const totalTicketCents = showRevenueRows.reduce(
+      (sum, r) => sum + (r.total_ticket_cents || 0),
+      0,
+    );
+
+    // 3) merch revenue
+    const merchRevenueRows = await all(
+      db,
+      `
+      SELECT
+        m.id AS merch_id,
+        m.title,
+        SUM(o.total_cents) AS total_merch_cents,
+        COUNT(o.id) AS order_count
+      FROM merch_items m
+      JOIN merch_orders o ON o.merch_id = m.id
+      WHERE m.skater_id = ?
+        AND o.status IN ('paid', 'fulfilled')
+      GROUP BY m.id, m.title
+      `,
+      skater_id,
+    );
+
+    const totalMerchCents = merchRevenueRows.reduce(
+      (sum, r) => sum + (r.total_merch_cents || 0),
+      0,
+    );
+
+    // 4) skate card revenue
+    const cardRevenueRows = await all(
+      db,
+      `
+      SELECT
+        sc.id AS card_id,
+        sc.title,
+        SUM(scs.amount_cents) AS total_card_cents,
+        COUNT(scs.id) AS sale_count
+      FROM skate_cards sc
+      JOIN skate_card_sales scs ON scs.card_id = sc.id
+      WHERE sc.skater_id = ?
+      GROUP BY sc.id, sc.title
+      `,
+      skater_id,
+    );
+
+    const totalCardCents = cardRevenueRows.reduce(
+      (sum, r) => sum + (r.total_card_cents || 0),
+      0,
+    );
+
+    return {
+      skater_id,
+      royalty: {
+        balance_cents: royaltyBalance,
+        events: royaltyEvents,
+      },
+      tickets: {
+        total_cents: totalTicketCents,
+        by_show: showRevenueRows,
+      },
+      merch: {
+        total_cents: totalMerchCents,
+        by_item: merchRevenueRows,
+      },
+      skate_cards: {
+        total_cents: totalCardCents,
+        by_card: cardRevenueRows,
+      },
+      // NOTE: per‑show splits between multiple skaters/musicians
+      // must be modeled via royalty_events and/or a future show_splits table.
+    };
+  }
 }
