@@ -192,10 +192,10 @@
 
   <!-- TOP NAV -->
   <nav class="rs-top-nav">
-    <a href="/buyer/buyer-dashboard.html" class="rs-active">Dashboard</a>
-    <a href="/buyer/buyer-profile.html">Profile</a>
-    <a href="/buyer/buyer-feed.html">Feed</a>
-    <a href="/buyer/buyer-music-library.html">Library</a>
+    <a href="/pages/buyer/buyer-dashboard.html" class="rs-active">Dashboard</a>
+    <a href="/pages/buyer/buyer-profile.html">Profile</a>
+    <a href="/pages/buyer/buyer-feed.html">Feed</a>
+    <a href="/pages/buyer/buyer-music-library.html">Library</a>
   </nav>
 
   <!-- DASHBOARD SHELL -->
@@ -230,30 +230,39 @@
     <div class="rs-dash-actions">
 
       <!-- TICKETS -->
-      <div class="rs-dash-action" onclick="location.href='/buyer/buyer-tickets.html'">My Tickets</div>
-      <div class="rs-dash-action" onclick="location.href='/buyer/ticket-wallet.html'">Ticket Wallet</div>
-      <div class="rs-dash-action" onclick="location.href='/buyer/purchase-history.html'">Purchase History</div>
-      <div class="rs-dash-action" onclick="location.href='/buyer/ticket-confirmation.html'">Confirmations</div>
-      <div class="rs-dash-action" onclick="location.href='/buyer/ticket-view.html'">Ticket Viewer</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/buyer-tickets.html'">My Tickets</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/ticket-wallet.html'">Ticket Wallet</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/purchase-history.html'">Purchase History</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/ticket-confirmation.html'">Confirmations</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/ticket-view.html'">Ticket Viewer</div>
 
       <!-- BUYER TOOLS -->
-      <div class="rs-dash-action" onclick="location.href='/buyer/buyer-cards.html'">Cards</div>
-      <div class="rs-dash-action" onclick="location.href='/buyer/buyer-calendar.html'">Calendar</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/buyer-cards.html'">Cards</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/buyer-calendar.html'">Calendar</div>
 
       <!-- MEDIA -->
-      <div class="rs-dash-action" onclick="location.href='/buyer/buyer-music-library.html'">Music Library</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/buyer-music-library.html'">Music Library</div>
 
       <!-- FEED -->
-      <div class="rs-dash-action" onclick="location.href='/buyer/buyer-feed.html'">Feed</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/buyer-feed.html'">Feed</div>
 
       <!-- PROFILE -->
-      <div class="rs-dash-action" onclick="location.href='/buyer/buyer-profile.html'">Profile</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/buyer/buyer-profile.html'">Profile</div>
 
     </div>
 
   </div>
 
-  <!-- JS -->
+  <!-- UNIFIED ENGINE -->
+  <script src="/app/js/app.js"></script>
+
+  <!-- BUYER GUARD + PAGE WIRING -->
+  <script>
+    // Require logged-in buyer
+    requireUser(["buyer"]);
+  </script>
+
+  <!-- BUYER DASHBOARD MODULE (optional extra logic) -->
   <script type="module" src="/app/js/buyer/buyer-dashboard.js"></script>
 
 </body>
