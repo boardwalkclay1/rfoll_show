@@ -183,7 +183,6 @@
       border-color: rgba(255,255,255,0.6);
     }
 
-    /* RESPONSIVE */
     @media (max-width: 900px) {
       .rs-dash-shell { margin-top: 80px; }
       .rs-dash-grid { grid-template-columns: minmax(0, 1fr); }
@@ -198,10 +197,10 @@
 
   <!-- TOP NAV -->
   <nav class="rs-top-nav">
-    <a href="/business/business-dashboard.html" class="rs-active">Dashboard</a>
-    <a href="/business/business-profile.html">Profile</a>
-    <a href="/business/business-feed.html">Feed</a>
-    <a href="/business/branding-studio.html">Branding</a>
+    <a href="/pages/business/business-dashboard.html" class="rs-active">Dashboard</a>
+    <a href="/pages/business/business-profile.html">Profile</a>
+    <a href="/pages/business/business-feed.html">Feed</a>
+    <a href="/pages/business/branding-studio.html">Branding</a>
   </nav>
 
   <!-- DASHBOARD SHELL -->
@@ -213,7 +212,7 @@
         <div class="rs-dash-title" id="business-name">Business</div>
         <div class="rs-dash-sub">Your Roll Show business suite</div>
       </div>
-      <div class="rs-dash-stat">$0.00</div>
+      <div class="rs-dash-stat" id="business-revenue">$0.00</div>
     </header>
 
     <!-- MAIN GRID -->
@@ -245,36 +244,39 @@
       <ul class="rs-dash-list" id="business-messages"></ul>
     </div>
 
-    <!-- FULL ACTION GRID (GROUPED BY FUNCTION) -->
+    <!-- ACTION GRID -->
     <div class="rs-dash-actions">
 
-      <!-- BUSINESS TOOLS -->
-      <div class="rs-dash-action" onclick="location.href='/business/create-offer.html'">Create Offer</div>
-      <div class="rs-dash-action" onclick="location.href='/business/offers.html'">Offers</div>
-      <div class="rs-dash-action" onclick="location.href='/business/offers-inbox.html'">Offers Inbox</div>
-      <div class="rs-dash-action" onclick="location.href='/business/contracts.html'">Contracts</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/create-offer.html'">Create Offer</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/offers.html'">Offers</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/offers-inbox.html'">Offers Inbox</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/contracts.html'">Contracts</div>
 
-      <!-- MARKETING / CAMPAIGNS -->
-      <div class="rs-dash-action" onclick="location.href='/business/business-campains.html'">Campaigns</div>
-      <div class="rs-dash-action" onclick="location.href='/business/business-sponsorships.html'">Sponsorships</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/business-campaigns.html'">Campaigns</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/business-sponsorships.html'">Sponsorships</div>
 
-      <!-- ANALYTICS / BOOKINGS -->
-      <div class="rs-dash-action" onclick="location.href='/business/business-analytics.html'">Analytics</div>
-      <div class="rs-dash-action" onclick="location.href='/business/business-bookings.html'">Bookings</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/business-analytics.html'">Analytics</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/business-bookings.html'">Bookings</div>
 
-      <!-- BRANDING / FEED -->
-      <div class="rs-dash-action" onclick="location.href='/business/branding-studio.html'">Branding Studio</div>
-      <div class="rs-dash-action" onclick="location.href='/business/business-feed.html'">Feed</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/branding-studio.html'">Branding Studio</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/business-feed.html'">Feed</div>
 
-      <!-- PROFILE / APPLICATION -->
-      <div class="rs-dash-action" onclick="location.href='/business/business-profile.html'">Profile</div>
-      <div class="rs-dash-action" onclick="location.href='/business/apply.html'">Application</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/business-profile.html'">Profile</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/business/apply.html'">Application</div>
 
     </div>
 
   </div>
 
-  <!-- JS -->
+  <!-- UNIFIED ENGINE -->
+  <script src="/app/js/app.js"></script>
+
+  <!-- BUSINESS GUARD -->
+  <script>
+    requireUser(["business"]);
+  </script>
+
+  <!-- PAGE MODULE -->
   <script type="module" src="/app/js/business/business-dashboard.js"></script>
 
 </body>
