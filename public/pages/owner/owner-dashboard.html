@@ -6,6 +6,7 @@
 
   <link rel="icon" href="/favicon.png" />
 
+  <!-- GLOBAL + OWNER STYLES -->
   <link rel="stylesheet" href="/app/styles/styles.css" />
   <link rel="stylesheet" href="/pages/owner/css/owner.css" />
 
@@ -239,7 +240,6 @@
   <!-- RIGHT FEED -->
   <div class="right-feed" id="rightFeed">
     <h3>Live Metrics</h3>
-    <!-- JS injects feed items -->
   </div>
 
   <div class="owner-shell">
@@ -277,9 +277,14 @@
 
   </div>
 
-  <script type="module" src="/app/js/owner-dashboard.js"></script>
+  <!-- LOAD UNIFIED ENGINE -->
+  <script src="/app/js/app.js"></script>
 
+  <!-- OWNER GUARD + BURGER -->
   <script>
+    // Require logged-in owner
+    requireUser(["owner"]);
+
     // Burger toggle
     const burger = document.getElementById("burger");
     const sidebar = document.getElementById("sidebar");
@@ -288,6 +293,9 @@
       sidebar.classList.toggle("open");
     });
   </script>
+
+  <!-- OWNER DASHBOARD MODULE -->
+  <script type="module" src="/app/js/owner-dashboard.js"></script>
 
 </body>
 </html>
