@@ -261,7 +261,7 @@
       <p id="secondary-talent-text">Loading…</p>
     </div>
 
-    <!-- FULL ACTION GRID (ALL YOUR SHIT) -->
+    <!-- FULL ACTION GRID -->
     <div class="rs-dash-actions">
 
       <div class="rs-dash-action" id="create-show-link">Create Show</div>
@@ -276,23 +276,31 @@
       <div class="rs-dash-action" id="feed-link">Feed</div>
       <div class="rs-dash-action" id="followers-link">Followers</div>
 
-      <!-- NEW EXPANSION MODULES -->
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-analytic.html'">Analytics</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-bookings.html'">Bookings</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-branding.html'">Branding</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-calendar.html'">Calendar</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-campaigns.html'">Campaigns</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-cards.html'">Cards</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-group.html'">Group</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-groups.html'">Groups</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-music.html'">Music</div>
-      <div class="rs-dash-action" onclick="location.href='/skater/skater-offerings.html'">Offerings</div>
+      <!-- EXPANSION MODULES -->
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-analytic.html'">Analytics</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-bookings.html'">Bookings</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-branding.html'">Branding</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-calendar.html'">Calendar</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-campaigns.html'">Campaigns</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-cards.html'">Cards</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-group.html'">Group</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-groups.html'">Groups</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-music.html'">Music</div>
+      <div class="rs-dash-action" onclick="location.href='/pages/skater/skater-offerings.html'">Offerings</div>
 
     </div>
 
   </div>
 
-  <!-- JS -->
+  <!-- UNIFIED ENGINE -->
+  <script src="/app/js/app.js"></script>
+
+  <!-- SKATER GUARD -->
+  <script>
+    requireUser(["skater"]);
+  </script>
+
+  <!-- PAGE MODULE -->
   <script type="module" src="/app/js/skater/skater-dashboard.js"></script>
 
 </body>
