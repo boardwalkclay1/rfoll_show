@@ -1,255 +1,123 @@
-// routes/owner.js — FULL CLEAN REBUILD FOR NEW SCHEMA
-
+// routes/owner.js — FULL CINEMATIC OWNER DASHBOARD
 import { apiJson, requireRole } from "../users.js";
 
 /* ============================================================
-   OWNER: OVERVIEW (MAIN ANALYTICS)
+   OWNER DASHBOARD — MAIN ENTRY
+   Returns structured sections for mobile UI
 ============================================================ */
-export async function ownerOverview(request, env) {
+export async function ownerDashboard(request, env) {
   return requireRole(request, env, ["owner"], async () => {
     const db = env.DB_users;
 
-    const total_users = (await db.prepare(
-      "SELECT COUNT(*) AS n FROM users"
-    ).first()).n;
+    /* ------------------------------
+       HIGH-LEVEL COUNTS
+    ------------------------------ */
+    const total_users = (await db.prepare("SELECT COUNT(*) AS n FROM users").first()).n;
+    const total_skaters = (await db.prepare("SELECT COUNT(*) AS n FROM skater_profiles").first()).n;
+    const total_businesses = (await db.prepare("SELECT COUNT(*) AS n FROM business_profiles").first()).n;
+    const total_musicians = (await db.prepare("SELECT COUNT(*) AS n FROM musician_profiles").first()).n;
+    const total_buyers = (await db.prepare("SELECT COUNT(*) AS n FROM buyer_profiles").first()).n;
 
-    const total_skaters = (await db.prepare(
-      "SELECT COUNT(*) AS n FROM skaters"
-    ).first()).n;
+    const total_shows = (await db.prepare("SELECT COUNT(*) AS n FROM shows").first()).n;
+    const total_tickets = (await db.prepare("SELECT COUNT(*) AS n FROM tickets").first()).n;
 
-    const total_businesses = (await db.prepare(
-      "SELECT COUNT(*) AS n FROM businesses"
-    ).first()).n;
+    const total_merch_orders = (await db.prepare("SELECT COUNT(*) AS n FROM merch_orders").first()).n;
+    const total_skatecard_sales = (await db.prepare("SELECT COUNT(*) AS n FROM skate_card_sales").first()).n;
 
-    const total_musicians = (await db.prepare(
-      "SELECT COUNT(*) AS n FROM musicians"
-    ).first()).n;
+    const total_revenue = (await db.prepare(`
+      SELECT 
+        COALESCE(SUM(price_cents),0) 
+      FROM (
+        SELECT price_cents FROM tickets
+        UNION ALL
+        SELECT price_cents FROM merch_orders
+        UNION ALL
+        SELECT price_cents FROM skate_card_sales
+      )
+    `).first())["COALESCE(SUM(price_cents),0)"];
 
-    const total_buyers = (await db.prepare(
-      "SELECT COUNT(*) AS n FROM buyers"
-    ).first()).n;
+    /* ------------------------------
+       RECENT ACTIVITY
+    ------------------------------ */
+    const recent_users = (await db.prepare(`
+      SELECT id, email, role, created_at
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT 10
+    `).all()).results;
 
-    const total_shows = (await db.prepare(
-      "SELECT COUNT(*) AS n FROM shows"
-    ).first()).n;
+    const recent_reports = (await db.prepare(`
+      SELECT r.*, u.email AS reporter_email
+      FROM feed_reports r
+      LEFT JOIN users u ON u.id = r.reporter_id
+      ORDER BY r.created_at DESC
+      LIMIT 10
+    `).all()).results;
 
-    const total_purchases = (await db.prepare(
-      "SELECT COUNT(*) AS n FROM purchases"
-    ).first()).n;
+    const recent_errors = (await db.prepare(`
+      SELECT *
+      FROM error_logs
+      ORDER BY created_at DESC
+      LIMIT 10
+    `).all()).results;
 
-    const total_revenue = (await db.prepare(
-      "SELECT COALESCE(SUM(amount),0) AS total FROM purchases"
-    ).first()).total;
+    /* ------------------------------
+       ANALYTICS CHIPS (YouTube style)
+    ------------------------------ */
+    const analytics_chips = [
+      { label: "Users", value: total_users, link: "/owner/users" },
+      { label: "Skaters", value: total_skaters, link: "/owner/skaters" },
+      { label: "Businesses", value: total_businesses, link: "/owner/businesses" },
+      { label: "Musicians", value: total_musicians, link: "/owner/musicians" },
+      { label: "Buyers", value: total_buyers, link: "/owner/buyers" },
+      { label: "Shows", value: total_shows, link: "/owner/shows" },
+      { label: "Tickets", value: total_tickets, link: "/owner/tickets" },
+      { label: "Merch Orders", value: total_merch_orders, link: "/owner/merch" },
+      { label: "Skatecard Sales", value: total_skatecard_sales, link: "/owner/skatecards" },
+      { label: "Revenue", value: total_revenue / 100, link: "/owner/revenue" }
+    ];
 
+    /* ------------------------------
+       GHOST BUTTON SECTIONS
+    ------------------------------ */
+    const ghost_buttons = [
+      { label: "Users", icon: "users", link: "/owner/users" },
+      { label: "Skaters", icon: "skate", link: "/owner/skaters" },
+      { label: "Businesses", icon: "briefcase", link: "/owner/businesses" },
+      { label: "Musicians", icon: "music", link: "/owner/musicians" },
+      { label: "Shows", icon: "ticket", link: "/owner/shows" },
+      { label: "Contracts", icon: "file", link: "/owner/contracts" },
+      { label: "Reports", icon: "flag", link: "/owner/reports" },
+      { label: "Errors", icon: "alert", link: "/owner/errors" },
+      { label: "Webhooks", icon: "link", link: "/owner/webhooks" },
+      { label: "Branding", icon: "palette", link: "/owner/branding" },
+      { label: "Notes", icon: "note", link: "/owner/notes" },
+      { label: "Sponsorships", icon: "star", link: "/owner/sponsorships" }
+    ];
+
+    /* ------------------------------
+       BURGER MENU (ALL DASHBOARDS)
+    ------------------------------ */
+    const burger_menu = [
+      { label: "Owner Dashboard", link: "/owner" },
+      { label: "Skater Dashboard", link: "/skater" },
+      { label: "Business Dashboard", link: "/business" },
+      { label: "Musician Dashboard", link: "/musician" },
+      { label: "Buyer Dashboard", link: "/buyer" },
+      { label: "Admin Tools", link: "/admin" }
+    ];
+
+    /* ------------------------------
+       FINAL STRUCTURED RESPONSE
+    ------------------------------ */
     return apiJson({
-      total_users,
-      total_skaters,
-      total_businesses,
-      total_musicians,
-      total_buyers,
-      total_shows,
-      total_purchases,
-      total_revenue
+      layout: "owner_dashboard",
+      analytics_chips,
+      ghost_buttons,
+      burger_menu,
+      recent_users,
+      recent_reports,
+      recent_errors
     });
-  });
-}
-
-/* ============================================================
-   OWNER: USERS
-============================================================ */
-export async function ownerUsers(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      "SELECT id, email, role, is_owner, created_at FROM users ORDER BY created_at DESC"
-    ).all();
-    return apiJson({ users: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: SKATERS
-============================================================ */
-export async function ownerSkaters(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      `SELECT s.*, u.email, u.name
-       FROM skaters s
-       JOIN users u ON s.user_id = u.id
-       ORDER BY s.created_at DESC`
-    ).all();
-    return apiJson({ skaters: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: BUSINESSES
-============================================================ */
-export async function ownerBusinesses(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      `SELECT b.*, u.email, u.name
-       FROM businesses b
-       JOIN users u ON b.user_id = u.id
-       ORDER BY b.created_at DESC`
-    ).all();
-    return apiJson({ businesses: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: MUSICIANS
-============================================================ */
-export async function ownerMusicians(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      `SELECT m.*, u.email, u.name
-       FROM musicians m
-       JOIN users u ON m.user_id = u.id
-       ORDER BY m.created_at DESC`
-    ).all();
-    return apiJson({ musicians: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: SHOWS
-============================================================ */
-export async function ownerShows(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      "SELECT * FROM shows ORDER BY created_at DESC"
-    ).all();
-    return apiJson({ shows: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: CONTRACTS
-============================================================ */
-export async function ownerContracts(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      "SELECT * FROM contracts ORDER BY created_at DESC"
-    ).all();
-    return apiJson({ contracts: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: MUSIC LIBRARY
-============================================================ */
-export async function ownerMusic(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      "SELECT * FROM media WHERE type = 'music' ORDER BY created_at DESC"
-    ).all();
-    return apiJson({ music: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: BUSINESS APPLICATIONS
-============================================================ */
-export async function ownerBusinessApplications(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      `SELECT b.*, u.email, u.name
-       FROM businesses b
-       JOIN users u ON b.user_id = u.id
-       WHERE b.verified = 0
-       ORDER BY b.created_at DESC`
-    ).all();
-
-    return apiJson({ applications: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: UPDATE BUSINESS APPLICATION STATUS
-============================================================ */
-export async function ownerBusinessUpdateStatus(request, env) {
-  return requireRole(request, env, ["owner"], async (req) => {
-    const body = await req.json().catch(() => ({}));
-    const { businessId, verified } = body;
-
-    if (verified !== 0 && verified !== 1) {
-      return apiJson({ message: "Invalid verified value" }, 400);
-    }
-
-    await env.DB_users.prepare(
-      `UPDATE businesses
-       SET verified = ?
-       WHERE id = ?`
-    ).bind(verified, businessId).run();
-
-    return apiJson({ businessId, verified });
-  });
-}
-
-/* ============================================================
-   OWNER: SETTINGS — BRANDING
-============================================================ */
-export async function ownerSettingsBranding(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const branding = await env.DB_users.prepare(
-      "SELECT * FROM owner_branding LIMIT 1"
-    ).first();
-
-    return apiJson({ branding: branding || {} });
-  });
-}
-
-/* ============================================================
-   OWNER: SETTINGS — NOTES
-============================================================ */
-export async function ownerSettingsNotes(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const notes = await env.DB_users.prepare(
-      "SELECT * FROM owner_notes ORDER BY created_at DESC"
-    ).all();
-
-    return apiJson({ notes: notes.results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: ADS
-============================================================ */
-export async function ownerAds(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      "SELECT * FROM ads ORDER BY created_at DESC"
-    ).all();
-
-    return apiJson({ ads: results || [] });
-  });
-}
-
-/* ============================================================
-   OWNER: UPDATE AD STATUS
-============================================================ */
-export async function ownerUpdateAdStatus(request, env) {
-  return requireRole(request, env, ["owner"], async (req) => {
-    const body = await req.json().catch(() => ({}));
-    const { adId, status } = body;
-
-    await env.DB_users.prepare(
-      "UPDATE ads SET status = ? WHERE id = ?"
-    ).bind(status, adId).run();
-
-    return apiJson({ adId, status });
-  });
-}
-
-/* ============================================================
-   OWNER: SPONSORSHIPS
-============================================================ */
-export async function ownerSponsorships(request, env) {
-  return requireRole(request, env, ["owner"], async () => {
-    const { results } = await env.DB_users.prepare(
-      "SELECT * FROM sponsorships ORDER BY created_at DESC"
-    ).all();
-
-    return apiJson({ sponsorships: results || [] });
   });
 }
