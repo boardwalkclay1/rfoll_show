@@ -7,7 +7,6 @@
 //   import { makeSkatersApi } from './skaters.js';
 //   const api = makeSkatersApi(env.DB_users);
 
-import { randomUUID } from 'crypto';
 
 // ---------- helpers ----------
 
