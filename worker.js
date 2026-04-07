@@ -19,7 +19,7 @@ import {
   buyerDashboard
 } from "./buyers.js";
 
-// SKATERS — you now use makeSkatersApi, NOT named exports
+// SKATERS — factory, not named exports
 import { makeSkatersApi } from "./skaters.js";
 
 import {
@@ -48,23 +48,11 @@ import {
   listMusicianOffers
 } from "./musicians.js";
 
+// OWNER — ONLY import what actually exists
 import {
-  ownerDashboard,
-  ownerUsers,
-  ownerSkaters,
-  ownerBusinesses,
-  ownerMusicians,
-  ownerShows,
-  ownerContracts,
-  ownerMusic,
-  ownerSettingsBranding,
-  ownerSettingsNotes,
-  ownerBusinessApplications,
-  ownerBusinessUpdateStatus,
-  ownerAds,
-  ownerUpdateAdStatus,
-  ownerSponsorships
+  ownerDashboard
 } from "./routes/owner.js";
+
 
 /* ===== ENGINES =========================================================== */
 
