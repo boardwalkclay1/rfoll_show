@@ -1,25 +1,28 @@
-// /app/js/business/business-dashboard.js
 import API from "/js/api.js";
 
-/* ============================================================
-   DOM HELPERS
-============================================================ */
-function $(id) {
-  return document.getElementById(id);
+const businessState = {
+  user: null,
+  business: null,
+  analyticsChips: [],
+  actions: [],
+  shows: [],
+  campaigns: [],
+  sponsorships: [],
+  earnings: 0
+};
+
+const $b = (id) => document.getElementById(id);
+
+async function apiGet(path, user) {
+  return API.get(path, user);
 }
 
-/* ============================================================
-   LOADER CONTROL
-============================================================ */
 function hideBusinessLoader() {
-  const loader = $("business-loading");
+  const loader = $b("business-loading");
   if (loader) loader.classList.add("rs-hidden");
 }
 
-/* ============================================================
-   MAIN DASHBOARD LOAD
-============================================================ */
-async function loadBusinessDashboard() {
+async function initBusinessDashboard() {
   try {
     const userRaw = localStorage.getItem("user");
     if (!userRaw) {
@@ -27,123 +30,232 @@ async function loadBusinessDashboard() {
       return;
     }
 
-    const user = JSON.parse(userRaw);
+    businessState.user = JSON.parse(userRaw);
 
-    // AUTH CHECK
-    const me = await apiGet("/api/auth/me", user);
-    if (!me || me.role !== "business") {
-      window.location.href = "/login.html";
-      return;
-    }
+    await loadBusinessDashboard(businessState.user);
 
-    // NAME
-    setText("business-name", me.name || me.email || "Business");
-
-    // PARALLEL LOADS
-    const [profileRes, campaignsRes, offersRes, messagesRes] =
-      await Promise.allSettled([
-        apiGet("/api/business/profile", user),
-        apiGet("/api/business/campaigns", user),
-        apiGet("/api/business/offers", user),
-        apiGet("/api/business/messages", user),
-      ]);
-
-    const profile =
-      profileRes.status === "fulfilled"
-        ? profileRes.value?.data || profileRes.value
-        : null;
-
-    const campaigns =
-      campaignsRes.status === "fulfilled"
-        ? campaignsRes.value?.data || campaignsRes.value
-        : [];
-
-    const offers =
-      offersRes.status === "fulfilled"
-        ? offersRes.value?.data || offersRes.value
-        : [];
-
-    const messages =
-      messagesRes.status === "fulfilled"
-        ? messagesRes.value?.data || messagesRes.value
-        : [];
-
-    renderCampaigns(campaigns);
-    renderOffers(offers);
-    renderMessages(messages);
-
+    renderBusinessHero();
+    renderBusinessChips();
+    renderBusinessGhostActions();
+    renderBusinessCards();
+    renderBusinessBurgerMenu();
   } catch (err) {
-    console.error("Business Dashboard Error:", err);
+    console.error("Business dashboard init failed", err);
   } finally {
     hideBusinessLoader();
   }
 }
 
-/* ============================================================
-   RENDERERS (SAFE)
-============================================================ */
-function setText(id, value) {
-  const el = $(id);
-  if (el) el.textContent = value ?? "";
+async function loadBusinessDashboard(user) {
+  try {
+    const res = await apiGet("/api/business/dashboard", user);
+    if (!res?.success) {
+      console.error("Business dashboard load failed", res?.error);
+      return;
+    }
+
+    const data = res.data || {};
+
+    businessState.business = data.business || null;
+    businessState.earnings = data.earnings || 0;
+    businessState.shows = Array.isArray(data.shows) ? data.shows : [];
+    businessState.campaigns = Array.isArray(data.campaigns) ? data.campaigns : [];
+    businessState.sponsorships = Array.isArray(data.sponsorships) ? data.sponsorships : [];
+
+    businessState.analyticsChips = [
+      { label: "Shows", value: businessState.shows.length, link: "#biz-shows" },
+      { label: "Campaigns", value: businessState.campaigns.length, link: "#biz-campaigns" },
+      { label: "Sponsorships", value: businessState.sponsorships.length, link: "#biz-sponsorships" },
+      { label: "Earnings", value: `$${Number(businessState.earnings || 0).toFixed(2)}`, link: "#biz-earnings" }
+    ];
+
+    businessState.actions = [
+      { id: "create-campaign", label: "Create Campaign", icon: "📣" },
+      { id: "view-shows", label: "Shows", icon: "🎟️" },
+      { id: "manage-sponsorships", label: "Sponsorships", icon: "🤝" },
+      { id: "edit-profile", label: "Edit Profile", icon: "🖊️" }
+    ];
+  } catch (err) {
+    console.error("Business dashboard load error", err);
+  }
 }
 
-function renderCampaigns(list) {
-  const ul = $("business-campaigns");
-  if (!ul) return;
+function renderBusinessHero() {
+  const nameEl = $b("business-hero-name");
+  const subtitleEl = $b("business-hero-subtitle");
+  const earningsEl = $b("business-hero-earnings");
 
-  ul.innerHTML = "";
-
-  if (!Array.isArray(list) || list.length === 0) {
-    ul.innerHTML = "<li>No campaigns yet.</li>";
-    return;
+  if (nameEl) {
+    nameEl.textContent =
+      businessState.business?.display_name ||
+      businessState.business?.name ||
+      "Business";
   }
 
-  list.forEach(c => {
-    const li = document.createElement("li");
-    li.textContent = `${c.name || "Campaign"} — ${c.status || "active"}`;
-    ul.appendChild(li);
+  if (subtitleEl) {
+    subtitleEl.textContent = businessState.business?.category || "Roll Show Partner";
+  }
+
+  if (earningsEl) {
+    earningsEl.textContent = `$${Number(businessState.earnings || 0).toFixed(2)}`;
+  }
+}
+
+function renderBusinessChips() {
+  const container = $b("business-analytics-chips");
+  if (!container) return;
+
+  container.innerHTML = "";
+  businessState.analyticsChips.forEach((chip) => {
+    const btn = document.createElement("button");
+    btn.className = "rs-chip rs-chip-ghost";
+    btn.textContent = `${chip.label}: ${chip.value}`;
+    btn.addEventListener("click", () => {
+      if (chip.link.startsWith("#")) {
+        const target = document.querySelector(chip.link);
+        if (target) target.scrollIntoView({ behavior: "smooth" });
+      } else {
+        window.location.href = chip.link;
+      }
+    });
+    container.appendChild(btn);
   });
 }
 
-function renderOffers(list) {
-  const ul = $("business-offers");
-  if (!ul) return;
+function renderBusinessGhostActions() {
+  const container = $b("business-ghost-actions");
+  if (!container) return;
 
-  ul.innerHTML = "";
-
-  if (!Array.isArray(list) || list.length === 0) {
-    ul.innerHTML = "<li>No offers yet.</li>";
-    return;
-  }
-
-  list.forEach(o => {
-    const li = document.createElement("li");
-    li.textContent = `${o.type || "Offer"} → ${o.to_user_name || "User"} (${o.status || "pending"})`;
-    ul.appendChild(li);
+  container.innerHTML = "";
+  businessState.actions.forEach((action) => {
+    const btn = document.createElement("button");
+    btn.className = "rs-ghost-button";
+    btn.dataset.actionId = action.id;
+    btn.innerHTML = `<span class="rs-ghost-icon">${action.icon}</span><span>${action.label}</span>`;
+    btn.addEventListener("click", () => handleBusinessAction(action.id));
+    container.appendChild(btn);
   });
 }
 
-function renderMessages(msgs) {
-  const ul = $("business-messages");
-  if (!ul) return;
+function renderBusinessCards() {
+  renderBusinessShows();
+  renderBusinessCampaigns();
+  renderBusinessSponsorships();
+}
 
-  ul.innerHTML = "";
+function renderBusinessShows() {
+  const container = $b("business-shows-cards");
+  if (!container) return;
 
-  if (!Array.isArray(msgs) || msgs.length === 0) {
-    ul.innerHTML = "<li>No messages yet.</li>";
+  container.innerHTML = "";
+  if (!businessState.shows.length) {
+    container.innerHTML = `<div class="rs-card rs-card-empty">No shows yet.</div>`;
     return;
   }
 
-  msgs.forEach(m => {
-    const li = document.createElement("li");
-    li.textContent = `${m.sender_name || "Unknown"}: ${m.content || ""}`;
-    ul.appendChild(li);
+  businessState.shows.forEach((show) => {
+    const card = document.createElement("div");
+    card.className = "rs-card rs-card-show";
+    card.innerHTML = `
+      <div class="rs-card-title">${show.title || "Untitled Show"}</div>
+      <div class="rs-card-meta">
+        <span>${show.venue_name || ""}</span>
+        <span>${show.date || ""}</span>
+      </div>
+    `;
+    container.appendChild(card);
   });
 }
 
-/* ============================================================
-   BOOTSTRAP
-============================================================ */
+function renderBusinessCampaigns() {
+  const container = $b("business-campaigns-cards");
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (!businessState.campaigns.length) {
+    container.innerHTML = `<div class="rs-card rs-card-empty">No campaigns yet.</div>`;
+    return;
+  }
+
+  businessState.campaigns.forEach((c) => {
+    const card = document.createElement("div");
+    card.className = "rs-card rs-card-campaign";
+    card.innerHTML = `
+      <div class="rs-card-title">${c.name || "Campaign"}</div>
+      <div class="rs-card-meta">
+        <span>Status: ${c.status || "draft"}</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderBusinessSponsorships() {
+  const container = $b("business-sponsorships-cards");
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (!businessState.sponsorships.length) {
+    container.innerHTML = `<div class="rs-card rs-card-empty">No sponsorships yet.</div>`;
+    return;
+  }
+
+  businessState.sponsorships.forEach((s) => {
+    const card = document.createElement("div");
+    card.className = "rs-card rs-card-sponsorship";
+    card.innerHTML = `
+      <div class="rs-card-title">${s.title || "Sponsorship"}</div>
+      <div class="rs-card-meta">
+        <span>${s.status || ""}</span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderBusinessBurgerMenu() {
+  const menu = $b("rs-burger-menu");
+  if (!menu) return;
+
+  const items = [
+    { label: "Owner Dashboard", link: "/owner.html" },
+    { label: "Skater Dashboard", link: "/skater.html" },
+    { label: "Business Dashboard", link: "/business.html" },
+    { label: "Musician Dashboard", link: "/musician.html" },
+    { label: "Buyer Dashboard", link: "/buyer.html" }
+  ];
+
+  menu.innerHTML = "";
+  items.forEach((item) => {
+    const li = document.createElement("button");
+    li.className = "rs-burger-item";
+    li.textContent = item.label;
+    li.addEventListener("click", () => {
+      window.location.href = item.link;
+    });
+    menu.appendChild(li);
+  });
+}
+
+function handleBusinessAction(id) {
+  switch (id) {
+    case "create-campaign":
+      window.location.href = "/business-campaign-create.html";
+      break;
+    case "view-shows":
+      window.location.href = "/business-shows.html";
+      break;
+    case "manage-sponsorships":
+      window.location.href = "/business-sponsorships.html";
+      break;
+    case "edit-profile":
+      window.location.href = "/business-profile.html";
+      break;
+    default:
+      console.log("Unhandled business action:", id);
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  loadBusinessDashboard();
+  initBusinessDashboard();
 });
