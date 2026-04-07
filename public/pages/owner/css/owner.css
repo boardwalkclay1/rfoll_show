@@ -1,27 +1,59 @@
 /* ============================================================
-   SIDEBAR — CLEAN + GLASS
+   GLOBAL RESET
+============================================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: system-ui, sans-serif;
+  color: #fff;
+  overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* ============================================================
+   BACKGROUND (fullscreen, locked)
+============================================================ */
+body {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ============================================================
+   SIDEBAR — PREMIUM GLASS
 ============================================================ */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
-  width: 220px;
+  width: 230px;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(12px);
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 24px 18px;
-  box-sizing: border-box;
-  z-index: 20;
+  background: rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(14px);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 26px 20px;
+  z-index: 50;
 }
 
 .sidebar-logo {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #fff;
-  margin-bottom: 24px;
+  color: #ffd36b;
+  margin-bottom: 28px;
 }
 
 .nav-section-label {
@@ -29,16 +61,16 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.45);
-  margin: 18px 0 8px;
+  margin: 20px 0 10px;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 9px 10px;
-  margin-bottom: 4px;
-  border-radius: 6px;
-  color: #d0d0d0;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 8px;
+  color: #e0e0e0;
   text-decoration: none;
   font-size: 14px;
   transition: background 0.18s, color 0.18s, transform 0.18s;
@@ -49,13 +81,13 @@
 }
 
 .nav-link:hover {
-  background: rgba(255, 0, 80, 0.18);
+  background: rgba(255, 211, 107, 0.18);
   color: #ffffff;
-  transform: translateX(1px);
+  transform: translateX(2px);
 }
 
 .nav-link.active {
-  background: rgba(255, 0, 80, 0.26);
+  background: rgba(255, 211, 107, 0.28);
   color: #ffffff;
 }
 
@@ -66,10 +98,10 @@
   position: fixed;
   top: 18px;
   left: 18px;
-  width: 30px;
-  height: 22px;
+  width: 32px;
+  height: 24px;
   cursor: pointer;
-  z-index: 30;
+  z-index: 100;
   display: none;
 }
 
@@ -78,7 +110,7 @@
 .burger div::after {
   width: 100%;
   height: 3px;
-  background: #fff;
+  background: #ffd36b;
   border-radius: 2px;
   position: absolute;
   transition: 0.3s;
@@ -86,197 +118,120 @@
 
 .burger div::before {
   content: "";
-  top: -7px;
+  top: -8px;
 }
 
 .burger div::after {
   content: "";
-  top: 7px;
+  top: 8px;
 }
 
 /* ============================================================
-   MAIN CONTENT WRAPPER
+   MAIN CONTENT
 ============================================================ */
 .main {
-  margin-left: 220px;
-  padding: 32px 32px 40px;
+  margin-left: 230px;
+  padding: 40px 36px 60px;
   position: relative;
   z-index: 10;
   color: #fff;
   min-height: 100vh;
-  box-sizing: border-box;
 }
 
 .main-header {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 26px;
+  margin-bottom: 32px;
 }
 
 .title {
-  font-size: 30px;
+  font-size: 32px;
   font-weight: 800;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: #ffd36b;
 }
 
 .subtitle {
   font-size: 15px;
-  color: #d0d0d0;
+  color: #e0e0e0;
 }
 
 /* ============================================================
-   QUICK ACTIONS ROW
+   ANALYTICS CHIPS (Owner version)
 ============================================================ */
-.quick-actions {
+.owner-chip-scroll {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 28px;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 1rem 0 1rem;
+  scrollbar-width: none;
 }
 
-.quick-btn {
-  padding: 10px 16px;
+.owner-chip-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.owner-chip {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background 0.18s, transform 0.18s, border-color 0.18s;
-  backdrop-filter: blur(8px);
-}
-
-.quick-btn:hover {
-  background: rgba(255, 0, 80, 0.22);
-  border-color: rgba(255, 0, 80, 0.6);
-  transform: translateY(-1px);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 211, 107, 0.4);
+  background: rgba(255, 211, 107, 0.15);
+  backdrop-filter: blur(6px);
+  color: #ffd36b;
 }
 
 /* ============================================================
-   GRID LAYOUT: STATS + MODULES
+   GHOST BUTTONS (Owner version)
 ============================================================ */
-.section-row {
+.owner-ghost-grid {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-  gap: 24px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  padding: 1rem 0 2rem;
 }
 
-/* Small stat cards */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 14px;
-}
-
-.stat-card {
-  background: rgba(0, 0, 0, 0.28);
-  border-radius: 12px;
-  padding: 14px 14px 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 13px;
-  backdrop-filter: blur(8px);
-}
-
-.stat-label {
-  color: #b8b8b8;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-
-.stat-value {
-  font-size: 18px;
-  font-weight: 700;
-}
-
-/* Module cards */
-.module-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.module-card {
-  background: rgba(0, 0, 0, 0.28);
+.owner-ghost-button {
+  background: rgba(255, 211, 107, 0.12);
+  border: 1px solid rgba(255, 211, 107, 0.35);
+  backdrop-filter: blur(10px);
   border-radius: 14px;
-  padding: 18px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  text-decoration: none;
-  color: #ffffff;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: #ffd36b;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.owner-ghost-button:hover {
+  background: rgba(255, 211, 107, 0.22);
+}
+
+/* ============================================================
+   LISTS (Recent Users, Reports, Errors)
+============================================================ */
+.rs-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  transition: transform 0.18s, border-color 0.18s, background 0.18s;
-  backdrop-filter: blur(8px);
+  gap: 0.75rem;
 }
 
-.module-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255, 0, 80, 0.5);
-  background: rgba(0, 0, 0, 0.4);
-}
-
-.module-title {
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.module-meta {
-  font-size: 12px;
-  color: #c8c8c8;
-}
-
-/* ============================================================
-   SECONDARY TILE GRID (OTHER TOOLS)
-============================================================ */
-.tile-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
-  margin: 24px 0 0;
-}
-
-.tile {
-  background: rgba(0, 0, 0, 0.28);
-  padding: 18px 16px;
+.rs-list-row {
+  background: rgba(0,0,0,0.32);
+  border: 1px solid rgba(255,255,255,0.18);
+  backdrop-filter: blur(10px);
+  padding: 0.9rem 1.1rem;
   border-radius: 12px;
-  text-align: left;
-  color: white;
-  text-decoration: none;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(8px);
-  transition: 0.18s;
+  font-size: 0.9rem;
 }
 
-.tile:hover {
-  background: rgba(0, 0, 0, 0.4);
-  transform: translateY(-2px);
-}
-
-/* ============================================================
-   RECENT ACTIVITY LIST
-============================================================ */
-.activity-list {
-  margin-top: 10px;
-  padding: 0;
-  list-style: none;
-  font-size: 13px;
-  color: #d4d4d4;
-}
-
-.activity-item {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.rs-error-row {
+  border-color: rgba(255, 80, 80, 0.4);
 }
 
 /* ============================================================
@@ -288,7 +243,7 @@
   }
 
   .sidebar {
-    transform: translateX(-220px);
+    transform: translateX(-230px);
     transition: 0.3s;
   }
 
@@ -298,10 +253,6 @@
 
   .main {
     margin-left: 0;
-    padding: 72px 18px 32px;
-  }
-
-  .section-row {
-    grid-template-columns: minmax(0, 1fr);
+    padding: 80px 20px 40px;
   }
 }
