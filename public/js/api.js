@@ -1,7 +1,7 @@
-// ROLL SHOW — GLOBAL SAFE API CLIENT (WORKER DOMAIN)
+// ROLL SHOW — GLOBAL SAFE API CLIENT (PAGES-FIRST, WORKER-COMPATIBLE)
 
-// Prevent duplicate loads from throwing errors
-window.API_BASE = window.API_BASE || "https://rollshow.boardwalkclay1.workers.dev";
+// 1. Prefer Pages domain (no CORS), fallback to Worker if needed
+window.API_BASE = window.API_BASE || "https://roll-show.pages.dev";
 
 /* SAFE JSON PARSER */
 async function safeJson(res) {
@@ -46,8 +46,16 @@ async function request(method, path, payload = null, extraHeaders = {}) {
   }
 
   let res;
+
   try {
+    // Try Pages first (no CORS)
     res = await fetch(window.API_BASE + path, options);
+
+    // If Pages returns 404, fallback to Worker
+    if (res.status === 404) {
+      res = await fetch("https://rollshow.boardwalkclay1.workers.dev" + path, options);
+    }
+
   } catch {
     return {
       success: false,
