@@ -1,4 +1,4 @@
-// /js/auth-login.js — FINAL FIXED VERSION (correct /login route)
+// /js/auth-login.js — FINAL CORRECT VERSION (matches Worker: /api/login)
 
 const form = document.getElementById("auth-login-form");
 
@@ -13,8 +13,8 @@ if (form) {
       password: fd.get("password")
     };
 
-    // 🔥 FIXED: Correct backend route (NO /api)
-    const res = await API.post("/login", payload);
+    // 🔥 CORRECT: Worker route is /api/login (NOT /login)
+    const res = await API.post("/api/login", payload);
 
     if (!res || !res.success || !res.user) {
       alert(res?.error?.message || "Login failed. Check your email and password.");
