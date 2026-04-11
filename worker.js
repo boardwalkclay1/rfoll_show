@@ -49,6 +49,19 @@ import { ownerDashboard } from "./routes/owner.js";
 
 
 // ============================================================
+// CORS WRAPPER
+// ============================================================
+
+function withCORS(response) {
+  const headers = cors();
+  for (const [k, v] of Object.entries(headers)) {
+    response.headers.set(k, v);
+  }
+  return response;
+}
+
+
+// ============================================================
 // MAIN ROUTER
 // ============================================================
 
@@ -58,31 +71,31 @@ export default {
     const path = url.pathname;
     const method = request.method;
 
-    // CORS
+    // CORS preflight
     if (method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors() });
     }
 
     // LOGIN
     if (path === "/api/login" && method === "POST") {
-      return userLogin(request.clone(), env);
+      return withCORS(await userLogin(request.clone(), env));
     }
 
     // SIGNUP
     if (path === "/api/buyer/signup" && method === "POST") {
-      return signupBuyer(request.clone(), env);
+      return withCORS(await signupBuyer(request.clone(), env));
     }
 
     if (path === "/api/skater/signup" && method === "POST") {
-      return signupBase(request.clone(), env, "skater");
+      return withCORS(await signupBase(request.clone(), env, "skater"));
     }
 
     if (path === "/api/musician/signup" && method === "POST") {
-      return signupMusician(request.clone(), env);
+      return withCORS(await signupMusician(request.clone(), env));
     }
 
     if (path === "/api/business/signup" && method === "POST") {
-      return signupBusiness(request.clone(), env);
+      return withCORS(await signupBusiness(request.clone(), env));
     }
 
     // INIT SKATER API
@@ -93,45 +106,57 @@ export default {
     // ============================================================
 
     if (path === "/api/skater/dashboard" && method === "GET") {
-      return requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
-        Skaters.getSkaterProfile(user.id)
+      return withCORS(
+        await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
+          Skaters.getSkaterProfile(user.id)
+        )
       );
     }
 
     if (path === "/api/skater/profile" && method === "PUT") {
-      return requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-        const body = await req.json();
-        return Skaters.updateSkaterProfile(user.profile_id, body);
-      });
+      return withCORS(
+        await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
+          const body = await req.json();
+          return Skaters.updateSkaterProfile(user.profile_id, body);
+        })
+      );
     }
 
     if (path === "/api/skater/offerings" && method === "POST") {
-      return requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-        const body = await req.json();
-        return Skaters.createSkaterOffering(user.profile_id, body);
-      });
+      return withCORS(
+        await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
+          const body = await req.json();
+          return Skaters.createSkaterOffering(user.profile_id, body);
+        })
+      );
     }
 
     if (path === "/api/skater/offerings" && method === "GET") {
-      return requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
-        Skaters.listSkaterOfferings(user.profile_id)
+      return withCORS(
+        await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
+          Skaters.listSkaterOfferings(user.profile_id)
+        )
       );
     }
 
     if (path === "/api/skater/shows" && method === "POST") {
-      return requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-        const body = await req.json();
-        return Skaters.createShowForSkaterOrGroup({
-          host_type: "skater",
-          host_id: user.profile_id,
-          ...body
-        });
-      });
+      return withCORS(
+        await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
+          const body = await req.json();
+          return Skaters.createShowForSkaterOrGroup({
+            host_type: "skater",
+            host_id: user.profile_id,
+            ...body
+          });
+        })
+      );
     }
 
     if (path === "/api/skater/shows" && method === "GET") {
-      return requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
-        Skaters.listShowsForHost("skater", user.profile_id)
+      return withCORS(
+        await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
+          Skaters.listShowsForHost("skater", user.profile_id)
+        )
       );
     }
 
@@ -140,19 +165,19 @@ export default {
     // ============================================================
 
     if (path === "/api/musician/dashboard" && method === "GET") {
-      return requireRole(request.clone(), env, ["musician"], musicianDashboard);
+      return withCORS(await requireRole(request.clone(), env, ["musician"], musicianDashboard));
     }
 
     if (path === "/api/musician/tracks" && method === "GET") {
-      return requireRole(request.clone(), env, ["musician"], listMusic);
+      return withCORS(await requireRole(request.clone(), env, ["musician"], listMusic));
     }
 
     if (path === "/api/musician/tracks" && method === "POST") {
-      return requireRole(request.clone(), env, ["musician"], uploadTrack);
+      return withCORS(await requireRole(request.clone(), env, ["musician"], uploadTrack));
     }
 
     if (path === "/api/musician/license" && method === "POST") {
-      return requireRole(request.clone(), env, ["musician"], licenseTrack);
+      return withCORS(await requireRole(request.clone(), env, ["musician"], licenseTrack));
     }
 
     // ============================================================
@@ -160,35 +185,35 @@ export default {
     // ============================================================
 
     if (path === "/api/business/dashboard" && method === "GET") {
-      return requireRole(request.clone(), env, ["business"], businessDashboard);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessDashboard));
     }
 
     if (path === "/api/business/offers" && method === "POST") {
-      return requireRole(request.clone(), env, ["business"], businessSubmitOffer);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitOffer));
     }
 
     if (path === "/api/business/events" && method === "POST") {
-      return requireRole(request.clone(), env, ["business"], businessSubmitEvent);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitEvent));
     }
 
     if (path === "/api/business/ads" && method === "POST") {
-      return requireRole(request.clone(), env, ["business"], businessSubmitAd);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitAd));
     }
 
     if (path === "/api/business/staff" && method === "POST") {
-      return requireRole(request.clone(), env, ["business"], businessAddStaff);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessAddStaff));
     }
 
     if (path === "/api/business/staff" && method === "DELETE") {
-      return requireRole(request.clone(), env, ["business"], businessRemoveStaff);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessRemoveStaff));
     }
 
     if (path === "/api/business/staff" && method === "GET") {
-      return requireRole(request.clone(), env, ["business"], businessListStaff);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessListStaff));
     }
 
     if (path === "/api/business/scan-ticket" && method === "POST") {
-      return requireRole(request.clone(), env, ["business"], businessScanTicket);
+      return withCORS(await requireRole(request.clone(), env, ["business"], businessScanTicket));
     }
 
     // ============================================================
@@ -196,19 +221,19 @@ export default {
     // ============================================================
 
     if (path === "/api/buyer/dashboard" && method === "GET") {
-      return requireRole(request.clone(), env, ["buyer"], buyerDashboard);
+      return withCORS(await requireRole(request.clone(), env, ["buyer"], buyerDashboard));
     }
 
     if (path === "/api/buyer/tickets" && method === "GET") {
-      return requireRole(request.clone(), env, ["buyer"], listTickets);
+      return withCORS(await requireRole(request.clone(), env, ["buyer"], listTickets));
     }
 
     if (path === "/api/buyer/tickets" && method === "POST") {
-      return requireRole(request.clone(), env, ["buyer"], createTicket);
+      return withCORS(await requireRole(request.clone(), env, ["buyer"], createTicket));
     }
 
     if (path === "/api/buyer/partner-webhook" && method === "POST") {
-      return partnerWebhook(request.clone(), env);
+      return withCORS(await partnerWebhook(request.clone(), env));
     }
 
     // ============================================================
@@ -216,13 +241,13 @@ export default {
     // ============================================================
 
     if (path === "/api/owner/dashboard" && method === "GET") {
-      return requireRole(request.clone(), env, ["owner"], ownerDashboard);
+      return withCORS(await requireRole(request.clone(), env, ["owner"], ownerDashboard));
     }
 
     // ============================================================
     // FALLBACK
     // ============================================================
 
-    return apiJson({ message: "Not found" }, 404);
+    return withCORS(apiJson({ message: "Not found" }, 404));
   }
 };
