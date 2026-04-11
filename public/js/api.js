@@ -1,8 +1,10 @@
-// ROLL SHOW — GLOBAL SAFE API CLIENT (CLEAN FINAL VERSION)
+// ROLL SHOW — GLOBAL SAFE API CLIENT (FINAL, CORRECT)
 
-// Prefer Pages (no CORS), fallback to Worker for API routes
+// STATIC FRONTEND (Pages)
 window.API_BASE_PAGES  = "https://roll-show.pages.dev";
-window.API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev";
+
+// REAL BACKEND (Worker API)
+window.API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev/api";
 
 /* -------------------------------------------------------
    SAFE JSON PARSER
@@ -35,7 +37,7 @@ async function safeJson(res) {
 }
 
 /* -------------------------------------------------------
-   INTERNAL REQUEST HANDLER
+   INTERNAL REQUEST HANDLER (WORKER FIRST — CORRECT)
 ------------------------------------------------------- */
 async function request(method, path, payload = null, extraHeaders = {}) {
   const headers = { ...extraHeaders };
@@ -54,35 +56,17 @@ async function request(method, path, payload = null, extraHeaders = {}) {
 
   let res;
 
-  // Try Pages first
+  // ALWAYS hit Worker first (correct)
   try {
-    res = await fetch(window.API_BASE_PAGES + path, options);
-  } catch {
-    // Pages unreachable → go straight to Worker
     res = await fetch(window.API_BASE_WORKER + path, options);
-    const body = await safeJson(res);
+  } catch {
     return {
-      success: body.success ?? res.ok ?? false,
-      status: res.status,
-      data: body.data ?? null,
-      user: body.user ?? undefined,
-      error: body.error ?? null
+      success: false,
+      status: 0,
+      data: null,
+      user: undefined,
+      error: { message: "Network error" }
     };
-  }
-
-  // If Pages returns ANY non-OK → fallback to Worker
-  if (!res.ok) {
-    try {
-      res = await fetch(window.API_BASE_WORKER + path, options);
-    } catch {
-      return {
-        success: false,
-        status: 0,
-        data: null,
-        user: undefined,
-        error: { message: "Network error" }
-      };
-    }
   }
 
   const body = await safeJson(res);
