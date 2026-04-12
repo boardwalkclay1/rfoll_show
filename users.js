@@ -15,11 +15,11 @@ export function apiJson(obj, status = 200) {
   });
 }
 
+const AUTH_URL = "https://rollshow-auth.boardwalkclay1.workers.dev";
+
 // ============================================================
 // PBKDF2 VERIFY — FINAL VERSION
 // ============================================================
-
-const AUTH_URL = "https://rollshow-auth.boardwalkclay1.workers.dev";
 
 export async function verify(password, hashValue, saltValue, iterations, env) {
   const payload = {
