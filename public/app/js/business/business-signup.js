@@ -1,3 +1,6 @@
+// app/js/business/business-apply.js
+import API from "/app/js/api.js";
+
 const form = document.getElementById("business-apply-form");
 const messageEl = document.getElementById("business-apply-message");
 
@@ -13,16 +16,13 @@ form.addEventListener("submit", async (e) => {
   const payload = Object.fromEntries(new FormData(form).entries());
 
   try {
-    const res = await fetch("/api/business/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+    const res = await API.post("/api/business/signup", payload);
 
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      showMessage(data.error || "Application failed.", "error");
+    if (!res.success) {
+      showMessage(
+        res.error?.message || res.error || "Application failed.",
+        "error"
+      );
       return;
     }
 
@@ -32,7 +32,9 @@ form.addEventListener("submit", async (e) => {
     );
 
     form.reset();
+
   } catch (err) {
+    console.error(err);
     showMessage("Network error. Please try again.", "error");
   }
 });
