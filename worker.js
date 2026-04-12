@@ -4,9 +4,10 @@ import {
   cors,
   apiJson,
   requireRole,
-  login as userLogin,
   signupBase
 } from "./users.js";
+
+import loginHandler from "./api/login.js";
 
 import {
   signupBuyer,
@@ -107,11 +108,11 @@ export default {
     }
 
     // ============================================================
-    // LOGIN
+    // LOGIN — NOW USING /api/login.js (FIXED)
     // ============================================================
 
     if (path === "/api/login" && method === "POST") {
-      return withCORS(await userLogin(request.clone(), env));
+      return withCORS(await loginHandler(request.clone(), env));
     }
 
     // ============================================================
