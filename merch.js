@@ -8,7 +8,7 @@ export async function createMerchItem(request, env, user) {
   const { title, description, price_cents, image_url } = await request.json();
 
   // Resolve skater profile
-  const skater = await env.DB_users.prepare(
+  const skater = await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
@@ -17,7 +17,7 @@ export async function createMerchItem(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO merch_items (
        id, skater_id, title, description, price_cents, image_url, created_at
      )
@@ -41,13 +41,13 @@ export async function createMerchItem(request, env, user) {
    LIST MERCH ITEMS FOR A SKATER
 ============================================================ */
 export async function listMerchForSkater(request, env, user) {
-  const skater = await env.DB_users.prepare(
+  const skater = await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   if (!skater) return apiJson({ message: "Skater not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT *
      FROM merch_items
      WHERE skater_id = ?
@@ -70,14 +70,14 @@ export async function buyMerch(request, env, user) {
   }
 
   // Resolve buyer profile
-  const buyer = await env.DB_users.prepare(
+  const buyer = await env.DB_roll.prepare(
     "SELECT id FROM buyer_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   if (!buyer) return apiJson({ message: "Buyer profile not found" }, 404);
 
   // Fetch merch item
-  const merch = await env.DB_users.prepare(
+  const merch = await env.DB_roll.prepare(
     "SELECT * FROM merch_items WHERE id = ?"
   ).bind(merch_id).first();
 
@@ -87,7 +87,7 @@ export async function buyMerch(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO merch_orders (
        id, merch_id, buyer_profile_id, quantity, total_cents, status, created_at
      )
@@ -107,13 +107,13 @@ export async function buyMerch(request, env, user) {
    LIST BUYER MERCH ORDERS
 ============================================================ */
 export async function listBuyerMerchOrders(request, env, user) {
-  const buyer = await env.DB_users.prepare(
+  const buyer = await env.DB_roll.prepare(
     "SELECT id FROM buyer_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   if (!buyer) return apiJson({ message: "Buyer profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT 
         o.id AS order_id,
         o.quantity,

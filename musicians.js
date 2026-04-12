@@ -14,7 +14,7 @@ export async function signupMusician(request, env) {
   const id = crypto.randomUUID();
   const created_at = base.created_at || new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO musician_profiles (
        id, user_id, name, bio, genre, avatar_url, city, state, created_at
      )
@@ -38,7 +38,7 @@ export async function signupMusician(request, env) {
    MUSICIAN DASHBOARD
 ============================================================ */
 export async function musicianDashboard(request, env, user) {
-  const musician = await env.DB_users.prepare(
+  const musician = await env.DB_roll.prepare(
     "SELECT * FROM musician_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
@@ -46,14 +46,14 @@ export async function musicianDashboard(request, env, user) {
     return apiJson({ message: "Musician profile not found" }, 404);
   }
 
-  const { results: tracks } = await env.DB_users.prepare(
+  const { results: tracks } = await env.DB_roll.prepare(
     `SELECT *
      FROM tracks
      WHERE musician_id = ?
      ORDER BY created_at DESC`
   ).bind(musician.id).all();
 
-  const { results: licenses } = await env.DB_users.prepare(
+  const { results: licenses } = await env.DB_roll.prepare(
     `SELECT l.*, t.title
      FROM track_licenses l
      JOIN tracks t ON l.track_id = t.id
@@ -91,7 +91,7 @@ export async function uploadTrack(request, env, user) {
     return apiJson({ message: "Missing R2 key for uploaded file." }, 400);
   }
 
-  const musician = await env.DB_users.prepare(
+  const musician = await env.DB_roll.prepare(
     "SELECT id FROM musician_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
@@ -102,7 +102,7 @@ export async function uploadTrack(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO tracks (
        id, musician_id, title, description, genre, bpm, duration_seconds,
        r2_key, artwork_r2_key, isrc, visibility,
@@ -135,7 +135,7 @@ export async function uploadTrack(request, env, user) {
    PUBLIC MUSIC LIBRARY
 ============================================================ */
 export async function listMusic(env) {
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT
        id,
        musician_id,
@@ -160,7 +160,7 @@ export async function licenseTrack(request, env, user) {
     await request.json();
 
   // Resolve skater profile for this user
-  const skater = await env.DB_users.prepare(
+  const skater = await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
@@ -168,7 +168,7 @@ export async function licenseTrack(request, env, user) {
     return apiJson({ message: "Only skaters can license music." }, 403);
   }
 
-  const track = await env.DB_users.prepare(
+  const track = await env.DB_roll.prepare(
     "SELECT * FROM tracks WHERE id = ?"
   ).bind(trackId).first();
 
@@ -179,7 +179,7 @@ export async function licenseTrack(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO track_licenses (
        id,
        track_id,
@@ -214,7 +214,7 @@ export async function musicianCreateOffer(request, env, user) {
   const { skaterUserId, type, terms, amount_cents } = await request.json();
 
   // Ensure target is a skater by checking skater_profiles
-  const skaterProfile = await env.DB_users.prepare(
+  const skaterProfile = await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   ).bind(skaterUserId).first();
 
@@ -225,7 +225,7 @@ export async function musicianCreateOffer(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO offers (
        id,
        from_user_id,
@@ -254,7 +254,7 @@ export async function musicianCreateOffer(request, env, user) {
    LIST MUSICIAN OFFERS
 ============================================================ */
 export async function listMusicianOffers(request, env, user) {
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT
        o.*,
        u.name AS skater_name

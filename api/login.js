@@ -13,7 +13,7 @@ export default async function login(request, env) {
       );
     }
 
-    const row = await env.DB_users
+    const row = await env.DB_roll
       .prepare("SELECT * FROM users WHERE email = ?")
       .bind(email)
       .first();

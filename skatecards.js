@@ -5,13 +5,13 @@ import { apiJson } from "./users.js";
    INTERNAL HELPERS
 ============================================================ */
 async function getSkater(env, userId) {
-  return await env.DB_users.prepare(
+  return await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   ).bind(userId).first();
 }
 
 async function getBuyer(env, userId) {
-  return await env.DB_users.prepare(
+  return await env.DB_roll.prepare(
     "SELECT id FROM buyer_profiles WHERE user_id = ?"
   ).bind(userId).first();
 }
@@ -39,7 +39,7 @@ export async function createSkateCard(request, env, user) {
   const now = new Date().toISOString();
   const qr_code_url = `/qr/skatecard/${id}`;
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO skate_cards (
        id, skater_id, title, description,
        image_url, rarity, edition_size, price_cents,
@@ -76,7 +76,7 @@ export async function listSkaterCards(request, env, user) {
   const skater = await getSkater(env, user.id);
   if (!skater) return apiJson({ message: "Skater profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT *
      FROM skate_cards
      WHERE skater_id = ?
@@ -98,7 +98,7 @@ export async function buySkateCard(request, env, user) {
   const buyer = await getBuyer(env, user.id);
   if (!buyer) return apiJson({ message: "Buyer profile not found" }, 404);
 
-  const card = await env.DB_users.prepare(
+  const card = await env.DB_roll.prepare(
     "SELECT * FROM skate_cards WHERE id = ?"
   )
     .bind(card_id)
@@ -113,7 +113,7 @@ export async function buySkateCard(request, env, user) {
   const now = new Date().toISOString();
 
   // Record sale
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO skate_card_sales (
        id, card_id, buyer_id, price_cents, purchased_at
      )
@@ -125,7 +125,7 @@ export async function buySkateCard(request, env, user) {
   // Add to buyer library
   const libraryId = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO buyer_skate_card_library (
        id, buyer_id, card_id, acquired_at
      )
@@ -149,7 +149,7 @@ export async function listBuyerCardLibrary(request, env, user) {
   const buyer = await getBuyer(env, user.id);
   if (!buyer) return apiJson({ message: "Buyer profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT 
         l.id AS library_id,
         l.acquired_at,

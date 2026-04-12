@@ -3,7 +3,7 @@ import { apiJson, requireRole } from "../users.js";
 
 export async function ownerDashboard(request, env) {
   return requireRole(request, env, ["owner"], async () => {
-    const db = env.DB_users;
+    const db = env.DB_roll;
 
     /* ------------------------------
        SAFE COUNT HELPERS

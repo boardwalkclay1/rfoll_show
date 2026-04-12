@@ -6,7 +6,7 @@ import { apiJson } from "./users.js";
    GET BUSINESS RECORD
 ============================================================ */
 async function getBusinessByUser(env, userId) {
-  return await env.DB_users
+  return await env.DB_roll
     .prepare("SELECT * FROM businesses WHERE user_id = ?")
     .bind(userId)
     .first();
@@ -26,7 +26,7 @@ export async function signupBusiness(request, env) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO businesses (
        id, user_id, company_name, website, phone, address, ein,
        verified, review_status, review_notes, submitted_at, created_at
@@ -82,7 +82,7 @@ export async function businessDashboard(request, env, user) {
   /* ------------------------------------------------------------
      ANALYTICS
   ------------------------------------------------------------ */
-  const revenueRow = await env.DB_users.prepare(
+  const revenueRow = await env.DB_roll.prepare(
     `SELECT SUM(amount_cents) AS revenue_cents
      FROM payouts
      WHERE business_id = ?`
@@ -95,7 +95,7 @@ export async function businessDashboard(request, env, user) {
   /* ------------------------------------------------------------
      SUBMISSIONS (NOT PUBLISHED ITEMS)
   ------------------------------------------------------------ */
-  const { results: submissions } = await env.DB_users.prepare(
+  const { results: submissions } = await env.DB_roll.prepare(
     `SELECT *
      FROM business_submissions
      WHERE business_id = ?
@@ -107,7 +107,7 @@ export async function businessDashboard(request, env, user) {
   /* ------------------------------------------------------------
      STAFF
   ------------------------------------------------------------ */
-  const { results: staff } = await env.DB_users.prepare(
+  const { results: staff } = await env.DB_roll.prepare(
     `SELECT *
      FROM business_staff
      WHERE business_id = ?
@@ -137,7 +137,7 @@ export async function businessSubmitOffer(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_submissions
        (id, business_id, submission_type, payload_json, status, created_at)
      VALUES (?, ?, 'offer', ?, 'pending_owner', ?)`
@@ -166,7 +166,7 @@ export async function businessSubmitEvent(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_submissions
        (id, business_id, submission_type, payload_json, status, created_at)
      VALUES (?, ?, 'event', ?, 'pending_owner', ?)`
@@ -203,7 +203,7 @@ export async function businessSubmitAd(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_submissions
        (id, business_id, submission_type, payload_json, status, created_at)
      VALUES (?, ?, 'ad', ?, 'pending_owner', ?)`
@@ -238,7 +238,7 @@ export async function businessSubmitVenue(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_submissions
        (id, business_id, submission_type, payload_json, status, created_at)
      VALUES (?, ?, 'venue', ?, 'pending_owner', ?)`
@@ -273,7 +273,7 @@ export async function businessSubmitSponsorship(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_submissions
        (id, business_id, submission_type, payload_json, status, created_at)
      VALUES (?, ?, 'sponsorship', ?, 'pending_owner', ?)`
@@ -307,7 +307,7 @@ export async function businessSubmitAffiliate(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_submissions
        (id, business_id, submission_type, payload_json, status, created_at)
      VALUES (?, ?, 'affiliate', ?, 'pending_owner', ?)`
@@ -340,7 +340,7 @@ export async function businessSubmitDiscount(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_submissions
        (id, business_id, submission_type, payload_json, status, created_at)
      VALUES (?, ?, 'discount', ?, 'pending_owner', ?)`
@@ -374,7 +374,7 @@ export async function businessAddStaff(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO business_staff
        (id, business_id, staff_name, created_at)
      VALUES (?, ?, ?, ?)`
@@ -392,7 +392,7 @@ export async function businessRemoveStaff(request, env, user) {
   const business = await getBusinessByUser(env, user.id);
   if (!business) return apiJson({ message: "Business not found." }, 404);
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `DELETE FROM business_staff
      WHERE id = ? AND business_id = ?`
   )
@@ -406,7 +406,7 @@ export async function businessListStaff(request, env, user) {
   const business = await getBusinessByUser(env, user.id);
   if (!business) return apiJson({ message: "Business not found." }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT *
      FROM business_staff
      WHERE business_id = ?

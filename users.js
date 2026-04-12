@@ -123,7 +123,7 @@ export async function signupBase(env, { name, email, password, role }) {
     return { error: "Missing fields" };
   }
 
-  const exists = await env.DB_users.prepare(
+  const exists = await env.DB_roll.prepare(
     "SELECT id FROM users WHERE email = ?"
   ).bind(email).first();
 
@@ -137,7 +137,7 @@ export async function signupBase(env, { name, email, password, role }) {
   // PBKDF2 HASH
   const { hash: password_hash, salt: password_salt } = await hash(password, env);
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO users (id, name, email, password_hash, password_salt, role, "owner-1", created_at)
      VALUES (?, ?, ?, ?, ?, ?, 0, ?)`
   ).bind(id, name, email, password_hash, password_salt, role, created).run();
@@ -162,7 +162,7 @@ export async function login(request, env) {
       return apiJson({ message: "Missing credentials" }, 400);
     }
 
-    const row = await env.DB_users.prepare(
+    const row = await env.DB_roll.prepare(
       "SELECT * FROM users WHERE email = ?"
     ).bind(email).first();
 
@@ -221,7 +221,7 @@ export async function requireRole(request, env, allowedRoles, handler) {
       return apiJson({ message: "Unauthorized" }, 401);
     }
 
-    const user = await env.DB_users.prepare(
+    const user = await env.DB_roll.prepare(
       "SELECT * FROM users WHERE id = ?"
     ).bind(userId).first();
 

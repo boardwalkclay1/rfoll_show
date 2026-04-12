@@ -5,7 +5,7 @@ import { apiJson } from "./users.js";
    INTERNAL: GET SKATER PROFILE
 ============================================================ */
 async function getSkater(env, userId) {
-  return await env.DB_users.prepare(
+  return await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   )
     .bind(userId)
@@ -32,7 +32,7 @@ export async function uploadBrandingAsset(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO branding_assets (
        id, skater_id, asset_url, asset_type, asset_category, created_at
      )
@@ -61,7 +61,7 @@ export async function listBrandingAssets(request, env, user) {
   const skater = await getSkater(env, user.id);
   if (!skater) return apiJson({ message: "Skater profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT *
      FROM branding_assets
      WHERE skater_id = ?
@@ -84,7 +84,7 @@ export async function deleteBrandingAsset(request, env, user) {
   if (!asset_id) return apiJson({ message: "Missing asset_id" }, 400);
 
   // Ensure asset belongs to skater
-  const asset = await env.DB_users.prepare(
+  const asset = await env.DB_roll.prepare(
     "SELECT * FROM branding_assets WHERE id = ? AND skater_id = ?"
   )
     .bind(asset_id, skater.id)
@@ -92,7 +92,7 @@ export async function deleteBrandingAsset(request, env, user) {
 
   if (!asset) return apiJson({ message: "Asset not found" }, 404);
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     "DELETE FROM branding_assets WHERE id = ?"
   )
     .bind(asset_id)

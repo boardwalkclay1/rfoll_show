@@ -5,7 +5,7 @@ import { apiJson } from "./users.js";
    INTERNAL: GET BUSINESS PROFILE
 ============================================================ */
 async function getBusiness(env, userId) {
-  return await env.DB_users.prepare(
+  return await env.DB_roll.prepare(
     "SELECT * FROM business_profiles WHERE user_id = ?"
   )
     .bind(userId)
@@ -40,7 +40,7 @@ export async function createSponsorshipCampaign(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO sponsorship_campaigns (
        id, business_id, title, description,
        campaign_type, show_id,
@@ -74,7 +74,7 @@ export async function listBusinessCampaigns(request, env, user) {
   const business = await getBusiness(env, user.id);
   if (!business) return apiJson({ message: "Business profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT *
      FROM sponsorship_campaigns
      WHERE business_id = ?
@@ -106,7 +106,7 @@ export async function createSponsorshipOffer(request, env, user) {
   }
 
   // Ensure campaign belongs to this business
-  const campaign = await env.DB_users.prepare(
+  const campaign = await env.DB_roll.prepare(
     "SELECT * FROM sponsorship_campaigns WHERE id = ? AND business_id = ?"
   )
     .bind(campaign_id, business.id)
@@ -119,7 +119,7 @@ export async function createSponsorshipOffer(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO sponsorship_offers (
        id, campaign_id, skater_id,
        offer_type, show_id,
@@ -146,7 +146,7 @@ export async function createSponsorshipOffer(request, env, user) {
    SKATER: LIST SPONSORSHIP OFFERS
 ============================================================ */
 export async function listSkaterOffers(request, env, user) {
-  const skater = await env.DB_users.prepare(
+  const skater = await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   )
     .bind(user.id)
@@ -154,7 +154,7 @@ export async function listSkaterOffers(request, env, user) {
 
   if (!skater) return apiJson({ message: "Skater profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT 
         o.*,
         c.title AS campaign_title,
@@ -179,7 +179,7 @@ export async function listSkaterOffers(request, env, user) {
 export async function respondToOffer(request, env, user) {
   const { offer_id, action, terms_json } = await request.json();
 
-  const skater = await env.DB_users.prepare(
+  const skater = await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   )
     .bind(user.id)
@@ -187,7 +187,7 @@ export async function respondToOffer(request, env, user) {
 
   if (!skater) return apiJson({ message: "Skater profile not found" }, 404);
 
-  const offer = await env.DB_users.prepare(
+  const offer = await env.DB_roll.prepare(
     "SELECT * FROM sponsorship_offers WHERE id = ? AND skater_id = ?"
   )
     .bind(offer_id, skater.id)
@@ -203,7 +203,7 @@ export async function respondToOffer(request, env, user) {
 
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `UPDATE sponsorship_offers
      SET status = ?,
          terms_json = COALESCE(?, terms_json),

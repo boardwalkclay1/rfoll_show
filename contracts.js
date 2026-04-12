@@ -14,7 +14,7 @@ export async function createContract(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO contracts (
        id, template_slug, role, profile_id, status, signed_at, terms_json, created_at
      )
@@ -41,7 +41,7 @@ export async function listContractsForProfile(request, env, user) {
 
   if (!profile_id) return apiJson({ message: "Missing profile_id" }, 400);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT *
      FROM contracts
      WHERE profile_id = ?
@@ -61,7 +61,7 @@ export async function approveContract(request, env, user) {
 
   if (!contract_id) return apiJson({ message: "Missing contract_id" }, 400);
 
-  const contract = await env.DB_users.prepare(
+  const contract = await env.DB_roll.prepare(
     "SELECT * FROM contracts WHERE id = ?"
   ).bind(contract_id).first();
 
@@ -69,7 +69,7 @@ export async function approveContract(request, env, user) {
 
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `UPDATE contracts
      SET status = 'approved',
          signed_at = ?
@@ -89,13 +89,13 @@ export async function rejectContract(request, env, user) {
 
   if (!contract_id) return apiJson({ message: "Missing contract_id" }, 400);
 
-  const contract = await env.DB_users.prepare(
+  const contract = await env.DB_roll.prepare(
     "SELECT * FROM contracts WHERE id = ?"
   ).bind(contract_id).first();
 
   if (!contract) return apiJson({ message: "Contract not found" }, 404);
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `UPDATE contracts
      SET status = 'rejected'
      WHERE id = ?`

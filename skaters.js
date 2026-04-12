@@ -5,7 +5,7 @@
 // This module expects a D1 database instance (Cloudflare D1 style) passed in as `db`.
 // Example wiring from a Worker:
 //   import { makeSkatersApi } from './skaters.js';
-//   const api = makeSkatersApi(env.DB_users);
+//   const api = makeSkatersApi(env.DB_roll);
 
 // ---------- helpers ----------
 

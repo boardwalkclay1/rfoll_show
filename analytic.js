@@ -16,7 +16,7 @@ async function logAnalytics(env, {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO analytics (
        id, user_id, title, value, created_at,
        event_type, target_type, target_id, metadata
@@ -46,7 +46,7 @@ async function logActivity(env, user_id, action, target_type, target_id, metadat
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO user_activity_log (
        id, user_id, action, target_type, target_id, metadata, created_at
      )
@@ -70,7 +70,7 @@ async function logActivity(env, user_id, action, target_type, target_id, metadat
    INTERNAL: WEBHOOK TRIGGER
 ============================================================ */
 async function triggerWebhooks(env, event_type, payload) {
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT * FROM webhooks
      WHERE event_type = ? AND active = 1`
   )
@@ -149,7 +149,7 @@ export async function recordFeedView(request, env, user) {
 
   const id = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO feed_views (id, user_id, post_id)
      VALUES (?, ?, ?)`
   )
@@ -176,7 +176,7 @@ export async function recordFeedImpression(request, env, user) {
 
   const id = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO feed_impressions (id, user_id, post_id, source)
      VALUES (?, ?, ?, ?)`
   )
@@ -224,7 +224,7 @@ export async function recordHeatmapMetric(request, env, user) {
 
   const id = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO sessions_heatmap (
        id, session_id, metric, value
      )
@@ -255,7 +255,7 @@ export async function attachAnalyticsToSession(request, env, user) {
 
   const id = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO sessions_analytics_bridge (
        id, session_id, analytics_id
      )
@@ -276,7 +276,7 @@ export async function logError(request, env) {
 
   const id = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO error_logs (
        id, context, message, stack
      )
@@ -297,7 +297,7 @@ export async function logAudit(request, env, user) {
 
   const id = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO audit_log (
        id, actor_id, action, target_type, target_id, detail
      )

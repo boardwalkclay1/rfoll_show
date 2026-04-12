@@ -12,7 +12,7 @@ export async function createAffiliateLink(request, env, user) {
   }
 
   // Resolve business profile
-  const business = await env.DB_users.prepare(
+  const business = await env.DB_roll.prepare(
     "SELECT id FROM business_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
@@ -22,7 +22,7 @@ export async function createAffiliateLink(request, env, user) {
   const now = new Date().toISOString();
   const link_url = `/a/${id}`; // short redirect link
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO affiliate_links (
        id, business_id, skater_id, link_url, percent_cut, created_at
      )
@@ -38,13 +38,13 @@ export async function createAffiliateLink(request, env, user) {
    LIST AFFILIATE LINKS FOR BUSINESS
 ============================================================ */
 export async function listAffiliateLinks(request, env, user) {
-  const business = await env.DB_users.prepare(
+  const business = await env.DB_roll.prepare(
     "SELECT id FROM business_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   if (!business) return apiJson({ message: "Business profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT * FROM affiliate_links
      WHERE business_id = ?
      ORDER BY created_at DESC`

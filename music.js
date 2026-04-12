@@ -5,7 +5,7 @@ import { apiJson } from "./users.js";
    INTERNAL: GET MUSICIAN PROFILE
 ============================================================ */
 async function getMusician(env, userId) {
-  return await env.DB_users.prepare(
+  return await env.DB_roll.prepare(
     "SELECT * FROM musician_profiles WHERE user_id = ?"
   ).bind(userId).first();
 }
@@ -37,7 +37,7 @@ export async function uploadTrack(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO tracks (
        id, musician_id, title, description, genre, bpm, duration_seconds,
        r2_key, artwork_r2_key, isrc, visibility,
@@ -74,7 +74,7 @@ export async function uploadTrack(request, env, user) {
 export async function licenseTrack(request, env, user) {
   const { track_id, license_type, amount_cents, terms_json } = await request.json();
 
-  const track = await env.DB_users.prepare(
+  const track = await env.DB_roll.prepare(
     "SELECT * FROM tracks WHERE id = ?"
   ).bind(track_id).first();
 
@@ -85,7 +85,7 @@ export async function licenseTrack(request, env, user) {
   let profile_id = null;
 
   // Skater?
-  const skater = await env.DB_users.prepare(
+  const skater = await env.DB_roll.prepare(
     "SELECT id FROM skater_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
@@ -96,7 +96,7 @@ export async function licenseTrack(request, env, user) {
 
   // Business?
   if (!role) {
-    const business = await env.DB_users.prepare(
+    const business = await env.DB_roll.prepare(
       "SELECT id FROM business_profiles WHERE user_id = ?"
     ).bind(user.id).first();
 
@@ -119,7 +119,7 @@ export async function licenseTrack(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO track_licenses (
        id, track_id, musician_id,
        granted_to_role, granted_to_profile_id,
@@ -151,11 +151,11 @@ export async function musicianMusicDashboard(request, env, user) {
   const musician = await getMusician(env, user.id);
   if (!musician) return apiJson({ message: "Musician profile not found" }, 404);
 
-  const { results: tracks } = await env.DB_users.prepare(
+  const { results: tracks } = await env.DB_roll.prepare(
     "SELECT * FROM tracks WHERE musician_id = ? ORDER BY created_at DESC"
   ).bind(musician.id).all();
 
-  const { results: licenses } = await env.DB_users.prepare(
+  const { results: licenses } = await env.DB_roll.prepare(
     `SELECT l.*, t.title
      FROM track_licenses l
      JOIN tracks t ON t.id = l.track_id

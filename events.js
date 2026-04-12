@@ -22,7 +22,7 @@ export async function createEvent(request, env, user) {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO events (
        id, creator_id, title, description,
        location, latitude, longitude,
@@ -55,7 +55,7 @@ export async function createEvent(request, env, user) {
    LIST EVENTS (BASIC FEED)
 ============================================================ */
 export async function listEvents(request, env) {
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT *
      FROM events
      ORDER BY start_time IS NULL, start_time ASC, created_at DESC`
@@ -71,7 +71,7 @@ export async function createEventQr(request, env, user) {
   const { event_id } = await request.json();
   if (!event_id) return apiJson({ message: "Missing event_id" }, 400);
 
-  const event = await env.DB_users.prepare(
+  const event = await env.DB_roll.prepare(
     "SELECT * FROM events WHERE id = ?"
   )
     .bind(event_id)
@@ -86,7 +86,7 @@ export async function createEventQr(request, env, user) {
   const now = new Date().toISOString();
 
   // qr_codes: generic QR record
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO qr_codes (
        id, owner_id, type, target_id, tracking_mode, expiration_at, created_at
      )
@@ -99,7 +99,7 @@ export async function createEventQr(request, env, user) {
   const qrLinkId = crypto.randomUUID();
   const qrImageUrl = `/qr/event/${qrId}`;
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO qr_links (
        id, user_id, target_type, target_id, qr_image_url, created_at
      )
@@ -124,7 +124,7 @@ export async function recordQrScan(request, env) {
 
   const id = crypto.randomUUID();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO qr_scans (
        id, qr_id, scanned_by, user_agent, ip_address
      )

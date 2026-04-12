@@ -5,7 +5,7 @@ import { apiJson } from "./users.js";
    INTERNAL: GET BUYER PROFILE
 ============================================================ */
 async function getBuyerProfile(env, userId) {
-  return await env.DB_users.prepare(
+  return await env.DB_roll.prepare(
     "SELECT * FROM buyer_profiles WHERE user_id = ?"
   ).bind(userId).first();
 }
@@ -20,7 +20,7 @@ export async function createTicket(request, env, user) {
   const buyer = await getBuyerProfile(env, user.id);
   if (!buyer) return apiJson({ message: "Buyer profile not found" }, 404);
 
-  const show = await env.DB_users.prepare(
+  const show = await env.DB_roll.prepare(
     "SELECT * FROM shows WHERE id = ?"
   ).bind(show_id).first();
 
@@ -31,7 +31,7 @@ export async function createTicket(request, env, user) {
   const price_cents = (show.base_price_cents || 0) + (show.booking_fee_cents || 0);
   const qr_code_url = `/qr/ticket/${id}`;
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `INSERT INTO tickets (
        id, show_id, buyer_profile_id, purchaser_user_id,
        ticket_type, price_cents, status, purchased_at,
@@ -58,7 +58,7 @@ export async function markTicketCharged(request, env) {
 
   if (status !== "charged") return apiJson({ ok: true });
 
-  const ticket = await env.DB_users.prepare(
+  const ticket = await env.DB_roll.prepare(
     "SELECT * FROM tickets WHERE id = ?"
   ).bind(ticket_id).first();
 
@@ -66,7 +66,7 @@ export async function markTicketCharged(request, env) {
 
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `UPDATE tickets
      SET status = 'charged',
          purchased_at = ?
@@ -83,7 +83,7 @@ export async function checkInTicket(request, env) {
   const { ticket_id } = await request.json();
   if (!ticket_id) return apiJson({ message: "Missing ticket_id" }, 400);
 
-  const ticket = await env.DB_users.prepare(
+  const ticket = await env.DB_roll.prepare(
     "SELECT * FROM tickets WHERE id = ?"
   ).bind(ticket_id).first();
 
@@ -91,7 +91,7 @@ export async function checkInTicket(request, env) {
 
   const now = new Date().toISOString();
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `UPDATE tickets
      SET checkin_status = 'there',
          checkin_at = ?
@@ -108,7 +108,7 @@ export async function listTickets(request, env, user) {
   const buyer = await getBuyerProfile(env, user.id);
   if (!buyer) return apiJson({ message: "Buyer profile not found" }, 404);
 
-  const { results } = await env.DB_users.prepare(
+  const { results } = await env.DB_roll.prepare(
     `SELECT 
         t.id AS ticket_id,
         t.ticket_type,

@@ -7,13 +7,13 @@ import { apiJson } from "./users.js";
 export async function setDefaultDiscount(request, env, user) {
   const { coupon_code, coupon_percent } = await request.json();
 
-  const business = await env.DB_users.prepare(
+  const business = await env.DB_roll.prepare(
     "SELECT id FROM business_profiles WHERE user_id = ?"
   ).bind(user.id).first();
 
   if (!business) return apiJson({ message: "Business profile not found" }, 404);
 
-  await env.DB_users.prepare(
+  await env.DB_roll.prepare(
     `UPDATE business_profiles
      SET default_coupon_code = ?, default_coupon_percent = ?
      WHERE id = ?`
