@@ -76,6 +76,18 @@ export default {
       return new Response(null, { status: 204, headers: cors() });
     }
 
+    // ============================================================
+    // AUTH WORKER FORWARDING (PBKDF2 HASH)
+    // ============================================================
+
+    if (path === "/api/auth/hash" && method === "POST") {
+      // Forward raw request to auth worker (rollshow-auth)
+      const res = await env.AUTH.fetch(request);
+      // Optionally wrap CORS if you want browser calls here
+      const wrapped = new Response(res.body, res);
+      return withCORS(wrapped);
+    }
+
     // LOGIN
     if (path === "/api/login" && method === "POST") {
       return withCORS(await userLogin(request.clone(), env));
