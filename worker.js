@@ -77,23 +77,37 @@ export default {
     }
 
     // ============================================================
-    // AUTH WORKER FORWARDING (PBKDF2 HASH)
+    // AUTH WORKER FORWARDING (PBKDF2 HASH + VERIFY)
     // ============================================================
 
-    if (path === "/api/auth/hash" && method === "POST") {
-      // Forward raw request to auth worker (rollshow-auth)
-      const res = await env.AUTH.fetch(request);
-      // Optionally wrap CORS if you want browser calls here
-      const wrapped = new Response(res.body, res);
+    if (
+      (path === "/api/auth/hash" || path === "/api/auth/verify") &&
+      method === "POST"
+    ) {
+      const upstream = await env.AUTH.fetch(request);
+
+      // *** FIXED: preserve headers correctly ***
+      const wrapped = new Response(upstream.body, {
+        status: upstream.status,
+        statusText: upstream.statusText,
+        headers: upstream.headers
+      });
+
       return withCORS(wrapped);
     }
 
+    // ============================================================
     // LOGIN
+    // ============================================================
+
     if (path === "/api/login" && method === "POST") {
       return withCORS(await userLogin(request.clone(), env));
     }
 
-    // SIGNUP
+    // ============================================================
+    // SIGNUP ROUTES
+    // ============================================================
+
     if (path === "/api/buyer/signup" && method === "POST") {
       return withCORS(await signupBuyer(request.clone(), env));
     }
@@ -110,7 +124,7 @@ export default {
       return withCORS(await signupBusiness(request.clone(), env));
     }
 
-    // INIT SKATER API (FIXED)
+    // INIT SKATER API
     const Skaters = makeSkatersApi(env.DB_roll);
 
     // ============================================================
