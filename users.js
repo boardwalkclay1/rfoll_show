@@ -1,4 +1,4 @@
-// users.js — AUTH WORKER + BCRYPT COST 12
+// users.js — PBKDF2 AUTH WORKER VERSION
 
 const AUTH_URL = "https://rollshow-auth.boardwalkclay1.workers.dev";
 
@@ -71,10 +71,10 @@ async function safeAuthJson(res) {
 }
 
 /* ============================================================
-   PASSWORD HASHING (AUTH WORKER, BCRYPT COST 12)
+   PASSWORD HASHING (PBKDF2)
 ============================================================ */
 export async function hash(password, env) {
-  const res = await env.AUTH.fetch(`${AUTH_URL}/hash`, {
+  const res = await fetch(`${AUTH_URL}/hash`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password })
@@ -82,21 +82,28 @@ export async function hash(password, env) {
 
   const data = await safeAuthJson(res);
 
-  if (!data.hashed) {
-    throw new Error("AUTH worker missing 'hashed' field");
+  if (!data.hash || !data.salt) {
+    throw new Error("AUTH worker missing PBKDF2 fields");
   }
 
-  return data.hashed;
+  return {
+    hash: data.hash,
+    salt: data.salt
+  };
 }
 
 /* ============================================================
-   PASSWORD VERIFY (AUTH WORKER, BCRYPT COST 12)
+   PASSWORD VERIFY (PBKDF2)
 ============================================================ */
-export async function verify(password, hashValue, env) {
-  const res = await env.AUTH.fetch(`${AUTH_URL}/verify`, {
+export async function verify(password, hashValue, saltValue, env) {
+  const res = await fetch(`${AUTH_URL}/verify`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password, hash: hashValue })
+    body: JSON.stringify({
+      password,
+      hash: hashValue,
+      salt: saltValue
+    })
   });
 
   const data = await safeAuthJson(res);
@@ -109,7 +116,7 @@ export async function verify(password, hashValue, env) {
 }
 
 /* ============================================================
-   BASE SIGNUP (ALL ROLES)
+   BASE SIGNUP (PBKDF2)
 ============================================================ */
 export async function signupBase(env, { name, email, password, role }) {
   if (!name || !email || !password || !role) {
@@ -126,12 +133,14 @@ export async function signupBase(env, { name, email, password, role }) {
 
   const id = crypto.randomUUID();
   const created = new Date().toISOString();
-  const hashed = await hash(password, env);
+
+  // PBKDF2 HASH
+  const { hash: password_hash, salt: password_salt } = await hash(password, env);
 
   await env.DB_users.prepare(
-    `INSERT INTO users (id, name, email, password_hash, role, "owner-1", created_at)
-     VALUES (?, ?, ?, ?, ?, 0, ?)`
-  ).bind(id, name, email, hashed, role, created).run();
+    `INSERT INTO users (id, name, email, password_hash, password_salt, role, "owner-1", created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 0, ?)`
+  ).bind(id, name, email, password_hash, password_salt, role, created).run();
 
   return {
     id,
@@ -143,7 +152,7 @@ export async function signupBase(env, { name, email, password, role }) {
 }
 
 /* ============================================================
-   LOGIN (USES AUTH WORKER + owner-1)
+   LOGIN (PBKDF2)
 ============================================================ */
 export async function login(request, env) {
   try {
@@ -161,11 +170,17 @@ export async function login(request, env) {
       return apiJson({ message: "Invalid credentials" }, 401);
     }
 
-    if (!row.password_hash) {
-      return apiJson({ message: "User has no password_hash" }, 500);
+    if (!row.password_hash || !row.password_salt) {
+      return apiJson({ message: "User missing PBKDF2 fields" }, 500);
     }
 
-    const valid = await verify(password, row.password_hash, env);
+    const valid = await verify(
+      password,
+      row.password_hash,
+      row.password_salt,
+      env
+    );
+
     if (!valid) {
       return apiJson({ message: "Invalid credentials" }, 401);
     }
@@ -195,7 +210,7 @@ export async function login(request, env) {
 }
 
 /* ============================================================
-   ROLE GUARD (OWNER OVERRIDE VIA owner-1)
+   ROLE GUARD (UNCHANGED)
 ============================================================ */
 export async function requireRole(request, env, allowedRoles, handler) {
   try {
