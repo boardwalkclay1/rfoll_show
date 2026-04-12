@@ -1,4 +1,4 @@
-// /api/login.js — CLEAN, FINAL
+// /api/login.js — DEFENSIVE VERSION
 
 import { apiJson, verify } from "../users.js";
 
@@ -32,7 +32,32 @@ export default async function login(request, env) {
       );
     }
 
-    const valid = await verify(password, row.password_hash, env);
+    // Defensive verify call: catch and log any upstream/non-JSON errors
+    let valid;
+    try {
+      valid = await verify(password, row.password_hash, env);
+    } catch (verifyErr) {
+      try {
+        console.error("verify() threw an error", {
+          message: String(verifyErr),
+          // best-effort: include any extra fields the error may carry
+          ...(verifyErr && typeof verifyErr === "object" ? verifyErr : {})
+        });
+      } catch (logErr) {
+        console.error("Failed to serialize verify error", String(logErr));
+      }
+
+      return apiJson(
+        {
+          success: false,
+          message: "Server error",
+          detail: "Authentication backend returned an unexpected response"
+        },
+        500
+      );
+    }
+
+    // If verify returned something unexpected, treat as failure
     if (!valid) {
       return apiJson(
         { success: false, message: "Invalid credentials" },
@@ -58,6 +83,11 @@ export default async function login(request, env) {
     });
 
   } catch (err) {
+    try {
+      console.error("Login handler error", { err: String(err) });
+    } catch (logErr) {
+      // swallow logging errors
+    }
     return apiJson(
       {
         success: false,
