@@ -40,3 +40,7 @@ enabled = false
 
 [observability.logs]
 invocation_logs = true
+main = "worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
