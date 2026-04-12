@@ -51,18 +51,15 @@ function logout() {
 function requireUser(roles = null) {
   const user = getUser();
 
-  // No session → login
   if (!user) {
     window.location.href = "/pages/auth-login.html";
     return null;
   }
 
-  // OWNER BYPASS — owner can access everything
   if (user.role === "owner" || user.is_owner === true) {
     return user;
   }
 
-  // Normal role check
   if (roles && !roles.includes(user.role)) {
     window.location.href = "/index.html";
     return null;
@@ -114,7 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const user = res.user;
 
-    // Clean session object
     const session = {
       id: user.id,
       role: user.role,
@@ -123,7 +119,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveUser(session);
 
-    // Redirect logic
     if (session.is_owner) {
       window.location.href = "/pages/owner/owner-dashboard.html";
       return;
