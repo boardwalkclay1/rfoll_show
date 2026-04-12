@@ -1,32 +1,37 @@
-// routes/owner.js — FULL CINEMATIC OWNER DASHBOARD
+// routes/owner.js — FINAL PBKDF2-CLEAN OWNER DASHBOARD
 import { apiJson, requireRole } from "../users.js";
 
-/* ============================================================
-   OWNER DASHBOARD — MAIN ENTRY
-   Returns structured sections for mobile UI
-============================================================ */
 export async function ownerDashboard(request, env) {
   return requireRole(request, env, ["owner"], async () => {
     const db = env.DB_users;
 
     /* ------------------------------
+       SAFE COUNT HELPERS
+    ------------------------------ */
+    async function count(table) {
+      const row = await db.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first();
+      return row?.n || 0;
+    }
+
+    /* ------------------------------
        HIGH-LEVEL COUNTS
     ------------------------------ */
-    const total_users = (await db.prepare("SELECT COUNT(*) AS n FROM users").first()).n;
-    const total_skaters = (await db.prepare("SELECT COUNT(*) AS n FROM skater_profiles").first()).n;
-    const total_businesses = (await db.prepare("SELECT COUNT(*) AS n FROM business_profiles").first()).n;
-    const total_musicians = (await db.prepare("SELECT COUNT(*) AS n FROM musician_profiles").first()).n;
-    const total_buyers = (await db.prepare("SELECT COUNT(*) AS n FROM buyer_profiles").first()).n;
+    const total_users = await count("users");
+    const total_skaters = await count("skater_profiles");
+    const total_businesses = await count("business_profiles");
+    const total_musicians = await count("musician_profiles");
+    const total_buyers = await count("buyer_profiles");
 
-    const total_shows = (await db.prepare("SELECT COUNT(*) AS n FROM shows").first()).n;
-    const total_tickets = (await db.prepare("SELECT COUNT(*) AS n FROM tickets").first()).n;
+    const total_shows = await count("shows");
+    const total_tickets = await count("tickets");
+    const total_merch_orders = await count("merch_orders");
+    const total_skatecard_sales = await count("skate_card_sales");
 
-    const total_merch_orders = (await db.prepare("SELECT COUNT(*) AS n FROM merch_orders").first()).n;
-    const total_skatecard_sales = (await db.prepare("SELECT COUNT(*) AS n FROM skate_card_sales").first()).n;
-
-    const total_revenue = (await db.prepare(`
-      SELECT 
-        COALESCE(SUM(price_cents),0) 
+    /* ------------------------------
+       TOTAL REVENUE (SAFE)
+    ------------------------------ */
+    const revenueRow = await db.prepare(`
+      SELECT COALESCE(SUM(price_cents), 0) AS total
       FROM (
         SELECT price_cents FROM tickets
         UNION ALL
@@ -34,35 +39,43 @@ export async function ownerDashboard(request, env) {
         UNION ALL
         SELECT price_cents FROM skate_card_sales
       )
-    `).first())["COALESCE(SUM(price_cents),0)"];
+    `).first();
+
+    const total_revenue = revenueRow?.total || 0;
 
     /* ------------------------------
        RECENT ACTIVITY
     ------------------------------ */
-    const recent_users = (await db.prepare(`
-      SELECT id, email, role, created_at
-      FROM users
-      ORDER BY created_at DESC
-      LIMIT 10
-    `).all()).results;
+    const recent_users = (
+      await db.prepare(`
+        SELECT id, email, role, created_at
+        FROM users
+        ORDER BY created_at DESC
+        LIMIT 10
+      `).all()
+    ).results || [];
 
-    const recent_reports = (await db.prepare(`
-      SELECT r.*, u.email AS reporter_email
-      FROM feed_reports r
-      LEFT JOIN users u ON u.id = r.reporter_id
-      ORDER BY r.created_at DESC
-      LIMIT 10
-    `).all()).results;
+    const recent_reports = (
+      await db.prepare(`
+        SELECT r.*, u.email AS reporter_email
+        FROM feed_reports r
+        LEFT JOIN users u ON u.id = r.reporter_id
+        ORDER BY r.created_at DESC
+        LIMIT 10
+      `).all()
+    ).results || [];
 
-    const recent_errors = (await db.prepare(`
-      SELECT *
-      FROM error_logs
-      ORDER BY created_at DESC
-      LIMIT 10
-    `).all()).results;
+    const recent_errors = (
+      await db.prepare(`
+        SELECT *
+        FROM error_logs
+        ORDER BY created_at DESC
+        LIMIT 10
+      `).all()
+    ).results || [];
 
     /* ------------------------------
-       ANALYTICS CHIPS (YouTube style)
+       ANALYTICS CHIPS
     ------------------------------ */
     const analytics_chips = [
       { label: "Users", value: total_users, link: "/owner/users" },
@@ -78,7 +91,7 @@ export async function ownerDashboard(request, env) {
     ];
 
     /* ------------------------------
-       GHOST BUTTON SECTIONS
+       GHOST BUTTONS
     ------------------------------ */
     const ghost_buttons = [
       { label: "Users", icon: "users", link: "/owner/users" },
@@ -96,7 +109,7 @@ export async function ownerDashboard(request, env) {
     ];
 
     /* ------------------------------
-       BURGER MENU (ALL DASHBOARDS)
+       BURGER MENU
     ------------------------------ */
     const burger_menu = [
       { label: "Owner Dashboard", link: "/owner" },
@@ -108,7 +121,7 @@ export async function ownerDashboard(request, env) {
     ];
 
     /* ------------------------------
-       FINAL STRUCTURED RESPONSE
+       FINAL RESPONSE
     ------------------------------ */
     return apiJson({
       layout: "owner_dashboard",
