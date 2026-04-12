@@ -1,9 +1,20 @@
 export default {
   async fetch(request) {
     const url = new URL(request.url);
+    const path = url.pathname;
+    const method = request.method;
+
+    // Accept both direct and forwarded paths
+    const isHashRoute =
+      method === "POST" &&
+      (path === "/hash" || path === "/api/auth/hash");
+
+    const isVerifyRoute =
+      method === "POST" &&
+      (path === "/verify" || path === "/api/auth/verify");
 
     // PBKDF2 HASH
-    if (url.pathname === "/hash" && request.method === "POST") {
+    if (isHashRoute) {
       const { password } = await request.json();
 
       const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -37,7 +48,7 @@ export default {
     }
 
     // PBKDF2 VERIFY
-    if (url.pathname === "/verify" && request.method === "POST") {
+    if (isVerifyRoute) {
       const { password, hash, salt } = await request.json();
 
       const saltBytes = Uint8Array.from(atob(salt), c => c.charCodeAt(0));
