@@ -1,4 +1,4 @@
-// /api/login.js — FINAL PBKDF2 VERSION (BOOLEAN VERIFY)
+// /api/login.js — FULL REBUILD (PBKDF2, BOOLEAN VERIFY)
 
 import { apiJson, verify } from "../users.js";
 
@@ -7,10 +7,7 @@ export default async function login(request, env) {
     const { email, password } = await request.json();
 
     if (!email || !password) {
-      return apiJson(
-        { message: "Missing credentials" },
-        400
-      );
+      return apiJson({ success: false, message: "Missing credentials" }, 400);
     }
 
     const row = await env.DB_roll
@@ -19,15 +16,12 @@ export default async function login(request, env) {
       .first();
 
     if (!row) {
-      return apiJson(
-        { message: "Invalid credentials" },
-        401
-      );
+      return apiJson({ success: false, message: "Invalid credentials" }, 401);
     }
 
     if (!row.password_hash || !row.password_salt) {
       return apiJson(
-        { message: "User missing PBKDF2 fields" },
+        { success: false, message: "User missing PBKDF2 fields" },
         500
       );
     }
@@ -36,7 +30,6 @@ export default async function login(request, env) {
 
     let isValid;
     try {
-      // verify() returns TRUE or FALSE
       isValid = await verify(
         password,
         row.password_hash,
@@ -46,9 +39,9 @@ export default async function login(request, env) {
       );
     } catch (err) {
       console.error("verify() error", String(err));
-
       return apiJson(
         {
+          success: false,
           message: "Server error",
           detail: "Authentication backend returned an unexpected response"
         },
@@ -57,10 +50,7 @@ export default async function login(request, env) {
     }
 
     if (isValid !== true) {
-      return apiJson(
-        { message: "Invalid credentials" },
-        401
-      );
+      return apiJson({ success: false, message: "Invalid credentials" }, 401);
     }
 
     const is_owner =
@@ -69,6 +59,7 @@ export default async function login(request, env) {
       row["owner-1"] === true;
 
     return apiJson({
+      success: true,
       user: {
         id: row.id,
         name: row.name,
@@ -78,15 +69,10 @@ export default async function login(request, env) {
         created_at: row.created_at
       }
     });
-
   } catch (err) {
     console.error("Login handler error", String(err));
-
     return apiJson(
-      {
-        message: "Server error",
-        detail: String(err)
-      },
+      { success: false, message: "Server error", detail: String(err) },
       500
     );
   }
