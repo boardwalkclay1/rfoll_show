@@ -1,4 +1,3 @@
-// auth-worker/index.js
 export default {
   async fetch(request) {
     const url = new URL(request.url);
@@ -26,7 +25,7 @@ export default {
     const fromB64 = (s) =>
       Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
-    // PBKDF2 worker function with try/catch and optional fallback
+    // PBKDF2 worker function
     async function derive(password, saltBytes, iterations) {
       const enc = new TextEncoder();
       const key = await crypto.subtle.importKey(
@@ -67,10 +66,12 @@ export default {
 
         // primary iteration count (your production target)
         const PRIMARY_ITER = 310000;
-        // fallback for testing if primary fails (reduce CPU/time)
+        // fallback for runtimes that limit iterations
         const FALLBACK_ITER = 100000;
 
         const salt = crypto.getRandomValues(new Uint8Array(16));
+
+        // Try primary, then fallback if primary not supported
         try {
           const hashBytes = await derive(password, salt, PRIMARY_ITER);
           return json({
@@ -81,10 +82,7 @@ export default {
             warning: null
           });
         } catch (errPrimary) {
-          // log the primary failure
           console.error("PBKDF2 primary failed:", String(errPrimary));
-
-          // try fallback once (useful for debugging / edge limits)
           try {
             const hashBytes = await derive(password, salt, FALLBACK_ITER);
             return json({
@@ -118,21 +116,38 @@ export default {
         }
 
         const saltBytes = fromB64(salt);
-        const iter = iterations || 310000;
+        const PRIMARY_ITER = 310000;
+        const FALLBACK_ITER = 100000;
+        const iter = iterations || PRIMARY_ITER;
 
+        // Try requested/primary iterations first, then fallback if needed.
         try {
           const bits = await derive(password, saltBytes, iter);
           const newHash = toB64(bits);
           return json({ success: true, ok: newHash === hash });
-        } catch (err) {
-          console.error("Verify PBKDF2 failed:", String(err));
-          return json({ success: false, error: "Verify failed", detail: String(err) }, 500);
+        } catch (errPrimary) {
+          console.error("Verify PBKDF2 primary failed:", String(errPrimary));
+          // If primary failed due to unsupported iterations, try fallback
+          try {
+            const bits = await derive(password, saltBytes, FALLBACK_ITER);
+            const newHash = toB64(bits);
+            return json({
+              success: true,
+              ok: newHash === hash,
+              warning: "Primary iterations failed; used fallback iterations",
+              iterations: FALLBACK_ITER
+            });
+          } catch (errFallback) {
+            console.error("Verify PBKDF2 fallback failed:", String(errFallback));
+            return json({ success: false, error: "Verify failed", detail: String(errFallback) }, 500);
+          }
         }
       }
 
-      return new Response("Auth worker online");
+      // Always return JSON for the health/default route
+      return json({ success: true, message: "Auth worker online" });
     } catch (err) {
-      // catch-all: log and return JSON so caller never sees plain 1101
+      // catch-all: log and return JSON so caller never sees plain text
       console.error("Unhandled auth worker error:", String(err));
       return json({ success: false, error: "Unhandled error", detail: String(err) }, 500);
     }
