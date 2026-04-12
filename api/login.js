@@ -1,4 +1,4 @@
-// /api/login.js — DEFENSIVE VERSION
+// /api/login.js — DEFENSIVE VERSION (FIXED FOR PBKDF2)
 
 import { apiJson, verify } from "../users.js";
 
@@ -25,22 +25,30 @@ export default async function login(request, env) {
       );
     }
 
-    if (!row.password_hash) {
+    if (!row.password_hash || !row.password_salt) {
       return apiJson(
-        { success: false, message: "User has no password_hash" },
+        { success: false, message: "User missing PBKDF2 fields" },
         500
       );
     }
 
-    // Defensive verify call: catch and log any upstream/non-JSON errors
+    // Pull iterations from DB (fallback to 100k)
+    const iterations = Number(row.password_iterations) || 100000;
+
+    // Defensive verify call
     let valid;
     try {
-      valid = await verify(password, row.password_hash, env);
+      valid = await verify(
+        password,
+        row.password_hash,
+        row.password_salt,
+        iterations,
+        env
+      );
     } catch (verifyErr) {
       try {
         console.error("verify() threw an error", {
           message: String(verifyErr),
-          // best-effort: include any extra fields the error may carry
           ...(verifyErr && typeof verifyErr === "object" ? verifyErr : {})
         });
       } catch (logErr) {
@@ -57,7 +65,6 @@ export default async function login(request, env) {
       );
     }
 
-    // If verify returned something unexpected, treat as failure
     if (!valid) {
       return apiJson(
         { success: false, message: "Invalid credentials" },
@@ -85,9 +92,8 @@ export default async function login(request, env) {
   } catch (err) {
     try {
       console.error("Login handler error", { err: String(err) });
-    } catch (logErr) {
-      // swallow logging errors
-    }
+    } catch {}
+
     return apiJson(
       {
         success: false,
