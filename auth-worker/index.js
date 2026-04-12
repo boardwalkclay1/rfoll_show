@@ -5,11 +5,14 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // HASH ENDPOINT
     if (path === "/hash") {
       const { password } = await request.json();
 
+      // Generate random salt
       const salt = crypto.getRandomValues(new Uint8Array(16));
 
+      // Import password as key
       const key = await crypto.subtle.importKey(
         "raw",
         new TextEncoder().encode(password),
@@ -18,6 +21,7 @@ export default {
         ["deriveBits"]
       );
 
+      // Derive 256-bit hash
       const bits = await crypto.subtle.deriveBits(
         {
           name: "PBKDF2",
@@ -37,6 +41,7 @@ export default {
       });
     }
 
+    // VERIFY ENDPOINT
     if (path === "/verify") {
       const { password, hash, salt } = await request.json();
 
@@ -68,6 +73,7 @@ export default {
       });
     }
 
+    // DEFAULT
     return new Response("Not found", { status: 404 });
   }
 };
