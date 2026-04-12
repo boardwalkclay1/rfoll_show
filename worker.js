@@ -98,8 +98,8 @@ export default {
       return withCORS(await signupBusiness(request.clone(), env));
     }
 
-    // INIT SKATER API
-    const Skaters = makeSkatersApi(env.DB_users);
+    // INIT SKATER API (FIXED)
+    const Skaters = makeSkatersApi(env.DB_roll);
 
     // ============================================================
     // SKATER ROUTES
