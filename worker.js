@@ -7,7 +7,7 @@ import {
   signupBase
 } from "./users.js";
 
-import loginHandler from "./api/login.js";
+import loginHandler from "./login.js";
 
 import {
   signupBuyer,
@@ -108,7 +108,7 @@ export default {
     }
 
     // ============================================================
-    // LOGIN — NOW USING /api/login.js (FIXED)
+    // LOGIN — NOW USING ./login.js
     // ============================================================
 
     if (path === "/api/login" && method === "POST") {
