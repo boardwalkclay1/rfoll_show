@@ -1,4 +1,4 @@
-// /api/login.js — DEFENSIVE VERSION (FIXED FOR PBKDF2)
+// /api/login.js — PBKDF2 VERSION (ACCEPTS ok: true)
 
 import { apiJson, verify } from "../users.js";
 
@@ -32,13 +32,11 @@ export default async function login(request, env) {
       );
     }
 
-    // Pull iterations from DB (fallback to 100k)
     const iterations = Number(row.password_iterations) || 100000;
 
-    // Defensive verify call
-    let valid;
+    let verifyResp;
     try {
-      valid = await verify(
+      verifyResp = await verify(
         password,
         row.password_hash,
         row.password_salt,
@@ -51,9 +49,7 @@ export default async function login(request, env) {
           message: String(verifyErr),
           ...(verifyErr && typeof verifyErr === "object" ? verifyErr : {})
         });
-      } catch (logErr) {
-        console.error("Failed to serialize verify error", String(logErr));
-      }
+      } catch {}
 
       return apiJson(
         {
@@ -64,6 +60,12 @@ export default async function login(request, env) {
         500
       );
     }
+
+    // Accept either verified:true OR ok:true
+    const valid =
+      verifyResp &&
+      verifyResp.success === true &&
+      (verifyResp.verified === true || verifyResp.ok === true);
 
     if (!valid) {
       return apiJson(
