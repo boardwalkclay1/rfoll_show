@@ -3,7 +3,8 @@ import {
   cors,
   apiJson,
   requireRole,
-  signupBase
+  signupBase,
+  signupBusiness
 } from "./users.js";
 
 import loginHandler from "./api/login.js";
@@ -20,7 +21,6 @@ import {
 import { makeSkatersApi } from "./skaters.js";
 
 import {
-  signupBusiness,
   businessDashboard,
   businessSubmitOffer,
   businessSubmitEvent,
@@ -112,8 +112,6 @@ export default {
       }
 
       // SIGNUP ROUTES
-      // Buyer, Skater, Musician, Business each have their own signup handlers.
-      // Handlers are responsible for creating the users row and then the profile row.
       if (path === "/api/buyer/signup" && method === "POST") {
         return withCORS(await signupBuyer(request.clone(), env));
       }
@@ -126,10 +124,10 @@ export default {
         return withCORS(await signupMusician(request.clone(), env));
       }
 
+      // Business signup: handled by signupBusiness exported from users.js
+      // signupBusiness will create the users row first and only then attempt to create
+      // the business_profiles row (using only the allowed fields).
       if (path === "/api/business/signup" && method === "POST") {
-        // signupBusiness must implement the two-step flow:
-        // 1) create users row (using signupBase or equivalent)
-        // 2) create business_profiles row with only: company_name, contact_name, contact_email, country
         return withCORS(await signupBusiness(request.clone(), env));
       }
 
