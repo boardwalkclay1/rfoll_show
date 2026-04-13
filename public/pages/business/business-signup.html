@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Business Signup – Roll Show</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/favicon.png">
-  <link rel="stylesheet" href="/app/styles/styles.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="icon" href="/favicon.png" />
+  <link rel="stylesheet" href="/app/styles/styles.css" />
 
   <style>
     .back-btn {
@@ -13,7 +13,7 @@
       background:rgba(0,0,0,0.55);
       padding:10px 16px; border-radius:8px;
       color:white; font-weight:600; text-decoration:none;
-      backdrop-filter:blur(4px); transition:.2s;
+      backdrop-filter:blur(4px); transition:.2s; z-index:10;
     }
     .back-btn:hover { background:rgba(0,0,0,0.75); }
 
@@ -21,13 +21,22 @@
       display:block; margin-top:18px; text-align:center;
       background:#f5b400; color:#1a1200;
       padding:12px 18px; border-radius:8px;
-      font-weight:700; text-decoration:none;
-      transition:.2s;
+      font-weight:700; text-decoration:none; transition:.2s;
+      max-width:520px;
     }
-    .learn-btn:hover { background:#ffca33; }
+    .learn-btn:hover { background:#ffca33; transform:translateY(-2px); }
+
+    .signup-shell { padding:48px 20px; max-width:720px; margin:0 auto; color:#111; }
+    .signup-form input, .signup-form select, .signup-form button {
+      display:block; width:100%; max-width:520px; margin:10px 0;
+      padding:12px 14px; border-radius:8px; border:1px solid rgba(0,0,0,0.12);
+      font-size:16px; box-sizing:border-box;
+    }
+    .error { color:#ff4d4f; margin-top:12px; font-weight:600; display:none; }
+    h1 { font-size:32px; margin-bottom:12px; }
+    .small-note { font-size:13px; color:#444; margin-top:6px; }
   </style>
 </head>
-
 <body style="background:url('/app/images/2nd-rd/roll-board-jump.jpg') center/contain no-repeat;">
 
   <a href="/index.html" class="back-btn">← Back</a>
@@ -35,23 +44,37 @@
   <main class="signup-shell">
     <h1>Business Application</h1>
 
-    <form id="business-apply-form" class="signup-form">
-      <input name="company_name" placeholder="Company Name" required>
-      <input name="website" placeholder="Website">
-      <input name="phone" placeholder="Phone">
-      <textarea name="address" rows="2" placeholder="Address"></textarea>
-      <input name="ein" placeholder="EIN / Tax ID">
-      <input name="name" placeholder="Your Name" required>
-      <input name="email" placeholder="Email" required>
-      <input name="password" placeholder="Password" required>
+    <form id="business-apply-form" class="signup-form" autocomplete="on" novalidate>
+      <!-- business profile fields (only these four map to business_profiles) -->
+      <input name="company_name" placeholder="Company Name" required autocomplete="organization" />
+      <label class="small-note" for="country">Country</label>
+      <select name="country" id="country" required>
+        <option value="">Select country</option>
+        <option value="United States">United States</option>
+        <option value="Canada">Canada</option>
+        <option value="United Kingdom">United Kingdom</option>
+        <option value="Australia">Australia</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <hr style="max-width:520px; border:none; border-top:1px solid rgba(0,0,0,0.06); margin:18px 0;" />
+
+      <!-- users fields -->
+      <input name="name" placeholder="Your Full Name" required autocomplete="name" />
+      <input name="email" type="email" placeholder="Email" required autocomplete="email" />
+      <input name="password" type="password" placeholder="Password" required autocomplete="new-password" />
+
+      <!-- hidden role (page-specific) -->
+      <input type="hidden" name="role" value="business" />
+
       <button type="submit">Submit Application</button>
+
+      <div id="business-signup-error" class="error" role="alert" aria-live="polite"></div>
     </form>
 
-    <a href="/pages/learn/learn-business.html" class="learn-btn">
-      Learn More About Business Accounts
-    </a>
+    <a href="/pages/learn/learn-business.html" class="learn-btn">Learn More About Business Accounts</a>
 
-    <p class="signup-login-link">
+    <p class="signup-login-link" style="margin-top:12px;">
       Already have an account?
       <a href="/pages/auth-login.html?role=business">Log in</a>
     </p>
