@@ -64,10 +64,25 @@
       color:#ffffff;
       text-decoration:underline;
     }
+
+    .error { color:#ff4d4f; margin-top:12px; font-weight:600; display:none; }
+    .signup-form input, .signup-form textarea, .signup-form button {
+      display:block;
+      width:100%;
+      max-width:420px;
+      margin:10px 0;
+      padding:12px 14px;
+      border-radius:8px;
+      border:1px solid rgba(0,0,0,0.12);
+      font-size:16px;
+    }
+    .signup-form textarea { min-height:100px; resize:vertical; }
+    .signup-shell { padding:48px 20px; max-width:720px; margin:0 auto; color:#fff; text-align:left; }
+    h1 { font-size:36px; margin-bottom:18px; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,0.45); }
   </style>
 </head>
 
-<body style="background:url('/app/images/roll-groovy.jpg') center -10px / cover no-repeat;">
+<body data-role="buyer" style="background:url('/app/images/roll-groovy.jpg') center -10px / cover no-repeat;">
 
   <!-- BACK BUTTON -->
   <a href="/index.html" class="back-btn">← Back</a>
@@ -75,11 +90,22 @@
   <main class="signup-shell">
     <h1>Create Buyer Account</h1>
 
-    <form id="buyer-signup-form" class="signup-form">
-      <input name="name" placeholder="Full Name" required>
-      <input name="email" type="email" placeholder="Email" required>
-      <input name="password" type="password" placeholder="Password" required>
+    <form id="buyer-signup-form" class="signup-form" autocomplete="on" novalidate>
+      <!-- users fields -->
+      <input name="name" placeholder="Full Name" autocomplete="name" />
+      <input name="email" type="email" placeholder="Email" required autocomplete="email" />
+      <input name="password" type="password" placeholder="Password" required autocomplete="new-password" />
+
+      <!-- hidden role (page-specific) -->
+      <input type="hidden" name="role" value="buyer" />
+
+      <!-- profile fields (buyer) -->
+      <input name="display_name" placeholder="Display Name" required />
+      <textarea name="billing_address" placeholder="Billing Address (optional)"></textarea>
+
       <button type="submit">Sign Up</button>
+
+      <div id="buyer-signup-error" class="error" role="alert" aria-live="polite"></div>
     </form>
 
     <!-- WHITE + BLACK LEARN BUTTON -->
