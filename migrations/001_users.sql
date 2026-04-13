@@ -7,7 +7,10 @@ CREATE TABLE users (
   name TEXT,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  password_salt TEXT NOT NULL,
+  password_iterations INTEGER NOT NULL,
+  password_algo TEXT NOT NULL DEFAULT 'pbkdf2',
   role TEXT NOT NULL,
-  created_at TEXT NOT NULL,
-  "owner-1" INTEGER DEFAULT 0
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  updated_at TEXT
 );
