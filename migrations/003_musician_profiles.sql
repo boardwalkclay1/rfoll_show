@@ -1,20 +1,13 @@
-/* ============================
-   MUSICIANS (PROFILE)
-============================ */
+-- 004_musician_profiles.sql — CLEAN, D1-SAFE (minimal: linkage + core musician fields)
+
 DROP TABLE IF EXISTS musician_profiles;
 
-CREATE TABLE musician_profiles (
-  id TEXT PRIMARY KEY,             -- musician_id (UUID)
-  user_id TEXT NOT NULL UNIQUE,    -- links to users.id
-
-  name TEXT,
-  bio TEXT,
+CREATE TABLE IF NOT EXISTS musician_profiles (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL UNIQUE,
+  stage_name TEXT NOT NULL,
   genre TEXT,
-  avatar_url TEXT,
-  city TEXT,
-  state TEXT,
-
-  created_at TEXT NOT NULL,
-
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  bio TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
