@@ -1,5 +1,4 @@
-// worker.js — FINAL MODULE WORKER (PBKDF2-COMPATIBLE, cleaned routes & guards)
-
+// worker.js — FINAL MODULE WORKER (cleaned routes & guards, updated)
 import {
   cors,
   apiJson,
@@ -62,7 +61,6 @@ function withCORS(response) {
 }
 
 function normalizePath(path) {
-  // remove trailing slash except root
   if (path.length > 1 && path.endsWith("/")) return path.slice(0, -1);
   return path;
 }
@@ -82,7 +80,7 @@ export default {
       return new Response(null, { status: 204, headers: cors() });
     }
 
-    // Helper to proxy auth endpoints to the auth worker
+    // Proxy helper for auth worker
     async function proxyAuth(pathSuffix) {
       const upstreamUrl = `${AUTH_UPSTREAM}${pathSuffix}`;
       const bodyText = await request.text();
@@ -100,27 +98,22 @@ export default {
     }
 
     try {
-      // ============================================================
-      // AUTH WORKER FORWARDING
-      // ============================================================
+      // AUTH FORWARDING
       if (path === "/api/auth/hash" && method === "POST") {
         return await proxyAuth("/hash");
       }
-
       if (path === "/api/auth/verify" && method === "POST") {
         return await proxyAuth("/verify");
       }
 
-      // ============================================================
       // LOGIN
-      // ============================================================
       if (path === "/api/login" && method === "POST") {
         return withCORS(await loginHandler(request.clone(), env));
       }
 
-      // ============================================================
       // SIGNUP ROUTES
-      // ============================================================
+      // Buyer, Skater, Musician, Business each have their own signup handlers.
+      // Handlers are responsible for creating the users row and then the profile row.
       if (path === "/api/buyer/signup" && method === "POST") {
         return withCORS(await signupBuyer(request.clone(), env));
       }
@@ -134,15 +127,16 @@ export default {
       }
 
       if (path === "/api/business/signup" && method === "POST") {
+        // signupBusiness must implement the two-step flow:
+        // 1) create users row (using signupBase or equivalent)
+        // 2) create business_profiles row with only: company_name, contact_name, contact_email, country
         return withCORS(await signupBusiness(request.clone(), env));
       }
 
       // Initialize Skaters API with DB binding
       const Skaters = makeSkatersApi(env.DB_roll);
 
-      // ============================================================
       // SKATER ROUTES
-      // ============================================================
       if (path === "/api/skater/dashboard" && method === "GET") {
         return withCORS(
           await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
@@ -198,9 +192,7 @@ export default {
         );
       }
 
-      // ============================================================
       // MUSICIAN ROUTES
-      // ============================================================
       if (path === "/api/musician/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["musician"], musicianDashboard));
       }
@@ -217,9 +209,7 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["musician"], licenseTrack));
       }
 
-      // ============================================================
       // BUSINESS ROUTES
-      // ============================================================
       if (path === "/api/business/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["business"], businessDashboard));
       }
@@ -252,7 +242,6 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["business"], businessScanTicket));
       }
 
-      // Additional business endpoints (placeholders for future features)
       if (path === "/api/business/venues" && method === "POST") {
         return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitVenue));
       }
@@ -269,9 +258,7 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitDiscount));
       }
 
-      // ============================================================
       // BUYER ROUTES
-      // ============================================================
       if (path === "/api/buyer/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["buyer"], buyerDashboard));
       }
@@ -285,7 +272,6 @@ export default {
       }
 
       if (path === "/api/buyer/partner-webhook" && method === "POST") {
-        // partner webhook is public but should validate signature inside handler
         return withCORS(await partnerWebhook(request.clone(), env));
       }
 
@@ -293,19 +279,14 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["buyer"], checkInTicket));
       }
 
-      // ============================================================
       // OWNER ROUTES
-      // ============================================================
       if (path === "/api/owner/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["owner"], ownerDashboard));
       }
 
-      // ============================================================
       // FALLBACK
-      // ============================================================
       return withCORS(apiJson({ success: false, message: "Not found" }, 404));
     } catch (err) {
-      // Global error handler
       console.error("Worker fetch error:", String(err));
       return withCORS(apiJson({ success: false, message: "Server error", detail: String(err) }, 500));
     }
