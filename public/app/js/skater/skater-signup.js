@@ -1,87 +1,164 @@
 // public/app/js/skater/skater-signup.js
 import API from "/app/js/api.js";
 
-const form = document.getElementById("skater-signup-form");
-const errorEl = document.getElementById("skater-signup-error");
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("skater-signup-form");
+  if (!form) return;
 
-function showError(msg) {
-  if (!errorEl) return alert(msg);
-  errorEl.textContent = msg;
-  errorEl.style.display = "block";
-}
+  const ERROR_ID = "skater-signup-error";
+  const RETRY_ID = "skater-profile-retry";
+  const SUBMIT_BTN = form.querySelector('button[type="submit"]');
 
-function clearError() {
-  if (!errorEl) return;
-  errorEl.textContent = "";
-  errorEl.style.display = "none";
-}
+  let errorEl = document.getElementById(ERROR_ID);
+  if (!errorEl) {
+    errorEl = document.createElement("div");
+    errorEl.id = ERROR_ID;
+    errorEl.style.color = "#ff4d4f";
+    errorEl.style.marginTop = "12px";
+    errorEl.style.fontWeight = "600";
+    errorEl.setAttribute("role", "alert");
+    errorEl.style.display = "none";
+    form.appendChild(errorEl);
+  }
 
-function detectRole() {
-  const bodyRole = document.body?.dataset?.role;
-  if (bodyRole) return bodyRole;
-  const path = location.pathname.split("/").filter(Boolean);
-  const possible = ["skater", "musician", "buyer", "business", "owner"];
-  for (const seg of path) if (possible.includes(seg)) return seg;
-  return "skater";
-}
+  let retryEl = document.getElementById(RETRY_ID);
+  if (!retryEl) {
+    retryEl = document.createElement("button");
+    retryEl.id = RETRY_ID;
+    retryEl.type = "button";
+    retryEl.textContent = "Retry profile creation";
+    retryEl.style.display = "none";
+    retryEl.style.marginTop = "10px";
+    retryEl.style.padding = "10px 14px";
+    retryEl.style.borderRadius = "8px";
+    retryEl.style.cursor = "pointer";
+    form.appendChild(retryEl);
+  }
 
-if (form) {
-  const role = detectRole() || "skater";
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = "block";
+  }
 
-  // ensure hidden role input exists for form semantics (optional)
-  (function ensureHiddenRoleInput() {
-    let hidden = form.querySelector('input[name="role"][type="hidden"]');
-    if (!hidden) {
-      hidden = document.createElement("input");
-      hidden.type = "hidden";
-      hidden.name = "role";
-      form.appendChild(hidden);
+  function clearError() {
+    errorEl.textContent = "";
+    errorEl.style.display = "none";
+    retryEl.style.display = "none";
+  }
+
+  function setSubmitting(isSubmitting) {
+    if (!SUBMIT_BTN) return;
+    SUBMIT_BTN.disabled = isSubmitting;
+    SUBMIT_BTN.textContent = isSubmitting ? "Saving…" : "Create Account";
+  }
+
+  function collectSignupPayload() {
+    const fd = new FormData(form);
+    const name = (fd.get("name") || "").trim() || null;
+    const email = (fd.get("email") || "").trim();
+    const password = fd.get("password") || "";
+    const roleInput = form.querySelector('input[name="role"]');
+    const role = (roleInput && roleInput.value) ? roleInput.value : "skater";
+    return { name, email, password, role };
+  }
+
+  function collectProfilePayload() {
+    const fd = new FormData(form);
+    const stage_name = (fd.get("stage_name") || "").trim();
+    const discipline = (fd.get("discipline") || "").trim();
+    const subclass = (fd.get("subclass") || "").trim() || null;
+    return { stage_name, discipline, subclass };
+  }
+
+  async function createProfile(profilePayload) {
+    try {
+      const res = await API.post("/api/profiles/skater", profilePayload);
+      if (res && res.success) return { ok: true, res };
+      if (res && (res.status === 409 || res.error === "profile_exists" || /exists/i.test(res.error?.message || ""))) {
+        return { ok: true, res };
+      }
+      return { ok: false, error: res?.error || "Profile creation failed" };
+    } catch (err) {
+      return { ok: false, error: err?.message || "Network error during profile creation" };
     }
-    hidden.value = role;
-  })();
+  }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearError();
 
-    const fd = new FormData(form);
-    const name = (fd.get("name") || "").trim() || null;
-    const email = (fd.get("email") || "").trim();
-    const password = fd.get("password") || "";
-
+    const { name, email, password, role } = collectSignupPayload();
     if (!email || !password) {
       showError("Email and password are required.");
       return;
     }
 
-    // Only call API via the shared API module. Payload is users-only.
-    const payload = { name, email, password, role };
-
-    try {
-      const res = await API.post("/api/signup", payload);
-
-      if (!res || !res.success) {
-        const msg = res?.error?.message || res?.error || "Signup failed. Try again.";
-        showError(msg);
-        return;
-      }
-
-      // Prefer server-returned role if present
-      const returnedRole = res.role || role;
-      const redirectMap = {
-        skater: "/onboard/skater",
-        musician: "/onboard/musician",
-        buyer: "/onboard/buyer",
-        business: "/onboard/business",
-        owner: "/dashboard"
-      };
-
-      const next = redirectMap[returnedRole] || "/dashboard";
-      window.location.href = next;
-
-    } catch (err) {
-      console.error("Signup error", err);
-      showError("Network error. Please try again.");
+    const profilePayload = collectProfilePayload();
+    if (!profilePayload.stage_name) {
+      showError("Stage name is required.");
+      return;
     }
+    if (!profilePayload.discipline) {
+      showError("Discipline is required.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    let signupRes;
+    try {
+      signupRes = await API.post("/api/signup", { name, email, password, role });
+    } catch (err) {
+      console.error("Signup network error", err);
+      showError("Network error during signup. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!signupRes || !signupRes.success) {
+      const msg = signupRes?.error?.message || signupRes?.error || "Signup failed. Please check your details.";
+      showError(msg);
+      setSubmitting(false);
+      return;
+    }
+
+    const profileResult = await createProfile(profilePayload);
+
+    if (!profileResult.ok) {
+      showError(typeof profileResult.error === "string" ? profileResult.error : "Profile creation failed. Click retry.");
+      retryEl.style.display = "inline-block";
+      setSubmitting(false);
+      return;
+    }
+
+    window.location.href = "/pages/skater/skater-dashboard.html";
   });
-}
+
+  retryEl.addEventListener("click", async () => {
+    clearError();
+    retryEl.style.display = "none";
+    setSubmitting(true);
+
+    const profilePayload = collectProfilePayload();
+    if (!profilePayload.stage_name) {
+      showError("Stage name is required.");
+      setSubmitting(false);
+      return;
+    }
+    if (!profilePayload.discipline) {
+      showError("Discipline is required.");
+      setSubmitting(false);
+      return;
+    }
+
+    const profileResult = await createProfile(profilePayload);
+    if (!profileResult.ok) {
+      showError(typeof profileResult.error === "string" ? profileResult.error : "Profile creation failed. Try again.");
+      retryEl.style.display = "inline-block";
+      setSubmitting(false);
+      return;
+    }
+
+    window.location.href = "/pages/skater/skater-dashboard.html";
+  });
+});
