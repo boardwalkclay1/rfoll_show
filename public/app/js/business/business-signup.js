@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // main submit flow: signup -> profile
+  // main submit flow: create user first, only then attempt profile
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearError();
@@ -120,10 +120,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setSubmitting(true);
 
-    // 1) create users row
+    // 1) create users row (only users fields)
     let signupRes;
     try {
-      signupRes = await API.post("/api/signup", { name, email, password, role });
+      // POST to business signup user endpoint (create users row)
+      signupRes = await API.post("/api/business/signup", { name, email, password, role });
     } catch (err) {
       console.error("Signup network error", err);
       showError("Network error during signup. Please try again.");
@@ -135,6 +136,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const msg = signupRes?.error?.message || signupRes?.error || "Signup failed. Please check your details.";
       showError(msg);
       setSubmitting(false);
+      return;
+    }
+
+    // If server created the user and also created the profile server-side, treat as success.
+    // Some server implementations may create both in one call; handle that gracefully.
+    if (signupRes.data && signupRes.data.profile_created === true) {
+      // server already created profile; navigate
+      window.location.href = "/pages/business/business-dashboard.html";
       return;
     }
 
