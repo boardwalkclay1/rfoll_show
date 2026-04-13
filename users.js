@@ -1,5 +1,6 @@
-// users.js — FULL REBUILD (PBKDF2, BOOLEAN VERIFY, CLEAN API)
-
+// users.js — AUTH HELPERS, PBKDF2 VERIFY, ROLE GUARD, SIGNUP BASE
+// Updated to be explicit about responsibilities: signupBase creates users row only.
+// Profile creation for business must be handled by signupBusiness in business.js
 export function cors() {
   return {
     "Access-Control-Allow-Origin": "*",
@@ -17,9 +18,7 @@ export function apiJson(obj, status = 200) {
 
 const AUTH_URL = "https://rollshow-auth.boardwalkclay1.workers.dev";
 
-// ============================================================
-// PBKDF2 VERIFY — FINAL VERSION (boolean)
-// ============================================================
+// PBKDF2 VERIFY — boolean result
 export async function verify(password, hashValue, saltValue, iterations, env) {
   try {
     const payload = {
@@ -41,18 +40,15 @@ export async function verify(password, hashValue, saltValue, iterations, env) {
     }
 
     const data = await res.json();
-    // Expecting { success: true, ok: true } or similar from auth worker
     if (!data || data.success !== true) return false;
     return data.ok === true;
   } catch (err) {
-    // Treat any error as verification failure (do not leak details)
     return false;
   }
 }
 
-// ============================================================
 // ROLE CHECKER (middleware style)
-// ============================================================
+// Expects x-user-id and x-user-role headers to be set by upstream auth/session layer.
 export async function requireRole(request, env, roles, handler) {
   try {
     const userId = request.headers.get("x-user-id");
@@ -76,20 +72,23 @@ export async function requireRole(request, env, roles, handler) {
   }
 }
 
-// ============================================================
-// BASE SIGNUP (USED BY SKATERS) — transactional, D1-safe
-// - Uses external AUTH_URL /hash to get PBKDF2 hash/salt/iterations
-// - Inserts into users table in a single transaction
-// - Returns minimal success/failure with appropriate status codes
-// ============================================================
+// BASE SIGNUP (creates users row only)
+// - role is required (string)
+// - expects JSON body: { name, email, password }
+// - uses AUTH_URL /hash to obtain pbkdf2 hash/salt/iterations
+// - inserts into users table (id, name, email, role, password_hash, password_salt, password_iterations, password_algo, created_at)
+// - returns { success: true, user: { id, name, email, role, created_at } } on 201
 export async function signupBase(request, env, role) {
   try {
     const body = await request.json();
     const { name, email, password } = body || {};
 
-    if (!name || !email || !password) {
+    if (!email || !password) {
       return apiJson({ success: false, message: "Missing fields" }, 400);
     }
+
+    // Normalize email
+    const normalizedEmail = String(email).trim().toLowerCase();
 
     // Get hash from auth worker
     const hashRes = await fetch(`${AUTH_URL}/hash`, {
@@ -116,9 +115,7 @@ export async function signupBase(request, env, role) {
     const id = crypto.randomUUID();
     const createdAt = new Date().toISOString();
 
-    // Use a single SQL transaction to insert the user (D1 / SQLite compatible)
-    // The SQL below is intentionally simple and idempotent in behavior:
-    // - If email uniqueness constraint fails, we catch and return 409.
+    // Insert user row (D1 / SQLite compatible)
     const insertSql = `
       BEGIN;
       INSERT INTO users (id, name, email, role, password_hash, password_salt, password_iterations, password_algo, created_at)
@@ -128,20 +125,18 @@ export async function signupBase(request, env, role) {
 
     try {
       await env.DB_roll.prepare(insertSql)
-        .bind(id, name, email.toLowerCase(), role, hash, salt, Number(iterations), createdAt)
+        .bind(id, name || null, normalizedEmail, role, hash, salt, Number(iterations), createdAt)
         .run();
     } catch (dbErr) {
-      // Handle unique constraint on email
       const msg = String(dbErr).toLowerCase();
       if (msg.includes("unique") || msg.includes("constraint") || msg.includes("email")) {
         return apiJson({ success: false, message: "Email already in use" }, 409);
       }
-      // Generic DB error
       return apiJson({ success: false, message: "Database error", detail: String(dbErr) }, 500);
     }
 
-    // Return created user id and minimal public info
-    return apiJson({ success: true, user: { id, name, email: email.toLowerCase(), role, created_at: createdAt } }, 201);
+    // Return created user minimal public info
+    return apiJson({ success: true, user: { id, name: name || null, email: normalizedEmail, role, created_at: createdAt } }, 201);
   } catch (err) {
     return apiJson(
       { success: false, message: "Server error", detail: String(err) },
