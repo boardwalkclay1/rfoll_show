@@ -1,16 +1,14 @@
 // /app/js/api.js — ROLL SHOW GLOBAL SAFE API CLIENT (UMD / browser global)
-// Updated: clearer responses, configurable bases, optional timeout, robust JSON/text handling
+// Redesigned: stable defaults, configurable init, robust parsing, timeout support, clear normalized response
 
 (function (global) {
-  // Default bases (can be overridden via API.init)
-  let API_BASE_PAGES  = "https://roll-show.pages.dev";
+  // Default base endpoints (can be overridden via API.init)
+  let API_BASE_PAGES = "https://roll-show.pages.dev";
   let API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev";
+  let DEFAULT_TIMEOUT_MS = 15000;
 
-  const DEFAULT_TIMEOUT_MS = 15000; // optional request timeout
-
-  /* SAFE JSON/TEXT PARSER
-     Returns a normalized object:
-     { ok: boolean, status: number, body: any, error: { message, status } | null }
+  /* Utility: safe parse response (JSON or text)
+     Returns: { ok, status, body, contentType, error }
   */
   async function safeParseResponse(res) {
     const status = res.status;
@@ -22,6 +20,7 @@
         ok: res.ok,
         status,
         body: null,
+        contentType,
         error: res.ok ? null : { message: "Empty response", status }
       };
     }
@@ -33,48 +32,78 @@
           ok: res.ok,
           status,
           body: parsed,
+          contentType,
           error: parsed && parsed.error ? parsed.error : (res.ok ? null : { message: "Request failed", status })
         };
-      } catch (e) {
+      } catch (err) {
         return {
           ok: res.ok,
           status,
           body: null,
+          contentType,
           error: { message: "Invalid JSON", status }
         };
       }
     }
 
-    // Non-JSON: return text as body
+    // Non-JSON response: return raw text
     return {
       ok: res.ok,
       status,
       body: text,
+      contentType,
       error: res.ok ? null : { message: "Non-JSON response", status }
     };
   }
 
-  /* Fetch with timeout helper */
-  function fetchWithTimeout(resource, options = {}, timeout = DEFAULT_TIMEOUT_MS) {
-    if (!timeout || timeout <= 0) {
-      return fetch(resource, options);
-    }
+  /* Fetch with timeout */
+  function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+    if (!timeoutMs || timeoutMs <= 0) return fetch(url, options);
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeout);
-    const opts = Object.assign({}, options, { signal: controller.signal });
-    return fetch(resource, opts).finally(() => clearTimeout(id));
+    const signal = controller.signal;
+    const opts = Object.assign({}, options, { signal });
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(url, opts).finally(() => clearTimeout(timer));
   }
 
-  /* CORE REQUEST
-     - method: "GET"|"POST"|"PUT"|"DELETE"
-     - path: absolute path starting with "/"
-     - payload: object | FormData | Blob | null
-     - extraHeaders: object
-     - opts: { timeoutMs?: number, forceWorker?: boolean, forcePages?: boolean }
+  /* Normalize parsed response into public shape:
+     { success, status, data, user, error }
+  */
+  function normalizeParsed(parsed) {
+    const body = parsed.body;
+    const status = parsed.status || 0;
+    let success = parsed.ok || false;
+    let data = null;
+    let user = undefined;
+    let error = parsed.error || null;
+
+    if (body && typeof body === "object") {
+      if (typeof body.success !== "undefined") success = !!body.success;
+      if (body.data !== undefined) data = body.data;
+      if (body.user !== undefined) user = body.user;
+      if (body.error) error = body.error;
+      // fallback: if body has top-level fields but not wrapped in data
+      if (data === null && body !== null && (body.id || body.name || body.email)) {
+        data = body;
+      }
+    } else {
+      // text body -> expose as data
+      data = body;
+    }
+
+    return { success, status, data, user, error };
+  }
+
+  /* Core request
+     method: "GET"|"POST"|"PUT"|"DELETE"
+     path: absolute path starting with "/"
+     payload: object | FormData | Blob | null
+     extraHeaders: object
+     opts: { timeoutMs?: number, forceWorker?: boolean, forcePages?: boolean }
   */
   async function request(method, path, payload = null, extraHeaders = {}, opts = {}) {
     if (!path || typeof path !== "string" || !path.startsWith("/")) {
-      throw new Error("API request path must be an absolute path starting with '/'");
+      throw new Error("API request path must start with '/'");
     }
 
     const headers = Object.assign({}, extraHeaders);
@@ -93,81 +122,49 @@
 
     const timeoutMs = typeof opts.timeoutMs === "number" ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
 
-    // Helper to normalize parsed response into the public shape
-    function normalize(parsed) {
-      // parsed.body may be an object with { success, data, user, error } already
-      const body = parsed.body;
-      const status = parsed.status || 0;
-      let success = parsed.ok || false;
-      let data = null;
-      let user = undefined;
-      let error = parsed.error || null;
-
-      if (body && typeof body === "object") {
-        if (typeof body.success !== "undefined") success = !!body.success;
-        if (body.data !== undefined) data = body.data;
-        if (body.user !== undefined) user = body.user;
-        if (body.error) error = body.error;
-      } else {
-        // non-object body (text) -> expose as data
-        data = body;
+    // Helper to handle fetch + parse + normalize
+    async function fetchAndNormalize(fullUrl) {
+      try {
+        const res = await fetchWithTimeout(fullUrl, options, timeoutMs);
+        const parsed = await safeParseResponse(res);
+        return normalizeParsed(parsed);
+      } catch (err) {
+        const isAbort = err && err.name === "AbortError";
+        return {
+          success: false,
+          status: 0,
+          data: null,
+          user: undefined,
+          error: { message: isAbort ? "Request timed out" : "Network error", detail: err?.message }
+        };
       }
-
-      return {
-        success,
-        status,
-        data,
-        user,
-        error
-      };
     }
 
-    // If path is an API route, always go to Worker to avoid Pages CORS issues
+    // If API route, prefer Worker to avoid Pages CORS issues
     if (path.startsWith("/api/") || opts.forceWorker) {
-      try {
-        const res = await fetchWithTimeout(API_BASE_WORKER + path, options, timeoutMs);
-        const parsed = await safeParseResponse(res);
-        return normalize(parsed);
-      } catch (err) {
-        return { success: false, status: 0, data: null, user: undefined, error: { message: err.name === "AbortError" ? "Request timed out" : "Network error", detail: err.message } };
-      }
+      return await fetchAndNormalize(API_BASE_WORKER + path);
     }
 
     // Non-API: try Pages first, fallback to Worker
-    let res;
     try {
-      res = await fetchWithTimeout(API_BASE_PAGES + path, options, timeoutMs);
-    } catch (errPages) {
-      // Pages unreachable — fallback to Worker
-      try {
-        res = await fetchWithTimeout(API_BASE_WORKER + path, options, timeoutMs);
-      } catch (errWorker) {
-        return { success: false, status: 0, data: null, user: undefined, error: { message: "Network error" } };
+      const pagesResult = await fetchAndNormalize(API_BASE_PAGES + path);
+      // If Pages returned a non-success HTTP-level response (status >= 400) and not a parsed success,
+      // attempt Worker fallback unless forcePages is set.
+      if (!pagesResult.success && pagesResult.status >= 400 && !opts.forcePages) {
+        const workerResult = await fetchAndNormalize(API_BASE_WORKER + path);
+        // Prefer workerResult if it indicates success or has a different status
+        if (workerResult.success || workerResult.status !== pagesResult.status) return workerResult;
       }
-      const parsed = await safeParseResponse(res);
-      return normalize(parsed);
+      return pagesResult;
+    } catch {
+      // If Pages fetch throws unexpectedly, fallback to Worker
+      return await fetchAndNormalize(API_BASE_WORKER + path);
     }
-
-    // If Pages responded but not OK, optionally try Worker
-    if (!res.ok) {
-      try {
-        const resWorker = await fetchWithTimeout(API_BASE_WORKER + path, options, timeoutMs);
-        const parsedWorker = await safeParseResponse(resWorker);
-        return normalize(parsedWorker);
-      } catch {
-        const parsed = await safeParseResponse(res);
-        return normalize(parsed);
-      }
-    }
-
-    const parsed = await safeParseResponse(res);
-    return normalize(parsed);
   }
 
-  /* PUBLIC API (global) */
+  /* Expose global API */
   if (!global.API) {
     global.API = {
-      // Basic methods
       get(path, headers = {}, opts = {}) {
         return request("GET", path, null, headers, opts);
       },
@@ -181,7 +178,7 @@
         return request("DELETE", path, null, headers, opts);
       },
 
-      // Convenience: attach user headers (not used for auth, only metadata)
+      // Attach user metadata headers (not for auth)
       withUser(user) {
         if (!user) return {};
         return {
@@ -190,22 +187,20 @@
         };
       },
 
-      // Allow runtime configuration of base URLs and timeout
+      // Runtime configuration
       init({ pagesBase, workerBase, defaultTimeoutMs } = {}) {
         if (pagesBase && typeof pagesBase === "string") API_BASE_PAGES = pagesBase;
         if (workerBase && typeof workerBase === "string") API_BASE_WORKER = workerBase;
-        if (typeof defaultTimeoutMs === "number") {
-          // update default timeout constant by shadowing variable
-          // (not strictly immutable; used by fetchWithTimeout)
-          // eslint-disable-next-line no-unused-vars
+        if (typeof defaultTimeoutMs === "number" && defaultTimeoutMs > 0) {
           DEFAULT_TIMEOUT_MS = defaultTimeoutMs;
         }
       },
 
-      // Expose bases for debugging/runtime tweaks
+      // Expose current bases for debugging
       _bases: {
         get pages() { return API_BASE_PAGES; },
-        get worker() { return API_BASE_WORKER; }
+        get worker() { return API_BASE_WORKER; },
+        get timeoutMs() { return DEFAULT_TIMEOUT_MS; }
       }
     };
   }
