@@ -68,19 +68,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = (fd.get("name") || "").trim() || null;
     const email = (fd.get("email") || "").trim();
     const password = fd.get("password") || "";
-    // role is page-specific; prefer hidden input if present
     const roleInput = form.querySelector('input[name="role"]');
     const role = (roleInput && roleInput.value) ? roleInput.value : "buyer";
     return { name, email, password, role };
   }
 
-  // call profile endpoint; returns true on success (including idempotent existing)
+  // call profile endpoint; returns ok on success or idempotent existing
   async function createProfile(profilePayload) {
     try {
       const res = await API.post("/api/profiles/buyer", profilePayload);
-      // treat success
       if (res && res.success) return { ok: true, res };
-      // handle idempotent case: server might return 409 or a specific code/message
       if (res && (res.status === 409 || res.error === "profile_exists" || /exists/i.test(res.error?.message || ""))) {
         return { ok: true, res };
       }
@@ -90,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // main submit flow: signup -> profile
+  // main submit flow: create user first, only then attempt profile
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearError();
@@ -101,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // basic profile validation
     const profilePayload = collectProfilePayload();
     if (!profilePayload.display_name) {
       showError("Display name is required.");
@@ -110,10 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setSubmitting(true);
 
-    // 1) create users row
+    // 1) create users row (business decision: POST to buyer signup route)
     let signupRes;
     try {
-      signupRes = await API.post("/api/signup", { name, email, password, role });
+      signupRes = await API.post("/api/buyer/signup", { name, email, password, role });
     } catch (err) {
       console.error("Signup network error", err);
       showError("Network error during signup. Please try again.");
@@ -128,20 +124,23 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // At this point server should have created users row and set session cookie or returned token.
-    // 2) create buyer profile
+    // If server created both user and profile in one call, handle that gracefully
+    if (signupRes.data && signupRes.data.profile_created === true) {
+      window.location.href = "/pages/buyer/buyer-dashboard.html";
+      return;
+    }
+
+    // 2) create buyer profile (server derives user_id)
     const profileResult = await createProfile(profilePayload);
 
     if (!profileResult.ok) {
-      // show profile error and allow retry (only profile call)
       showError(typeof profileResult.error === "string" ? profileResult.error : "Profile creation failed. Click retry.");
       retryEl.style.display = "inline-block";
       setSubmitting(false);
       return;
     }
 
-    // success: navigate to buyer final page
-    // final page path (adjust if your app uses a different path)
+    // success: navigate to buyer dashboard
     window.location.href = "/pages/buyer/buyer-dashboard.html";
   });
 
