@@ -1,30 +1,173 @@
-// app/js/musician/musician-signup.js
+// public/app/js/musician/musician-signup.js
 import API from "/app/js/api.js";
 
-const form = document.getElementById("musician-signup-form");
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("musician-signup-form");
+  if (!form) return;
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+  const ERROR_ID = "musician-signup-error";
+  const RETRY_ID = "musician-profile-retry";
+  const SUBMIT_BTN = form.querySelector('button[type="submit"]');
 
-  const fd = new FormData(form);
+  // Ensure error element exists
+  let errorEl = document.getElementById(ERROR_ID);
+  if (!errorEl) {
+    errorEl = document.createElement("div");
+    errorEl.id = ERROR_ID;
+    errorEl.style.color = "#ff4d4f";
+    errorEl.style.marginTop = "12px";
+    errorEl.style.fontWeight = "600";
+    errorEl.setAttribute("role", "alert");
+    errorEl.style.display = "none";
+    form.appendChild(errorEl);
+  }
 
-  try {
-    const res = await API.post("/api/musician/signup", {
-      name: fd.get("name"),
-      email: fd.get("email"),
-      password: fd.get("password")
-    });
+  // Ensure retry button exists
+  let retryEl = document.getElementById(RETRY_ID);
+  if (!retryEl) {
+    retryEl = document.createElement("button");
+    retryEl.id = RETRY_ID;
+    retryEl.type = "button";
+    retryEl.textContent = "Retry profile creation";
+    retryEl.style.display = "none";
+    retryEl.style.marginTop = "10px";
+    retryEl.style.padding = "10px 14px";
+    retryEl.style.borderRadius = "8px";
+    retryEl.style.cursor = "pointer";
+    form.appendChild(retryEl);
+  }
 
-    if (!res.success) {
-      alert("Signup failed: " + (res.error?.message || res.error || "Unknown error"));
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = "block";
+  }
+
+  function clearError() {
+    errorEl.textContent = "";
+    errorEl.style.display = "none";
+    retryEl.style.display = "none";
+  }
+
+  function setSubmitting(isSubmitting) {
+    if (!SUBMIT_BTN) return;
+    SUBMIT_BTN.disabled = isSubmitting;
+    SUBMIT_BTN.textContent = isSubmitting ? "Saving…" : "Create Account";
+  }
+
+  function collectSignupPayload() {
+    const fd = new FormData(form);
+    const name = (fd.get("name") || "").trim() || null;
+    const email = (fd.get("email") || "").trim();
+    const password = fd.get("password") || "";
+    const roleInput = form.querySelector('input[name="role"]');
+    const role = (roleInput && roleInput.value) ? roleInput.value : "musician";
+    return { name, email, password, role };
+  }
+
+  function collectProfilePayload() {
+    const fd = new FormData(form);
+    const stage_name = (fd.get("stage_name") || fd.get("name") || "").trim();
+    const genre = (fd.get("genre") || "").trim();
+    const bio = (fd.get("bio") || "").trim() || null;
+    return { stage_name, genre, bio };
+  }
+
+  // Create profile; treat existing profile as success (idempotent)
+  async function createProfile(profilePayload) {
+    try {
+      const res = await API.post("/api/profiles/musician", profilePayload);
+      if (res && res.success) return { ok: true, res };
+      // handle idempotent/existing profile responses
+      if (res && (res.status === 409 || res.error === "profile_exists" || /exists/i.test(res.error?.message || ""))) {
+        return { ok: true, res };
+      }
+      return { ok: false, error: res?.error || "Profile creation failed" };
+    } catch (err) {
+      return { ok: false, error: err?.message || "Network error during profile creation" };
+    }
+  }
+
+  // Main submit flow: signup -> profile
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    clearError();
+
+    const { name, email, password, role } = collectSignupPayload();
+    if (!email || !password) {
+      showError("Email and password are required.");
       return;
     }
 
-    alert("Account created! Please log in.");
-    window.location.href = "/pages/auth-login.html?role=musician";
+    const profilePayload = collectProfilePayload();
+    if (!profilePayload.stage_name) {
+      showError("Artist/Stage name is required.");
+      return;
+    }
+    if (!profilePayload.genre) {
+      showError("Genre is required.");
+      return;
+    }
 
-  } catch (err) {
-    console.error(err);
-    alert("Signup failed. Please try again.");
-  }
+    setSubmitting(true);
+
+    // 1) Create users row
+    let signupRes;
+    try {
+      signupRes = await API.post("/api/signup", { name, email, password, role });
+    } catch (err) {
+      console.error("Signup network error", err);
+      showError("Network error during signup. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
+    if (!signupRes || !signupRes.success) {
+      const msg = signupRes?.error?.message || signupRes?.error || "Signup failed. Please check your details.";
+      showError(msg);
+      setSubmitting(false);
+      return;
+    }
+
+    // 2) Create musician profile (server must derive user_id from session/token)
+    const profileResult = await createProfile(profilePayload);
+
+    if (!profileResult.ok) {
+      showError(typeof profileResult.error === "string" ? profileResult.error : "Profile creation failed. Click retry.");
+      retryEl.style.display = "inline-block";
+      setSubmitting(false);
+      return;
+    }
+
+    // Success: navigate to musician dashboard
+    window.location.href = "/pages/musician/musician-dashboard.html";
+  });
+
+  // Retry handler: only calls profile endpoint
+  retryEl.addEventListener("click", async () => {
+    clearError();
+    retryEl.style.display = "none";
+    setSubmitting(true);
+
+    const profilePayload = collectProfilePayload();
+    if (!profilePayload.stage_name) {
+      showError("Artist/Stage name is required.");
+      setSubmitting(false);
+      return;
+    }
+    if (!profilePayload.genre) {
+      showError("Genre is required.");
+      setSubmitting(false);
+      return;
+    }
+
+    const profileResult = await createProfile(profilePayload);
+    if (!profileResult.ok) {
+      showError(typeof profileResult.error === "string" ? profileResult.error : "Profile creation failed. Try again.");
+      retryEl.style.display = "inline-block";
+      setSubmitting(false);
+      return;
+    }
+
+    window.location.href = "/pages/musician/musician-dashboard.html";
+  });
 });
