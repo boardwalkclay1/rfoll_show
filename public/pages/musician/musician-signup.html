@@ -86,7 +86,8 @@
       <!-- users fields -->
       <input name="name" placeholder="Artist / Full Name" autocomplete="name" />
       <input name="email" type="email" placeholder="Email" required autocomplete="email" />
-      <input name="password" type="password" placeholder="Password" required autocomplete="new-password" />
+      <input id="password" name="password" type="password" placeholder="Password" required autocomplete="new-password" />
+      <input id="password-verify" name="password_verify" type="password" placeholder="Verify Password" required autocomplete="new-password" />
 
       <!-- hidden role -->
       <input type="hidden" name="role" value="musician" />
@@ -94,10 +95,8 @@
       <!-- musician profile fields -->
       <input name="stage_name" placeholder="Stage Name" required />
       <input name="genre" placeholder="Genre (e.g., indie, hip-hop, electronic)" required />
-      <label class="small" for="bio">Short Bio (optional)</label>
-      <textarea name="bio" id="bio" placeholder="Tell fans a little about your sound"></textarea>
 
-      <button type="submit">Create Account</button>
+      <button id="musician-signup-submit" type="submit">Create Account</button>
 
       <div id="musician-signup-error" class="error" role="alert" aria-live="polite"></div>
     </form>
