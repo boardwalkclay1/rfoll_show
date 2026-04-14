@@ -1,16 +1,56 @@
-// /app/js/api.js — ROLL SHOW GLOBAL SAFE API CLIENT (CLEAN FINAL)
-// - Cookie support (credentials: "include")
+// /app/js/api.js — XHR-ONLY VERSION (NO FETCH)
+// - Cookie support (withCredentials)
 // - Worker-first for /api/*
-// - Stable fallback logic
+// - Timeout support
 // - Safe JSON parsing
 // - Unified normalized response shape
-// - Timeout support (no .finally on fetch)
-// - Explicit error reporting
 
 (function (global) {
   let API_BASE_PAGES = "https://roll-show.pages.dev";
   let API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev";
   let DEFAULT_TIMEOUT_MS = 15000;
+
+  /* XHR WRAPPER */
+  function xhrRequest(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(options.method || "GET", url, true);
+
+      xhr.withCredentials = options.credentials === "include";
+
+      if (options.headers) {
+        for (const [k, v] of Object.entries(options.headers)) {
+          xhr.setRequestHeader(k, v);
+        }
+      }
+
+      xhr.timeout = timeoutMs;
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          const headers = new Headers();
+          const raw = xhr.getAllResponseHeaders().trim().split(/[\r\n]+/);
+          for (const line of raw) {
+            const parts = line.split(": ");
+            const key = parts.shift();
+            const value = parts.join(": ");
+            if (key) headers.append(key.toLowerCase(), value);
+          }
+
+          resolve(new Response(xhr.responseText, {
+            status: xhr.status,
+            statusText: xhr.statusText,
+            headers
+          }));
+        }
+      };
+
+      xhr.onerror = () => reject(new Error("Network error"));
+      xhr.ontimeout = () => reject(new DOMException("Request timed out", "AbortError"));
+
+      xhr.send(options.body || null);
+    });
+  }
 
   /* SAFE PARSE */
   async function safeParseResponse(res) {
@@ -54,19 +94,6 @@
     };
   }
 
-  /* TIMEOUT WRAPPER (NO .finally ON PROMISE) */
-  async function fetchWithTimeout(url, options, timeoutMs) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    const opts = { ...options, signal: controller.signal };
-
-    try {
-      return await fetch(url, opts);
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
   /* NORMALIZE */
   function normalize(parsed) {
     const body = parsed.body;
@@ -92,9 +119,7 @@
 
   /* CORE REQUEST */
   async function request(method, path, payload = null, extraHeaders = {}, opts = {}) {
-    if (!path || typeof path !== "string" || !path.startsWith("/")) {
-      throw new Error("API path must be a string starting with '/'");
-    }
+    if (!path.startsWith("/")) throw new Error("API path must start with '/'");
 
     const headers = { ...extraHeaders };
     const options = {
@@ -114,11 +139,11 @@
 
     async function run(fullUrl) {
       try {
-        const res = await fetchWithTimeout(fullUrl, options, timeoutMs);
+        const res = await xhrRequest(fullUrl, options, timeoutMs);
         const parsed = await safeParseResponse(res);
         return normalize(parsed);
       } catch (err) {
-        const isAbort = err && err.name === "AbortError";
+        const isAbort = err?.name === "AbortError";
         return {
           success: false,
           status: 0,
@@ -126,7 +151,7 @@
           user: undefined,
           error: {
             message: isAbort ? "Request timed out" : "Network error",
-            detail: err && err.message ? err.message : String(err || "Unknown error")
+            detail: err?.message || String(err)
           }
         };
       }
@@ -145,6 +170,7 @@
         return workerResult;
       }
     }
+
     return pagesResult;
   }
 
