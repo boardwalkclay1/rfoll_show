@@ -1,10 +1,15 @@
-// business.js — FINAL, CLEAN, OWNER‑CONTROLLED, NO DIRECT SKATER CONTACT
+// business.js — CLEAN, ROLE‑SAFE handlers (no direct signup here)
+// Exports plain objects (not Response) so requireRole() can wrap with apiJson.
+// Assumes requireRole will call these handlers as: handler(request, env, user)
 
-import { apiJson } from "./users.js";
+import { /* apiJson not used here; requireRole wraps results */ } from "./users.js";
 
 /* ============================================================
-   GET BUSINESS RECORD
+   Helpers
+   - All handlers return plain JS objects. Errors are returned
+     as objects with success:false so requireRole() will wrap them.
 ============================================================ */
+
 async function getBusinessByUser(env, userId) {
   return await env.DB_roll
     .prepare("SELECT * FROM businesses WHERE user_id = ?")
@@ -13,421 +18,335 @@ async function getBusinessByUser(env, userId) {
 }
 
 /* ============================================================
-   BUSINESS SIGNUP
+   BUSINESS PROFILE (profile-only endpoint)
+   POST /api/profiles/business
+   - Derives user_id from authenticated user (user.id)
+   - Accepts only: company_name, contact_name, contact_email, country
+   - Idempotent: if profile exists for user, return success + profile_exists
 ============================================================ */
-export async function signupBusiness(request, env) {
-  const body = await request.json();
-  body.role = "business";
+export async function createBusinessProfile(request, env, user) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const company_name = body.company_name ? String(body.company_name).trim() : null;
+    const contact_name = body.contact_name ? String(body.contact_name).trim() : null;
+    const contact_email = body.contact_email ? String(body.contact_email).trim() : null;
+    const country = body.country ? String(body.country).trim() : null;
 
-  // Create user
-  const base = await env.signupBase(env, body);
-  if (base.error) return apiJson({ message: base.error }, 400);
-
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  await env.DB_roll.prepare(
-    `INSERT INTO businesses (
-       id, user_id, company_name, website, phone, address, ein,
-       verified, review_status, review_notes, submitted_at, created_at
-     )
-     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'pending', '', ?, ?)`
-  )
-    .bind(
-      id,
-      base.id,
-      body.company_name || body.name || null,
-      body.website || null,
-      body.phone || null,
-      body.address || null,
-      body.ein || null,
-      now,
-      base.created_at
-    )
-    .run();
-
-  return apiJson({
-    user: base,
-    business: {
-      id,
-      company_name: body.company_name || null,
-      website: body.website || null,
-      phone: body.phone || null,
-      address: body.address || null,
-      ein: body.ein || null,
-      verified: 0,
-      review_status: "pending"
+    // Basic validation
+    if (!company_name || !contact_name || !contact_email || !country) {
+      return { success: false, message: "Missing profile fields" };
     }
-  });
+
+    // Check existing profile
+    const existing = await env.DB_roll
+      .prepare("SELECT * FROM business_profiles WHERE user_id = ?")
+      .bind(user.id)
+      .first();
+
+    if (existing) {
+      // Return existing profile (idempotent)
+      return {
+        success: true,
+        profile_exists: true,
+        profile: {
+          id: existing.id,
+          user_id: existing.user_id,
+          company_name: existing.company_name,
+          contact_name: existing.contact_name,
+          contact_email: existing.contact_email,
+          country: existing.country,
+          created_at: existing.created_at
+        }
+      };
+    }
+
+    // Insert profile
+    const profileId = crypto.randomUUID();
+    const now = new Date().toISOString();
+
+    try {
+      await env.DB_roll.prepare(
+        `INSERT INTO business_profiles
+           (id, user_id, company_name, contact_name, contact_email, country, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
+      )
+        .bind(profileId, user.id, company_name, contact_name, contact_email, country, now)
+        .run();
+
+      return {
+        success: true,
+        profile_created: true,
+        profile: {
+          id: profileId,
+          user_id: user.id,
+          company_name,
+          contact_name,
+          contact_email,
+          country,
+          created_at: now
+        }
+      };
+    } catch (err) {
+      const msg = String(err).toLowerCase();
+      // Treat unique/constraint errors as idempotent success if they indicate an existing profile
+      if (msg.includes("unique") || msg.includes("constraint") || /business_profiles/.test(msg)) {
+        const p = await env.DB_roll
+          .prepare("SELECT * FROM business_profiles WHERE user_id = ?")
+          .bind(user.id)
+          .first();
+        if (p) {
+          return {
+            success: true,
+            profile_exists: true,
+            profile: {
+              id: p.id,
+              user_id: p.user_id,
+              company_name: p.company_name,
+              contact_name: p.contact_name,
+              contact_email: p.contact_email,
+              country: p.country,
+              created_at: p.created_at
+            }
+          };
+        }
+      }
+
+      // Other DB error: return failure so client can retry later
+      return { success: false, message: "Profile insert failed", detail: String(err) };
+    }
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
 
 /* ============================================================
-   BUSINESS DASHBOARD (READ‑ONLY)
+   BUSINESS DASHBOARD (requires business role)
+   Returns business record, revenue_cents, submissions, staff
+   Called via requireRole(..., businessDashboard)
 ============================================================ */
 export async function businessDashboard(request, env, user) {
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business profile not found." }, 404);
+  try {
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business profile not found." };
 
-  if (!business.verified) {
-    return apiJson(
-      {
+    if (!business.verified) {
+      return {
+        success: false,
         message: "Your business is not verified yet.",
         review_status: business.review_status,
         review_notes: business.review_notes
-      },
-      403
-    );
+      };
+    }
+
+    const revenueRow = await env.DB_roll.prepare(
+      `SELECT SUM(amount_cents) AS revenue_cents
+       FROM payouts
+       WHERE business_id = ?`
+    )
+      .bind(business.id)
+      .first();
+
+    const revenue_cents = revenueRow?.revenue_cents || 0;
+
+    const { results: submissions } = await env.DB_roll.prepare(
+      `SELECT *
+       FROM business_submissions
+       WHERE business_id = ?
+       ORDER BY created_at DESC`
+    )
+      .bind(business.id)
+      .all();
+
+    const { results: staff } = await env.DB_roll.prepare(
+      `SELECT *
+       FROM business_staff
+       WHERE business_id = ?
+       ORDER BY created_at DESC`
+    )
+      .bind(business.id)
+      .all();
+
+    return {
+      success: true,
+      business,
+      revenue_cents,
+      submissions,
+      staff
+    };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
   }
-
-  /* ------------------------------------------------------------
-     ANALYTICS
-  ------------------------------------------------------------ */
-  const revenueRow = await env.DB_roll.prepare(
-    `SELECT SUM(amount_cents) AS revenue_cents
-     FROM payouts
-     WHERE business_id = ?`
-  )
-    .bind(business.id)
-    .first();
-
-  const revenue_cents = revenueRow?.revenue_cents || 0;
-
-  /* ------------------------------------------------------------
-     SUBMISSIONS (NOT PUBLISHED ITEMS)
-  ------------------------------------------------------------ */
-  const { results: submissions } = await env.DB_roll.prepare(
-    `SELECT *
-     FROM business_submissions
-     WHERE business_id = ?
-     ORDER BY created_at DESC`
-  )
-    .bind(business.id)
-    .all();
-
-  /* ------------------------------------------------------------
-     STAFF
-  ------------------------------------------------------------ */
-  const { results: staff } = await env.DB_roll.prepare(
-    `SELECT *
-     FROM business_staff
-     WHERE business_id = ?
-     ORDER BY created_at DESC`
-  )
-    .bind(business.id)
-    .all();
-
-  return apiJson({
-    business,
-    revenue_cents,
-    submissions,
-    staff
-  });
 }
 
 /* ============================================================
-   SUBMIT OFFER TO SKATER (THROUGH OWNER)
+   SUBMISSIONS / STAFF / SCAN — all accept (request, env, user)
+   Return plain objects for requireRole to wrap
 ============================================================ */
+
 export async function businessSubmitOffer(request, env, user) {
-  const body = await request.json();
-  const { skater_id, type, amount_cents, terms } = body;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { skater_id, type, amount_cents, terms } = body;
 
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business not found." };
 
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
 
-  await env.DB_roll.prepare(
-    `INSERT INTO business_submissions
-       (id, business_id, submission_type, payload_json, status, created_at)
-     VALUES (?, ?, 'offer', ?, 'pending_owner', ?)`
-  )
-    .bind(
-      id,
-      business.id,
-      JSON.stringify({ skater_id, type, amount_cents, terms }),
-      now
+    await env.DB_roll.prepare(
+      `INSERT INTO business_submissions
+         (id, business_id, submission_type, payload_json, status, created_at)
+       VALUES (?, ?, 'offer', ?, 'pending_owner', ?)`
     )
-    .run();
+      .bind(id, business.id, JSON.stringify({ skater_id, type, amount_cents, terms }), now)
+      .run();
 
-  return apiJson({ submissionId: id });
+    return { success: true, submissionId: id };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
 
-/* ============================================================
-   SUBMIT EVENT (THROUGH OWNER)
-============================================================ */
 export async function businessSubmitEvent(request, env, user) {
-  const body = await request.json();
-  const { title, description, location, lat, lng, start_at, end_at } = body;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { title, description, location, lat, lng, start_at, end_at } = body;
 
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business not found." };
 
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
 
-  await env.DB_roll.prepare(
-    `INSERT INTO business_submissions
-       (id, business_id, submission_type, payload_json, status, created_at)
-     VALUES (?, ?, 'event', ?, 'pending_owner', ?)`
-  )
-    .bind(
-      id,
-      business.id,
-      JSON.stringify({
-        title,
-        description,
-        location,
-        lat,
-        lng,
-        start_at,
-        end_at
-      }),
-      now
+    await env.DB_roll.prepare(
+      `INSERT INTO business_submissions
+         (id, business_id, submission_type, payload_json, status, created_at)
+       VALUES (?, ?, 'event', ?, 'pending_owner', ?)`
     )
-    .run();
+      .bind(
+        id,
+        business.id,
+        JSON.stringify({ title, description, location, lat, lng, start_at, end_at }),
+        now
+      )
+      .run();
 
-  return apiJson({ submissionId: id });
+    return { success: true, submissionId: id };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
 
-/* ============================================================
-   SUBMIT AD (THROUGH OWNER)
-============================================================ */
 export async function businessSubmitAd(request, env, user) {
-  const body = await request.json();
-  const { title, image_r2_key, target_url, start_at, end_at } = body;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { title, image_r2_key, target_url, start_at, end_at } = body;
 
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business not found." };
 
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
 
-  await env.DB_roll.prepare(
-    `INSERT INTO business_submissions
-       (id, business_id, submission_type, payload_json, status, created_at)
-     VALUES (?, ?, 'ad', ?, 'pending_owner', ?)`
-  )
-    .bind(
-      id,
-      business.id,
-      JSON.stringify({
-        title,
-        image_r2_key,
-        target_url,
-        start_at,
-        end_at
-      }),
-      now
+    await env.DB_roll.prepare(
+      `INSERT INTO business_submissions
+         (id, business_id, submission_type, payload_json, status, created_at)
+       VALUES (?, ?, 'ad', ?, 'pending_owner', ?)`
     )
-    .run();
+      .bind(
+        id,
+        business.id,
+        JSON.stringify({ title, image_r2_key, target_url, start_at, end_at }),
+        now
+      )
+      .run();
 
-  return apiJson({ submissionId: id });
+    return { success: true, submissionId: id };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
 
-/* ============================================================
-   SUBMIT VENUE OPPORTUNITY (THROUGH OWNER)
-============================================================ */
-export async function businessSubmitVenue(request, env, user) {
-  const body = await request.json();
-  const { venue_name, address, capacity, payout_model, notes } = body;
-
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
-
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  await env.DB_roll.prepare(
-    `INSERT INTO business_submissions
-       (id, business_id, submission_type, payload_json, status, created_at)
-     VALUES (?, ?, 'venue', ?, 'pending_owner', ?)`
-  )
-    .bind(
-      id,
-      business.id,
-      JSON.stringify({
-        venue_name,
-        address,
-        capacity,
-        payout_model,
-        notes
-      }),
-      now
-    )
-    .run();
-
-  return apiJson({ submissionId: id });
-}
-
-/* ============================================================
-   SUBMIT SPONSORSHIP (THROUGH OWNER)
-============================================================ */
-export async function businessSubmitSponsorship(request, env, user) {
-  const body = await request.json();
-  const { skater_id, amount_cents, duration_days, notes } = body;
-
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
-
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  await env.DB_roll.prepare(
-    `INSERT INTO business_submissions
-       (id, business_id, submission_type, payload_json, status, created_at)
-     VALUES (?, ?, 'sponsorship', ?, 'pending_owner', ?)`
-  )
-    .bind(
-      id,
-      business.id,
-      JSON.stringify({
-        skater_id,
-        amount_cents,
-        duration_days,
-        notes
-      }),
-      now
-    )
-    .run();
-
-  return apiJson({ submissionId: id });
-}
-
-/* ============================================================
-   SUBMIT AFFILIATE CAMPAIGN (THROUGH OWNER)
-============================================================ */
-export async function businessSubmitAffiliate(request, env, user) {
-  const body = await request.json();
-  const { product_name, payout_percent, link_url } = body;
-
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
-
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  await env.DB_roll.prepare(
-    `INSERT INTO business_submissions
-       (id, business_id, submission_type, payload_json, status, created_at)
-     VALUES (?, ?, 'affiliate', ?, 'pending_owner', ?)`
-  )
-    .bind(
-      id,
-      business.id,
-      JSON.stringify({
-        product_name,
-        payout_percent,
-        link_url
-      }),
-      now
-    )
-    .run();
-
-  return apiJson({ submissionId: id });
-}
-
-/* ============================================================
-   SUBMIT DISCOUNT CAMPAIGN (THROUGH OWNER)
-============================================================ */
-export async function businessSubmitDiscount(request, env, user) {
-  const body = await request.json();
-  const { discount_percent, description, start_at, end_at } = body;
-
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
-
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
-
-  await env.DB_roll.prepare(
-    `INSERT INTO business_submissions
-       (id, business_id, submission_type, payload_json, status, created_at)
-     VALUES (?, ?, 'discount', ?, 'pending_owner', ?)`
-  )
-    .bind(
-      id,
-      business.id,
-      JSON.stringify({
-        discount_percent,
-        description,
-        start_at,
-        end_at
-      }),
-      now
-    )
-    .run();
-
-  return apiJson({ submissionId: id });
-}
-
-/* ============================================================
-   STAFF MANAGEMENT
-============================================================ */
+/* Staff management */
 export async function businessAddStaff(request, env, user) {
-  const body = await request.json();
-  const { staff_name } = body;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { staff_name } = body;
 
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business not found." };
 
-  const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
 
-  await env.DB_roll.prepare(
-    `INSERT INTO business_staff
-       (id, business_id, staff_name, created_at)
-     VALUES (?, ?, ?, ?)`
-  )
-    .bind(id, business.id, staff_name, now)
-    .run();
+    await env.DB_roll.prepare(
+      `INSERT INTO business_staff
+         (id, business_id, staff_name, created_at)
+       VALUES (?, ?, ?, ?)`
+    )
+      .bind(id, business.id, staff_name, now)
+      .run();
 
-  return apiJson({ staffId: id });
+    return { success: true, staffId: id };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
 
 export async function businessRemoveStaff(request, env, user) {
-  const body = await request.json();
-  const { staff_id } = body;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { staff_id } = body;
 
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business not found." };
 
-  await env.DB_roll.prepare(
-    `DELETE FROM business_staff
-     WHERE id = ? AND business_id = ?`
-  )
-    .bind(staff_id, business.id)
-    .run();
+    await env.DB_roll.prepare(
+      `DELETE FROM business_staff
+       WHERE id = ? AND business_id = ?`
+    )
+      .bind(staff_id, business.id)
+      .run();
 
-  return apiJson({ removed: true });
+    return { success: true, removed: true };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
 
 export async function businessListStaff(request, env, user) {
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
+  try {
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business not found." };
 
-  const { results } = await env.DB_roll.prepare(
-    `SELECT *
-     FROM business_staff
-     WHERE business_id = ?
-     ORDER BY created_at DESC`
-  )
-    .bind(business.id)
-    .all();
+    const { results } = await env.DB_roll.prepare(
+      `SELECT *
+       FROM business_staff
+       WHERE business_id = ?
+       ORDER BY created_at DESC`
+    )
+      .bind(business.id)
+      .all();
 
-  return apiJson({ staff: results });
+    return { success: true, staff: results };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
 
-/* ============================================================
-   TICKET SCANNING
-============================================================ */
+/* Ticket scanning: forward hint for worker-level routing */
 export async function businessScanTicket(request, env, user) {
-  const body = await request.json();
-  const { qr_id } = body;
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { qr_id } = body;
 
-  const business = await getBusinessByUser(env, user.id);
-  if (!business) return apiJson({ message: "Business not found." }, 404);
+    const business = await getBusinessByUser(env, user.id);
+    if (!business) return { success: false, message: "Business not found." };
 
-  // Worker routes to Tickets.scanTicket
-  return apiJson({ forward: "tickets.scan", qr_id });
+    // Return a forward hint; worker can route to tickets.scan if desired
+    return { success: true, forward: "tickets.scan", qr_id };
+  } catch (err) {
+    return { success: false, message: "Server error", detail: String(err) };
+  }
 }
