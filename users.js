@@ -42,13 +42,12 @@ export async function verify(password, hashValue, saltValue, iterations, env) {
     const data = await res.json();
     if (!data || data.success !== true) return false;
     return data.ok === true;
-  } catch (err) {
+  } catch {
     return false;
   }
 }
 
-// ROLE CHECKER (middleware style)
-// OWNER BYPASS ADDED
+// ROLE CHECKER (middleware style) with OWNER BYPASS
 export async function requireRole(request, env, roles, handler) {
   try {
     const userId = request.headers.get("x-user-id");
@@ -58,7 +57,7 @@ export async function requireRole(request, env, roles, handler) {
       return apiJson({ success: false, message: "Unauthorized" }, 401);
     }
 
-    // ⭐ OWNER BYPASS — owner can access ANY route
+    // OWNER BYPASS — owner can access ANY route
     if (userRole === "owner") {
       const result = await handler(request, env, { id: userId, role: userRole });
       return apiJson(result);
@@ -136,7 +135,10 @@ export async function signupBase(request, env, role) {
       return apiJson({ success: false, message: "Database error", detail: String(dbErr) }, 500);
     }
 
-    return apiJson({ success: true, user: { id, name: name || null, email: normalizedEmail, role, created_at: createdAt } }, 201);
+    return apiJson(
+      { success: true, user: { id, name: name || null, email: normalizedEmail, role, created_at: createdAt } },
+      201
+    );
   } catch (err) {
     return apiJson(
       { success: false, message: "Server error", detail: String(err) },
@@ -199,7 +201,13 @@ export async function signupBusiness(request, env) {
       return apiJson({ success: false, message: "Database error", detail: String(dbErr) }, 500);
     }
 
-    const userObj = { id, name: name || null, email: normalizedEmail, role: "business", created_at: createdAt };
+    const userObj = {
+      id,
+      name: name || null,
+      email: normalizedEmail,
+      role: "business",
+      created_at: createdAt
+    };
 
     const company_name = body.company_name ? String(body.company_name).trim() : null;
     const contact_name = body.contact_name ? String(body.contact_name).trim() : null;
@@ -238,7 +246,15 @@ export async function signupBusiness(request, env) {
         success: true,
         user: userObj,
         profile_created: true,
-        profile: { id: profileId, user_id: id, company_name, contact_name, contact_email, country, created_at: profileCreatedAt }
+        profile: {
+          id: profileId,
+          user_id: id,
+          company_name,
+          contact_name,
+          contact_email,
+          country,
+          created_at: profileCreatedAt
+        }
       }, 201);
     } catch (profileErr) {
       const msg = String(profileErr).toLowerCase();
