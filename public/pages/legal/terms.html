@@ -4,65 +4,108 @@
   <meta charset="UTF-8">
   <title>Terms of Use – Roll Show</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <link rel="icon" href="/favicon.png">
-  <link rel="stylesheet" href="/app/styles/legal.css">
+  <link rel="stylesheet" href="/app/styles/legal-roll.css">
+
+  <!-- Cursive font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
 </head>
-<body style="background:url('/app/images/bg-terms.jpg') center/cover no-repeat;">
+
+<body class="legal">
+
+  <!-- Roll Show back button -->
+  <a href="/index.html" class="back-btn">← Back</a>
 
   <main class="legal-shell">
-    <h1>Terms of Use</h1>
 
-    <div id="agreement-body" class="legal-box">
+    <div class="legal-header">
+      <h1 class="legal-title">Terms of Use</h1>
+      <p class="legal-subtitle">Applies to all Roll Show users and visitors</p>
+    </div>
+
+    <div class="legal-content">
+
       <h2>1. Overview</h2>
-      <p>These Terms of Use (“Terms”) govern your access to and use of the Roll Show platform, including all websites, apps, services, and content provided under the Roll Show brand (“Platform”). By creating an account or using the Platform, you agree to these Terms.</p>
+      <p>
+        These Terms of Use (“Terms”) govern your access to and use of the Roll Show platform, including all websites,
+        apps, services, and content provided under the Roll Show brand (“Platform”). By using Roll Show, you agree to
+        these Terms.
+      </p>
 
       <h2>2. Roles and Accounts</h2>
-      <p>Roll Show supports multiple roles, including but not limited to skaters, musicians, businesses, and buyers. You are responsible for all activity under your account and for keeping your login credentials secure. You must provide accurate information and keep it updated.</p>
+      <p>
+        Roll Show supports multiple user roles including skaters, musicians, buyers, businesses, and staff. You are
+        responsible for all activity under your account and for keeping your login credentials secure. You must provide
+        accurate information and keep it updated.
+      </p>
 
       <h2>3. Eligibility</h2>
-      <p>You must be legally able to enter into binding contracts in your jurisdiction. If you are using the Platform on behalf of a company or organization, you represent that you have authority to bind that entity.</p>
+      <p>
+        You must be legally able to enter into binding contracts in your jurisdiction. If you use the Platform on behalf
+        of a company or organization, you represent that you have authority to bind that entity.
+      </p>
 
       <h2>4. Platform Use</h2>
-      <p>You agree not to misuse the Platform, including by attempting to interfere with its normal operation, accessing data without authorization, or using it for unlawful, fraudulent, or abusive purposes.</p>
+      <p>
+        You agree not to misuse the Platform. This includes attempting to interfere with normal operation, accessing data
+        without authorization, or using the Platform for unlawful, fraudulent, or abusive purposes.
+      </p>
 
       <h2>5. Content and Ownership</h2>
-      <p>Creators (including skaters and musicians) retain ownership of their original content, subject to the licenses they grant through specific agreements (e.g., Artist Agreement, Skater Agreement, Business Agreement). Roll Show may host, display, and transmit content as necessary to operate the Platform.</p>
+      <p>
+        Creators retain ownership of their original content, subject to the licenses they grant through specific
+        agreements (e.g., Skater Agreement, Artist Agreement, Business Agreement). Roll Show may host, display, and
+        transmit content as necessary to operate the Platform.
+      </p>
 
       <h2>6. Payments and Fees</h2>
-      <p>Payments, ticket sales, royalties, and revenue splits are governed by the specific agreements applicable to your role. Roll Show may charge platform fees or processing fees as disclosed in those agreements or in your dashboard.</p>
+      <p>
+        Payments, ticket sales, royalties, and revenue splits are governed by the specific agreements applicable to your
+        role. Roll Show may charge platform or processing fees as disclosed in those agreements or in your dashboard.
+      </p>
 
       <h2>7. No Guarantee of Results</h2>
-      <p>Roll Show does not guarantee bookings, sales, views, or any particular level of exposure or income.</p>
+      <p>
+        Roll Show does not guarantee bookings, sales, views, exposure, or income. Your results depend on your activity,
+        content, and market conditions.
+      </p>
 
       <h2>8. Termination</h2>
-      <p>We may suspend or terminate your access to the Platform if you violate these Terms, applicable law, or other agreements you have with us. You may stop using the Platform at any time.</p>
+      <p>
+        We may suspend or terminate your access to the Platform if you violate these Terms, applicable law, or other
+        agreements you have with us. You may stop using the Platform at any time.
+      </p>
 
       <h2>9. Disclaimers</h2>
-      <p>The Platform is provided “as is” and “as available” without warranties of any kind, to the maximum extent permitted by law.</p>
+      <p>
+        The Platform is provided “as is” and “as available,” without warranties of any kind, to the maximum extent
+        permitted by law.
+      </p>
 
       <h2>10. Limitation of Liability</h2>
-      <p>To the maximum extent permitted by law, Roll Show is not liable for indirect, incidental, consequential, or punitive damages, or for lost profits or revenues.</p>
+      <p>
+        To the maximum extent permitted by law, Roll Show is not liable for indirect, incidental, consequential, or
+        punitive damages, or for lost profits or revenues.
+      </p>
 
       <h2>11. Changes to These Terms</h2>
-      <p>We may update these Terms from time to time. When we do, we will update the “Last Updated” date and may notify you through the Platform. Continued use after changes means you accept the updated Terms.</p>
+      <p>
+        We may update these Terms as the Platform evolves. Continued use after changes means you accept the updated
+        Terms.
+      </p>
 
       <h2>12. Contact</h2>
-      <p>If you have questions about these Terms, contact the Roll Show team through the contact information provided in the Platform.</p>
+      <p>
+        If you have questions about these Terms, contact the Roll Show team through the contact information provided in
+        the Platform.
+      </p>
+
     </div>
 
-    <div class="sign-block"
-         data-agreement-type="terms"
-         data-agreement-version="v1"
-         data-content-selector="#agreement-body">
-      <label>
-        <input type="checkbox" id="sign-agree-checkbox">
-        I have read and agree to these Terms of Use.
-      </label>
-      <button id="sign-agreement-btn" disabled>Sign Terms</button>
-      <p id="sign-status"></p>
-    </div>
   </main>
 
-  <script type="module" src="/app/js/legal/agreement-sign.js"></script>
 </body>
 </html>
