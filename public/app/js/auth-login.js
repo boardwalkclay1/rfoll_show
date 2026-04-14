@@ -1,10 +1,5 @@
 // /app/js/auth-login.js
-// Uses global API client (public/app/js/api.js).
-// Behavior:
-// - POST /api/login via API.post
-// - Expects normalized API response: { success, data: { user, redirect, ... } }
-// - On success: redirect to server-provided redirect or role-based mapping
-// - Uses credentials: same-origin via API client; no manual cookie handling
+// Clean, role-agnostic, owner-compatible login handler
 
 (function () {
   const form = document.getElementById("auth-login-form");
@@ -44,29 +39,42 @@
       return;
     }
 
-    // Disable form while request in-flight
     const submitBtn = form.querySelector("button[type='submit']");
     submitBtn.disabled = true;
     submitBtn.textContent = "Signing in…";
 
     try {
-      // Use API client so credentials and fallback logic are consistent
+      // Only send email + password
       const res = await API.post("/api/login", { email, password });
 
       if (!res || res.success !== true) {
-        // Try to extract message from server-shaped response
-        const msg = (res && res.data && (res.data.message || res.data.error)) || (res && res.error && res.error.message) || "Invalid credentials";
+        const msg =
+          (res && res.data && (res.data.message || res.data.error)) ||
+          (res && res.error && res.error.message) ||
+          "Invalid credentials";
         showError(msg);
         return;
       }
 
-      // Server may return user and redirect inside data
-      const payload = res.data || {};
-      const user = payload.user || payload;
-      const redirect = payload.redirect || (user && user.role ? roleRedirect(user.role) : "/");
+      // Server returns user in res.user OR res.data.user
+      const user = res.user || (res.data && res.data.user) || res.data;
 
-      // Successful login: navigate (cookie already set by server if cookie flow)
+      if (!user || !user.role) {
+        showError("Invalid server response.");
+        return;
+      }
+
+      // Store session for dashboards
+      localStorage.setItem("user", JSON.stringify({
+        id: user.id,
+        role: user.role,
+        is_owner: user.role === "owner"
+      }));
+
+      // Redirect based on REAL role from DB
+      const redirect = roleRedirect(user.role);
       window.location.assign(redirect);
+
     } catch (err) {
       showError("Network error. Try again.");
       console.error("Login error:", err);
