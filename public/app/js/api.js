@@ -207,6 +207,13 @@
         get pages() { return API_BASE_PAGES; },
         get worker() { return API_BASE_WORKER; },
         get timeoutMs() { return DEFAULT_TIMEOUT_MS; }
+      },
+
+      // LEGAL / POLICY HELPERS
+      legal: {
+        accept(payload, headers = {}, opts = {}) {
+          return request("POST", "/api/legal/accept", payload, headers, opts);
+        }
       }
     };
   }
