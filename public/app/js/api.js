@@ -1,16 +1,18 @@
-// /app/js/api.js — ROLL SHOW GLOBAL SAFE API CLIENT (UMD / browser global)
-// Finalized: stable defaults, configurable init, robust parsing, timeout support,
-// consistent normalized response shape, safe cookie-friendly defaults.
+// /app/js/api.js — ROLL SHOW GLOBAL SAFE API CLIENT (FINAL)
+// - Guaranteed cookie support (credentials: "include")
+// - Worker-first for /api/*
+// - Stable fallback logic
+// - Safe JSON parsing
+// - Unified normalized response shape
+// - Timeout support
+// - Zero ambiguity
 
 (function (global) {
-  // Configurable defaults (can be changed via API.init)
   let API_BASE_PAGES = "https://roll-show.pages.dev";
   let API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev";
   let DEFAULT_TIMEOUT_MS = 15000;
 
-  /* SAFE PARSE RESPONSE
-     Returns: { ok, status, body, contentType, error }
-  */
+  /* SAFE PARSE */
   async function safeParseResponse(res) {
     const status = res.status;
     const contentType = (res.headers.get("content-type") || "").toLowerCase();
@@ -21,7 +23,6 @@
         ok: res.ok,
         status,
         body: null,
-        contentType,
         error: res.ok ? null : { message: "Empty response", status }
       };
     }
@@ -33,66 +34,51 @@
           ok: res.ok,
           status,
           body: parsed,
-          contentType,
-          error: parsed && parsed.error ? parsed.error : (res.ok ? null : { message: "Request failed", status })
+          error: parsed?.error || (res.ok ? null : { message: "Request failed", status })
         };
-      } catch (err) {
+      } catch {
         return {
           ok: res.ok,
           status,
           body: null,
-          contentType,
           error: { message: "Invalid JSON", status }
         };
       }
     }
 
-    // Non-JSON: return raw text
     return {
       ok: res.ok,
       status,
       body: text,
-      contentType,
       error: res.ok ? null : { message: "Non-JSON response", status }
     };
   }
 
-  /* FETCH WITH TIMEOUT */
-  function fetchWithTimeout(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
-    if (!timeoutMs || timeoutMs <= 0) return fetch(url, options);
+  /* TIMEOUT WRAPPER */
+  function fetchWithTimeout(url, options, timeoutMs) {
     const controller = new AbortController();
-    const signal = controller.signal;
-    const opts = Object.assign({}, options, { signal });
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const opts = { ...options, signal: controller.signal };
+
     return fetch(url, opts).finally(() => clearTimeout(timer));
   }
 
-  /* NORMALIZE PARSED RESPONSE
-     Public shape: { success, status, data, user, error }
-  */
-  function normalizeParsed(parsed) {
+  /* NORMALIZE */
+  function normalize(parsed) {
     const body = parsed.body;
-    const status = parsed.status || 0;
-    let success = parsed.ok || false;
+    const status = parsed.status;
+    let success = parsed.ok;
     let data = null;
     let user = undefined;
-    let error = parsed.error || null;
+    let error = parsed.error;
 
     if (body && typeof body === "object") {
-      if (typeof body.success !== "undefined") success = !!body.success;
-      if (body.data !== undefined) data = body.data;
-      if (body.user !== undefined) user = body.user;
+      if ("success" in body) success = !!body.success;
+      if ("data" in body) data = body.data;
+      if ("user" in body) user = body.user;
       if (body.error) error = body.error;
 
-      if (data === null) {
-        if (success) {
-          data = body;
-        } else if (!body.data && body.user) {
-          data = body;
-        } else {
-          data = body;
-        }
-      }
+      if (data === null) data = body;
     } else {
       data = body;
     }
@@ -102,34 +88,31 @@
 
   /* CORE REQUEST */
   async function request(method, path, payload = null, extraHeaders = {}, opts = {}) {
-    if (!path || typeof path !== "string" || !path.startsWith("/")) {
-      throw new Error("API request path must start with '/'");
-    }
+    if (!path.startsWith("/")) throw new Error("API path must start with '/'");
 
-    const headers = Object.assign({}, extraHeaders);
+    const headers = { ...extraHeaders };
     const options = {
       method,
       headers,
-      // 🔥 CRITICAL FIX: allow cross-site cookies (Pages → Worker)
-      credentials: "include"
+      credentials: "include" // ⭐ CRITICAL: allows session cookies
     };
 
     if (payload && !(payload instanceof FormData) && !(payload instanceof Blob)) {
       headers["Content-Type"] = "application/json";
       options.body = JSON.stringify(payload);
-    } else if (payload instanceof FormData || payload instanceof Blob) {
+    } else if (payload) {
       options.body = payload;
     }
 
-    const timeoutMs = typeof opts.timeoutMs === "number" ? opts.timeoutMs : DEFAULT_TIMEOUT_MS;
+    const timeoutMs = opts.timeoutMs || DEFAULT_TIMEOUT_MS;
 
-    async function fetchAndNormalize(fullUrl) {
+    async function run(fullUrl) {
       try {
         const res = await fetchWithTimeout(fullUrl, options, timeoutMs);
         const parsed = await safeParseResponse(res);
-        return normalizeParsed(parsed);
+        return normalize(parsed);
       } catch (err) {
-        const isAbort = err && err.name === "AbortError";
+        const isAbort = err?.name === "AbortError";
         return {
           success: false,
           status: 0,
@@ -140,22 +123,18 @@
       }
     }
 
-    // API routes should prefer Worker
+    // API routes → Worker only
     if (path.startsWith("/api/") || opts.forceWorker) {
-      return await fetchAndNormalize(API_BASE_WORKER + path);
+      return await run(API_BASE_WORKER + path);
     }
 
-    // Non-API: try Pages first, fallback to Worker
-    try {
-      const pagesResult = await fetchAndNormalize(API_BASE_PAGES + path);
-      if (!pagesResult.success && pagesResult.status >= 400 && !opts.forcePages) {
-        const workerResult = await fetchAndNormalize(API_BASE_WORKER + path);
-        if (workerResult.success || workerResult.status !== pagesResult.status) return workerResult;
-      }
-      return pagesResult;
-    } catch {
-      return await fetchAndNormalize(API_BASE_WORKER + path);
+    // Non-API → Pages first, fallback to Worker
+    const pagesResult = await run(API_BASE_PAGES + path);
+    if (!pagesResult.success && pagesResult.status >= 400 && !opts.forcePages) {
+      const workerResult = await run(API_BASE_WORKER + path);
+      if (workerResult.success || workerResult.status !== pagesResult.status) return workerResult;
     }
+    return pagesResult;
   }
 
   /* PUBLIC API */
@@ -175,19 +154,15 @@
       },
 
       withUser(user) {
-        if (!user) return {};
-        return {
-          "x-user-id": user.id,
-          "x-user-role": user.role
-        };
+        return user
+          ? { "x-user-id": user.id, "x-user-role": user.role }
+          : {};
       },
 
       init({ pagesBase, workerBase, defaultTimeoutMs } = {}) {
-        if (pagesBase && typeof pagesBase === "string") API_BASE_PAGES = pagesBase;
-        if (workerBase && typeof workerBase === "string") API_BASE_WORKER = workerBase;
-        if (typeof defaultTimeoutMs === "number" && defaultTimeoutMs > 0) {
-          DEFAULT_TIMEOUT_MS = defaultTimeoutMs;
-        }
+        if (pagesBase) API_BASE_PAGES = pagesBase;
+        if (workerBase) API_BASE_WORKER = workerBase;
+        if (defaultTimeoutMs > 0) DEFAULT_TIMEOUT_MS = defaultTimeoutMs;
       },
 
       _bases: {
