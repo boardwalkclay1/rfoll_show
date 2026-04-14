@@ -1,9 +1,17 @@
-// /app/js/business/business-signup.js
-// Client-side business signup: password verify, basic validation, POST to API.
+// /app/js/skater/skater-signup.js
+const form = document.getElementById("skater-signup-form");
+const disciplineSelect = document.getElementById("discipline");
+const subclassSelect = document.getElementById("subclass");
+const errorEl = document.getElementById("skater-signup-error");
+const submitBtn = document.getElementById("skater-signup-submit");
 
-const form = document.getElementById("business-apply-form");
-const errorEl = document.getElementById("business-signup-error");
-const submitBtn = document.getElementById("business-signup-submit");
+// canonical mapping (keys must match discipline option values)
+const subclassMap = {
+  "longboarder": ["cruiser", "downhill", "dancer"],
+  "skate boarder": ["street", "vert"],
+  "roller skater": ["rink", "outdoor", "skatepark"],
+  "inline skater": ["vert", "street", "rink"]
+};
 
 function showError(msg) {
   errorEl.textContent = msg;
@@ -15,41 +23,90 @@ function clearError() {
   errorEl.style.display = "none";
 }
 
+function normalizeDiscipline(raw) {
+  if (!raw) return "";
+  return String(raw).trim().toLowerCase();
+}
+
+function populateSubclassOptions(rawDiscipline) {
+  // normalize the incoming value to match keys
+  const discipline = normalizeDiscipline(rawDiscipline);
+
+  // find matching key in subclassMap (keys are lowercase)
+  // allow keys with spaces (e.g., "skate boarder")
+  const subs = subclassMap[discipline] || [];
+
+  if (!subs.length) {
+    subclassSelect.innerHTML = `<option value="">Select subclass (optional)</option>`;
+    subclassSelect.disabled = true;
+    return;
+  }
+
+  // build options; values are canonical lowercase
+  const options = [`<option value="">Select subclass (optional)</option>`]
+    .concat(subs.map(s => `<option value="${s}">${s.charAt(0).toUpperCase() + s.slice(1)}</option>`))
+    .join("");
+
+  subclassSelect.innerHTML = options;
+  subclassSelect.disabled = false;
+}
+
+// Event: discipline changed
+disciplineSelect.addEventListener("change", () => {
+  // use the raw select.value but normalize inside populate
+  populateSubclassOptions(disciplineSelect.value);
+  clearError();
+});
+
+// Form submit handler
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   clearError();
 
   const fd = new FormData(form);
-  const company_name = (fd.get("company_name") || "").trim();
-  const country = (fd.get("country") || "").trim();
   const name = (fd.get("name") || "").trim();
   const email = (fd.get("email") || "").trim();
   const password = fd.get("password") || "";
   const passwordVerify = fd.get("password_verify") || "";
-  const role = fd.get("role") || "business";
+  const stage_name = (fd.get("stage_name") || "").trim();
 
-  if (!company_name) return showError("Please enter your company name.");
-  if (!country) return showError("Please select your country.");
-  if (!name) return showError("Please enter your full name.");
+  // normalize discipline/subclass before sending
+  const rawDiscipline = fd.get("discipline") || "";
+  const rawSubclass = fd.get("subclass") || "";
+  const discipline = normalizeDiscipline(rawDiscipline);
+  const subclass = rawSubclass ? String(rawSubclass).trim().toLowerCase() : "";
+
+  // Basic client-side validation
   if (!email) return showError("Please enter an email.");
   if (!password) return showError("Please enter a password.");
   if (password !== passwordVerify) return showError("Passwords do not match.");
+  if (!stage_name) return showError("Please enter a stage name.");
+  if (!discipline) return showError("Please select a discipline.");
+
+  // Validate subclass matches discipline if provided
+  if (subclass) {
+    const allowed = subclassMap[discipline] || [];
+    if (!allowed.includes(subclass)) {
+      return showError("Invalid subclass for selected discipline.");
+    }
+  }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = "Submitting…";
+  submitBtn.textContent = "Creating…";
 
   try {
     const payload = {
-      company_name,
-      country,
       name,
       email,
       password,
       password_verify: passwordVerify,
-      role
+      role: fd.get("role") || "skater",
+      stage_name,
+      discipline, // normalized
+      subclass: subclass || null
     };
 
-    const res = await fetch("/api/signup/business", {
+    const res = await fetch("/api/signup/skater", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -61,20 +118,25 @@ form.addEventListener("submit", async (e) => {
     if (!res.ok || !data) {
       showError((data && data.message) || "Signup failed. Please try again.");
       submitBtn.disabled = false;
-      submitBtn.textContent = "Submit Application";
+      submitBtn.textContent = "Create Account";
       return;
     }
 
     if (data.success) {
-      window.location.href = data.redirect || "/pages/onboarding-business.html";
+      window.location.href = data.redirect || "/pages/onboarding-skater.html";
       return;
     } else {
-      showError(data.message || "Signup failed. Please check your input.");
+      showError(data.message || data.profile_error || "Signup failed. Please check your input.");
     }
   } catch (err) {
     showError("Network error. Please try again.");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = "Submit Application";
+    submitBtn.textContent = "Create Account";
   }
+});
+
+// Initialize subclass state on load (in case discipline preselected)
+document.addEventListener("DOMContentLoaded", () => {
+  populateSubclassOptions(disciplineSelect.value);
 });
