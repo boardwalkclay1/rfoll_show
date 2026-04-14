@@ -5,11 +5,23 @@ import { signupBase } from "./users.js"; // ensure this export matches users.js
 export async function signupBuyer(request, env) {
   try {
     const body = await request.json().catch(() => ({}));
+
+    // Server-side password confirmation (authoritative)
+    const password = body.password || null;
+    const password_verify = body.password_verify || body.passwordConfirm || null;
+    if (!password || !password_verify || password !== password_verify) {
+      return apiJson({ success: false, message: "Passwords do not match" }, 400);
+    }
+
     // Ensure role is buyer for the users row
-    const signupReqBody = { name: body.name || null, email: body.email, password: body.password, role: "buyer" };
+    const signupReqBody = {
+      name: body.name || null,
+      email: body.email,
+      password: password,
+      role: "buyer"
+    };
 
     // Call signupBase and parse its JSON response
-    // This assumes signupBase(request, env, role) returns a Response-like object or a plain object.
     const signupRes = await signupBase(
       new Request(request.url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(signupReqBody) }),
       env,
@@ -35,28 +47,43 @@ export async function signupBuyer(request, env) {
 
     // Create buyer profile row (idempotency handled by DB constraints if present)
     const profileId = crypto.randomUUID();
-    await env.DB_roll.prepare(
-      `INSERT INTO buyer_profiles (
-         id, user_id, name, phone, city, state,
-         default_payment_method, preferred_rink, profile_weather_snapshot_json,
-         created_at
-       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-    )
-      .bind(
-        profileId,
-        userId,
-        body.name || null,
-        body.phone || null,
-        body.city || null,
-        body.state || null,
-        body.default_payment_method || null,
-        body.preferred_rink || null,
-        null,
-        createdAt
-      )
-      .run();
 
-    return apiJson({ success: true, user: base.user, buyer_profile_id: profileId }, 201);
+    try {
+      await env.DB_roll.prepare(
+        `INSERT INTO buyer_profiles (
+           id, user_id, name, phone, city, state,
+           default_payment_method, preferred_rink, profile_weather_snapshot_json,
+           created_at
+         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      )
+        .bind(
+          profileId,
+          userId,
+          body.name || null,
+          body.phone || null,
+          body.city || null,
+          body.state || null,
+          body.default_payment_method || null,
+          body.preferred_rink || null,
+          null,
+          createdAt
+        )
+        .run();
+
+      return apiJson({ success: true, user: base.user, buyer_profile_id: profileId }, 201);
+    } catch (err) {
+      const msg = String(err).toLowerCase();
+      // Treat unique/constraint errors as idempotent success if profile exists
+      if (msg.includes("unique") || msg.includes("constraint") || /buyer_profiles/.test(msg)) {
+        const existing = await env.DB_roll.prepare("SELECT * FROM buyer_profiles WHERE user_id = ?").bind(userId).first();
+        if (existing) {
+          return apiJson({ success: true, user: base.user, buyer_profile_id: existing.id, profile_exists: true }, 201);
+        }
+      }
+
+      // Other DB error: return failure so client can retry later
+      return apiJson({ success: false, message: "Buyer profile insert failed", detail: String(err) }, 500);
+    }
   } catch (err) {
     return apiJson({ success: false, message: "Server error", detail: String(err) }, 500);
   }
