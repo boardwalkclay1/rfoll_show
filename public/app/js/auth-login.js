@@ -1,5 +1,4 @@
-// /app/js/auth-login.js
-// Clean, role-agnostic, owner-compatible login handler
+// /app/js/auth-login.js — NEW FINAL VERSION
 
 (function () {
   const form = document.getElementById("auth-login-form");
@@ -31,8 +30,15 @@
     e.preventDefault();
     clearError();
 
-    const email = (document.getElementById("email").value || "").trim();
-    const password = (document.getElementById("password").value || "");
+    // Read form fields safely
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    const email = emailInput?.value?.trim() || "";
+    const password = passwordInput?.value || "";
+
+    // Log what is actually being sent
+    console.log("LOGIN PAYLOAD (frontend):", { email, password });
 
     if (!email || !password) {
       showError("Email and password are required.");
@@ -44,45 +50,56 @@
     submitBtn.textContent = "Signing in…";
 
     try {
-      // Only send email + password
-      const res = await API.post("/api/login", { email, password });
+      // Always send JSON — never null, never empty
+      const payload = { email, password };
+
+      const res = await API.post("/api/login", payload);
+
+      console.log("LOGIN RESPONSE (frontend):", res);
 
       if (!res || res.success !== true) {
         const msg =
-          (res && res.data && (res.data.message || res.data.error)) ||
-          (res && res.error && res.error.message) ||
+          res?.data?.message ||
+          res?.data?.error ||
+          res?.error?.message ||
           "Invalid credentials";
         showError(msg);
         return;
       }
 
-      // Server returns user in res.user OR res.data.user
-      const user = res.user || (res.data && res.data.user) || res.data;
+      // Extract user from normalized response
+      const user = res.user || res.data?.user || res.data;
 
       if (!user || !user.role) {
         showError("Invalid server response.");
         return;
       }
 
-      // Store session for dashboards
-      localStorage.setItem("user", JSON.stringify({
-        id: user.id,
-        role: user.role,
-        is_owner: user.role === "owner"
-      }));
+      // Store minimal session info for dashboards
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          id: user.id,
+          role: user.role,
+          is_owner: user.role === "owner"
+        })
+      );
 
-      // Redirect based on REAL role from DB
-      const redirect = roleRedirect(user.role);
-      window.location.assign(redirect);
+      // Redirect based on role
+      window.location.assign(roleRedirect(user.role));
 
     } catch (err) {
-      showError("Network error. Try again.");
       console.error("Login error:", err);
+      showError("Network error. Try again.");
     } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = "Log in";
     }
   }
 
-  form.addEventListener("submit", onSubmit);
+  if (form) {
+    form.addEventListener("submit", onSubmit);
+  } else {
+    console.error("auth-login-form not found in DOM");
+  }
 })();
