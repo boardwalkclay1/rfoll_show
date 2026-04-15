@@ -1,14 +1,8 @@
-// /app/js/api.js — XHR-ONLY CLIENT (no auth routing)
-// -------------------------------------------------
-// - Worker-first routing for /api/*
-// - Proper JSON + FormData handling
-// - Safe JSON parsing
-// - Normalized response shape
-// - Cookie support (withCredentials)
+// /app/js/api.js — CLEAN GENERIC CLIENT (NO LOGIN LOGIC)
+// ------------------------------------------------------
 
 (function (global) {
-  let API_BASE_PAGES = "https://roll-show.pages.dev";
-  let API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev";
+  let API_BASE = "https://rollshow.boardwalkclay1.workers.dev";
   let DEFAULT_TIMEOUT_MS = 15000;
 
   /* -------------------------------------------------------
@@ -18,8 +12,6 @@
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open(options.method || "GET", url, true);
-
-      xhr.withCredentials = options.credentials === "include";
 
       if (options.headers) {
         for (const [k, v] of Object.entries(options.headers)) {
@@ -31,23 +23,10 @@
 
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
-          const headers = new Headers();
-          const raw = (xhr.getAllResponseHeaders() || "")
-            .trim()
-            .split(/[\r\n]+/);
-
-          for (const line of raw) {
-            const parts = line.split(": ");
-            const key = parts.shift();
-            const value = parts.join(": ");
-            if (key) headers.append(key.toLowerCase(), value);
-          }
-
           resolve(
             new Response(xhr.responseText, {
               status: xhr.status,
-              statusText: xhr.statusText,
-              headers
+              statusText: xhr.statusText
             })
           );
         }
@@ -64,141 +43,76 @@
   /* -------------------------------------------------------
    * SAFE PARSE
    * ----------------------------------------------------- */
-  async function safeParseResponse(res) {
+  async function safeParse(res) {
     const status = res.status;
-    const contentType = (res.headers.get("content-type") || "").toLowerCase();
     const text = await res.text();
+    const contentType = (res.headers.get("content-type") || "").toLowerCase();
 
     if (!text) {
-      return {
-        ok: res.ok,
-        status,
-        body: null,
-        error: res.ok ? null : { message: "Empty response", status }
-      };
+      return { ok: res.ok, status, body: null, error: null };
     }
 
     if (contentType.includes("application/json")) {
       try {
-        const parsed = JSON.parse(text);
-        return {
-          ok: res.ok,
-          status,
-          body: parsed,
-          error:
-            parsed?.error ||
-            (res.ok ? null : { message: "Request failed", status })
-        };
+        return { ok: res.ok, status, body: JSON.parse(text), error: null };
       } catch {
-        return {
-          ok: res.ok,
-          status,
-          body: null,
-          error: { message: "Invalid JSON", status }
-        };
+        return { ok: res.ok, status, body: null, error: "Invalid JSON" };
       }
     }
 
-    return {
-      ok: res.ok,
-      status,
-      body: text,
-      error: res.ok ? null : { message: "Non-JSON response", status }
-    };
+    return { ok: res.ok, status, body: text, error: null };
   }
 
   /* -------------------------------------------------------
    * NORMALIZE
    * ----------------------------------------------------- */
   function normalize(parsed) {
-    const body = parsed.body;
-    const status = parsed.status;
-    let success = parsed.ok;
-    let data = null;
-    let user = undefined;
-    let error = parsed.error;
-
-    if (body && typeof body === "object") {
-      if ("success" in body) success = !!body.success;
-      if ("data" in body) data = body.data;
-      if ("user" in body) user = body.user;
-      if (body.error) error = body.error;
-
-      if (data === null) data = body;
-    } else {
-      data = body;
-    }
-
-    return { success, status, data, user, error };
+    return {
+      success: parsed.ok,
+      status: parsed.status,
+      data: parsed.body,
+      error: parsed.error
+    };
   }
 
   /* -------------------------------------------------------
    * CORE REQUEST
    * ----------------------------------------------------- */
-  async function request(method, path, payload = null, extraHeaders = {}, opts = {}) {
+  async function request(method, path, payload = null, headers = {}, opts = {}) {
     if (!path.startsWith("/")) {
       throw new Error("API path must start with '/'");
     }
 
-    const headers = { ...extraHeaders };
+    const fullUrl = API_BASE + path;
+
     const options = {
       method,
-      headers,
-      credentials: "include"
+      headers: { ...headers }
     };
 
-    /* -----------------------------
-     * FormData must NOT have Content-Type set manually
-     * --------------------------- */
     if (payload instanceof FormData) {
-      if (headers["Content-Type"]) delete headers["Content-Type"];
+      // Let browser set Content-Type
+      delete options.headers["Content-Type"];
       options.body = payload;
-    }
-    else if (payload && !(payload instanceof Blob)) {
-      headers["Content-Type"] = "application/json";
+    } else if (payload !== null && payload !== undefined) {
+      options.headers["Content-Type"] = "application/json";
       options.body = JSON.stringify(payload);
-    }
-    else if (payload) {
-      options.body = payload;
     }
 
     const timeoutMs = opts.timeoutMs || DEFAULT_TIMEOUT_MS;
 
-    async function run(fullUrl) {
-      try {
-        const res = await xhrRequest(fullUrl, options, timeoutMs);
-        const parsed = await safeParseResponse(res);
-        return normalize(parsed);
-      } catch (err) {
-        const isAbort = err?.name === "AbortError";
-        return {
-          success: false,
-          status: 0,
-          data: null,
-          user: undefined,
-          error: {
-            message: isAbort ? "Request timed out" : "Network error",
-            detail: err?.message || String(err)
-          }
-        };
-      }
+    try {
+      const res = await xhrRequest(fullUrl, options, timeoutMs);
+      const parsed = await safeParse(res);
+      return normalize(parsed);
+    } catch (err) {
+      return {
+        success: false,
+        status: 0,
+        data: null,
+        error: err?.message || "Network error"
+      };
     }
-
-    // Worker-first for /api/*
-    if (path.startsWith("/api/") || opts.forceWorker) {
-      return await run(API_BASE_WORKER + path);
-    }
-
-    // Pages first, fallback to Worker
-    const pagesResult = await run(API_BASE_PAGES + path);
-    if (!pagesResult.success && pagesResult.status >= 400 && !opts.forcePages) {
-      const workerResult = await run(API_BASE_WORKER + path);
-      if (workerResult.success || workerResult.status !== pagesResult.status) {
-        return workerResult;
-      }
-    }
-
-    return pagesResult;
   }
 
   /* -------------------------------------------------------
@@ -219,26 +133,14 @@
         return request("DELETE", path, null, headers, opts);
       },
 
-      withUser(user) {
-        return user ? { "x-user-id": user.id, "x-user-role": user.role } : {};
+      init({ base, timeoutMs } = {}) {
+        if (base) API_BASE = base;
+        if (timeoutMs > 0) DEFAULT_TIMEOUT_MS = timeoutMs;
       },
 
-      init({ pagesBase, workerBase, defaultTimeoutMs } = {}) {
-        if (pagesBase) API_BASE_PAGES = pagesBase;
-        if (workerBase) API_BASE_WORKER = workerBase;
-        if (defaultTimeoutMs > 0) DEFAULT_TIMEOUT_MS = defaultTimeoutMs;
-      },
-
-      _bases: {
-        get pages() { return API_BASE_PAGES; },
-        get worker() { return API_BASE_WORKER; },
-        get timeoutMs() { return DEFAULT_TIMEOUT_MS; }
-      },
-
-      legal: {
-        accept(payload, headers = {}, opts = {}) {
-          return request("POST", "/api/legal/accept", payload, headers, opts);
-        }
+      _config: {
+        get base() { return API_BASE; },
+        get timeout() { return DEFAULT_TIMEOUT_MS; }
       }
     };
   }
