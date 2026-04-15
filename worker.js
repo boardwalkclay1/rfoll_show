@@ -1,4 +1,6 @@
 // worker.js — FINAL MODULE WORKER (cleaned routes & guards, updated)
+// -------------------------------------------------------------------------
+
 import {
   cors,
   apiJson,
@@ -47,8 +49,6 @@ import {
 
 import { ownerDashboard } from "./routes/owner.js";
 
-const AUTH_UPSTREAM = "https://rollshow-auth.boardwalkclay1.workers.dev";
-
 // ============================================================
 // CORS WRAPPER
 // ============================================================
@@ -80,7 +80,12 @@ export default {
       return new Response(null, { status: 204, headers: cors() });
     }
 
-    // Proxy helper for auth worker
+    // Resolve auth upstream from env if provided, otherwise fallback to known dev URL
+    const AUTH_UPSTREAM =
+      (env && env.AUTH_UPSTREAM) ||
+      "https://rollshow-auth.boardwalkclay1.workers.dev";
+
+    // Proxy helper for auth worker (preserves body and content-type)
     async function proxyAuth(pathSuffix) {
       const upstreamUrl = `${AUTH_UPSTREAM}${pathSuffix}`;
       const bodyText = await request.text();
@@ -90,9 +95,12 @@ export default {
         body: bodyText
       });
       const text = await upstream.text();
+      // Clone headers into a new Headers object to avoid frozen headers issues
+      const outHeaders = new Headers();
+      upstream.headers.forEach((v, k) => outHeaders.set(k, v));
       const res = new Response(text, {
         status: upstream.status,
-        headers: upstream.headers
+        headers: outHeaders
       });
       return withCORS(res);
     }
@@ -279,9 +287,7 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["owner"], ownerDashboard));
       }
 
-      // ============================================================
       // NEW: LEGAL ACCEPTANCE ENDPOINT
-      // ============================================================
       if (path === "/api/legal/accept" && method === "POST") {
         return withCORS(
           await requireRole(request.clone(), env, ["buyer","skater","musician","business","staff","owner"], async (req, envInner, user) => {
