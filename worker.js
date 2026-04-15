@@ -1,11 +1,10 @@
-// worker.js — AUTH REMOVED (signup/login/proxy taken out)
-// -------------------------------------------------------------------------
+// worker.js — MODULE WORKER (auth removed; profile/dashboard handlers only)
+// ----------------------------------------------------------------------
+// - Auth (signup/login/hash/verify) is handled by a separate auth-worker.
+// - This worker exposes role-protected APIs and profile endpoints.
+// - Handlers return plain objects; requireRole wraps them into JSON Responses.
 
-import {
-  cors,
-  apiJson,
-  requireRole
-} from "./users.js";
+import { cors, apiJson, requireRole } from "./users.js";
 
 import {
   listTickets,
@@ -29,7 +28,8 @@ import {
   businessAddStaff,
   businessRemoveStaff,
   businessListStaff,
-  businessScanTicket
+  businessScanTicket,
+  createBusinessProfile
 } from "./business.js";
 
 import {
@@ -38,14 +38,15 @@ import {
   listMusic,
   licenseTrack,
   musicianCreateOffer,
-  listMusicianOffers
+  listMusicianOffers,
+  createMusicianProfile
 } from "./musicians.js";
 
 import { ownerDashboard } from "./routes/owner.js";
 
-// ============================================================
-// CORS WRAPPER
-// ============================================================
+/* ---------------------------
+   Utilities
+   --------------------------- */
 function withCORS(response) {
   const headers = cors();
   for (const [k, v] of Object.entries(headers)) {
@@ -55,19 +56,20 @@ function withCORS(response) {
 }
 
 function normalizePath(path) {
+  if (!path) return "/";
   if (path.length > 1 && path.endsWith("/")) return path.slice(0, -1);
   return path;
 }
 
-// ============================================================
-// MODULE WORKER ENTRYPOINT (AUTH HANDLED BY AUTH WORKER)
-// ============================================================
+/* ---------------------------
+   Module worker entrypoint
+   --------------------------- */
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request, env) {
     const url = new URL(request.url);
     const rawPath = url.pathname;
     const path = normalizePath(rawPath);
-    const method = request.method.toUpperCase();
+    const method = (request.method || "GET").toUpperCase();
 
     // CORS preflight
     if (method === "OPTIONS") {
@@ -75,69 +77,50 @@ export default {
     }
 
     try {
-      // NOTE: auth (login/signup/hash/verify) has been removed from this worker.
-      // Those endpoints should be served by the separate auth-worker.
+      // Initialize domain APIs (factories return available handlers)
+      const Skaters = makeSkatersApi ? makeSkatersApi(env.DB_roll) : {};
+      // Business and musician profile helpers are imported above
 
-      // Initialize Skaters API with DB binding
-      const Skaters = makeSkatersApi(env.DB_roll);
+      /* ---------------------------
+         SKATER ROUTES (profile + dashboard)
+         - Signup/login removed; profile creation is idempotent and requires auth
+         --------------------------- */
+      if (path === "/api/profiles/skater" && method === "POST") {
+        return withCORS(
+          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
+            if (typeof Skaters.createSkaterProfile === "function") {
+              return Skaters.createSkaterProfile(req, envInner, user);
+            }
+            return { success: false, message: "Skater profile endpoint not implemented" };
+          })
+        );
+      }
 
-      // SKATER ROUTES
       if (path === "/api/skater/dashboard" && method === "GET") {
         return withCORS(
-          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
-            Skaters.getSkaterProfile(user.id)
-          )
-        );
-      }
-
-      if (path === "/api/skater/profile" && method === "PUT") {
-        return withCORS(
           await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-            const body = await req.json();
-            return Skaters.updateSkaterProfile(user.profile_id || user.id, body);
+            if (typeof Skaters.skaterDashboard === "function") {
+              return Skaters.skaterDashboard(req, envInner, user);
+            }
+            return { success: false, message: "Skater dashboard not implemented" };
           })
         );
       }
 
-      if (path === "/api/skater/offerings" && method === "POST") {
+      /* ---------------------------
+         MUSICIAN ROUTES (profile + dashboard)
+         --------------------------- */
+      if (path === "/api/profiles/musician" && method === "POST") {
         return withCORS(
-          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-            const body = await req.json();
-            return Skaters.createSkaterOffering(user.profile_id || user.id, body);
+          await requireRole(request.clone(), env, ["musician"], async (req, envInner, user) => {
+            if (typeof createMusicianProfile === "function") {
+              return createMusicianProfile(req, envInner, user);
+            }
+            return { success: false, message: "Musician profile endpoint not implemented" };
           })
         );
       }
 
-      if (path === "/api/skater/offerings" && method === "GET") {
-        return withCORS(
-          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
-            Skaters.listSkaterOfferings(user.profile_id || user.id)
-          )
-        );
-      }
-
-      if (path === "/api/skater/shows" && method === "POST") {
-        return withCORS(
-          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-            const body = await req.json();
-            return Skaters.createShowForSkaterOrGroup({
-              host_type: "skater",
-              host_id: user.profile_id || user.id,
-              ...body
-            });
-          })
-        );
-      }
-
-      if (path === "/api/skater/shows" && method === "GET") {
-        return withCORS(
-          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) =>
-            Skaters.listShowsForHost("skater", user.profile_id || user.id)
-          )
-        );
-      }
-
-      // MUSICIAN ROUTES
       if (path === "/api/musician/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["musician"], musicianDashboard));
       }
@@ -154,7 +137,20 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["musician"], licenseTrack));
       }
 
-      // BUSINESS ROUTES
+      /* ---------------------------
+         BUSINESS ROUTES (profile + dashboard + submissions)
+         --------------------------- */
+      if (path === "/api/profiles/business" && method === "POST") {
+        return withCORS(
+          await requireRole(request.clone(), env, ["business"], async (req, envInner, user) => {
+            if (typeof createBusinessProfile === "function") {
+              return createBusinessProfile(req, envInner, user);
+            }
+            return { success: false, message: "Business profile endpoint not implemented" };
+          })
+        );
+      }
+
       if (path === "/api/business/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["business"], businessDashboard));
       }
@@ -169,22 +165,6 @@ export default {
 
       if (path === "/api/business/ads" && method === "POST") {
         return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitAd));
-      }
-
-      if (path === "/api/business/staff" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessAddStaff));
-      }
-
-      if (path === "/api/business/staff" && method === "DELETE") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessRemoveStaff));
-      }
-
-      if (path === "/api/business/staff" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessListStaff));
-      }
-
-      if (path === "/api/business/scan-ticket" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessScanTicket));
       }
 
       if (path === "/api/business/venues" && method === "POST") {
@@ -203,7 +183,26 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitDiscount));
       }
 
-      // BUYER ROUTES
+      /* Staff management */
+      if (path === "/api/business/staff" && method === "POST") {
+        return withCORS(await requireRole(request.clone(), env, ["business"], businessAddStaff));
+      }
+
+      if (path === "/api/business/staff" && method === "DELETE") {
+        return withCORS(await requireRole(request.clone(), env, ["business"], businessRemoveStaff));
+      }
+
+      if (path === "/api/business/staff" && method === "GET") {
+        return withCORS(await requireRole(request.clone(), env, ["business"], businessListStaff));
+      }
+
+      if (path === "/api/business/scan-ticket" && method === "POST") {
+        return withCORS(await requireRole(request.clone(), env, ["business"], businessScanTicket));
+      }
+
+      /* ---------------------------
+         BUYER ROUTES
+         --------------------------- */
       if (path === "/api/buyer/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["buyer"], buyerDashboard));
       }
@@ -217,6 +216,7 @@ export default {
       }
 
       if (path === "/api/buyer/partner-webhook" && method === "POST") {
+        // partner webhook may be unauthenticated depending on integration
         return withCORS(await partnerWebhook(request.clone(), env));
       }
 
@@ -224,17 +224,20 @@ export default {
         return withCORS(await requireRole(request.clone(), env, ["buyer"], checkInTicket));
       }
 
-      // OWNER ROUTES
+      /* ---------------------------
+         OWNER ROUTES
+         --------------------------- */
       if (path === "/api/owner/dashboard" && method === "GET") {
         return withCORS(await requireRole(request.clone(), env, ["owner"], ownerDashboard));
       }
 
-      // NEW: LEGAL ACCEPTANCE ENDPOINT
+      /* ---------------------------
+         LEGAL ACCEPTANCE (idempotent)
+         --------------------------- */
       if (path === "/api/legal/accept" && method === "POST") {
         return withCORS(
-          await requireRole(request.clone(), env, ["buyer","skater","musician","business","staff","owner"], async (req, envInner, user) => {
+          await requireRole(request.clone(), env, ["buyer", "skater", "musician", "business", "staff", "owner"], async (req, envInner, user) => {
             const form = await req.formData();
-
             const agreement_type = form.get("agreement_type");
             const agreement_version = form.get("agreement_version");
             const role = form.get("role");
@@ -265,7 +268,9 @@ export default {
         );
       }
 
-      // FALLBACK
+      /* ---------------------------
+         Fallback
+         --------------------------- */
       return withCORS(apiJson({ success: false, message: "Not found" }, 404));
     } catch (err) {
       console.error("Worker fetch error:", String(err));
