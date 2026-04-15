@@ -1,18 +1,25 @@
-// /app/js/api.js — XHR-ONLY VERSION (NO FETCH)
-// Aligned to use the Worker for /api/* routes by default
+// /app/js/api.js — XHR-ONLY CLIENT (REBUILT CLEAN VERSION)
+// ---------------------------------------------------------
+// - Worker-first routing for /api/*
+// - Proper JSON + FormData handling
+// - No send() errors
+// - Safe JSON parsing
+// - Normalized response shape
+// - Cookie support (withCredentials)
 
 (function (global) {
   let API_BASE_PAGES = "https://roll-show.pages.dev";
   let API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev";
   let DEFAULT_TIMEOUT_MS = 15000;
 
-  /* XHR WRAPPER */
+  /* -------------------------------------------------------
+   * XHR WRAPPER
+   * ----------------------------------------------------- */
   function xhrRequest(url, options = {}, timeoutMs = DEFAULT_TIMEOUT_MS) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open(options.method || "GET", url, true);
 
-      // cookie support for cross-site requests
       xhr.withCredentials = options.credentials === "include";
 
       if (options.headers) {
@@ -26,7 +33,10 @@
       xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
           const headers = new Headers();
-          const raw = (xhr.getAllResponseHeaders() || "").trim().split(/[\r\n]+/);
+          const raw = (xhr.getAllResponseHeaders() || "")
+            .trim()
+            .split(/[\r\n]+/);
+
           for (const line of raw) {
             const parts = line.split(": ");
             const key = parts.shift();
@@ -34,22 +44,27 @@
             if (key) headers.append(key.toLowerCase(), value);
           }
 
-          resolve(new Response(xhr.responseText, {
-            status: xhr.status,
-            statusText: xhr.statusText,
-            headers
-          }));
+          resolve(
+            new Response(xhr.responseText, {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              headers
+            })
+          );
         }
       };
 
       xhr.onerror = () => reject(new Error("Network error"));
-      xhr.ontimeout = () => reject(new DOMException("Request timed out", "AbortError"));
+      xhr.ontimeout = () =>
+        reject(new DOMException("Request timed out", "AbortError"));
 
       xhr.send(options.body || null);
     });
   }
 
-  /* SAFE PARSE */
+  /* -------------------------------------------------------
+   * SAFE PARSE
+   * ----------------------------------------------------- */
   async function safeParseResponse(res) {
     const status = res.status;
     const contentType = (res.headers.get("content-type") || "").toLowerCase();
@@ -71,7 +86,9 @@
           ok: res.ok,
           status,
           body: parsed,
-          error: parsed?.error || (res.ok ? null : { message: "Request failed", status })
+          error:
+            parsed?.error ||
+            (res.ok ? null : { message: "Request failed", status })
         };
       } catch {
         return {
@@ -91,7 +108,9 @@
     };
   }
 
-  /* NORMALIZE */
+  /* -------------------------------------------------------
+   * NORMALIZE
+   * ----------------------------------------------------- */
   function normalize(parsed) {
     const body = parsed.body;
     const status = parsed.status;
@@ -114,9 +133,13 @@
     return { success, status, data, user, error };
   }
 
-  /* CORE REQUEST */
+  /* -------------------------------------------------------
+   * CORE REQUEST
+   * ----------------------------------------------------- */
   async function request(method, path, payload = null, extraHeaders = {}, opts = {}) {
-    if (!path.startsWith("/")) throw new Error("API path must start with '/'");
+    if (!path.startsWith("/")) {
+      throw new Error("API path must start with '/'");
+    }
 
     const headers = { ...extraHeaders };
     const options = {
@@ -125,10 +148,18 @@
       credentials: "include"
     };
 
-    if (payload && !(payload instanceof FormData) && !(payload instanceof Blob)) {
+    /* -----------------------------
+     * FIX: FormData must NOT have Content-Type set manually
+     * --------------------------- */
+    if (payload instanceof FormData) {
+      if (headers["Content-Type"]) delete headers["Content-Type"];
+      options.body = payload;
+    }
+    else if (payload && !(payload instanceof Blob)) {
       headers["Content-Type"] = "application/json";
       options.body = JSON.stringify(payload);
-    } else if (payload) {
+    }
+    else if (payload) {
       options.body = payload;
     }
 
@@ -154,12 +185,12 @@
       }
     }
 
-    // API routes → Worker only (ensures auth endpoints, /api/* go to worker)
+    // Worker-first for /api/*
     if (path.startsWith("/api/") || opts.forceWorker) {
       return await run(API_BASE_WORKER + path);
     }
 
-    // Non-API → Pages first, fallback to Worker
+    // Pages first, fallback to Worker
     const pagesResult = await run(API_BASE_PAGES + path);
     if (!pagesResult.success && pagesResult.status >= 400 && !opts.forcePages) {
       const workerResult = await run(API_BASE_WORKER + path);
@@ -171,7 +202,9 @@
     return pagesResult;
   }
 
-  /* PUBLIC API */
+  /* -------------------------------------------------------
+   * PUBLIC API
+   * ----------------------------------------------------- */
   if (!global.API) {
     global.API = {
       get(path, headers = {}, opts = {}) {
@@ -188,9 +221,7 @@
       },
 
       withUser(user) {
-        return user
-          ? { "x-user-id": user.id, "x-user-role": user.role }
-          : {};
+        return user ? { "x-user-id": user.id, "x-user-role": user.role } : {};
       },
 
       init({ pagesBase, workerBase, defaultTimeoutMs } = {}) {
@@ -207,7 +238,6 @@
 
       legal: {
         accept(payload, headers = {}, opts = {}) {
-          // legal acceptance endpoint expects form-data; keep as POST to /api/legal/accept
           return request("POST", "/api/legal/accept", payload, headers, opts);
         }
       }
