@@ -1,18 +1,13 @@
-// worker.js — FINAL MODULE WORKER (cleaned routes & guards, updated)
+// worker.js — AUTH REMOVED (signup/login/proxy taken out)
 // -------------------------------------------------------------------------
 
 import {
   cors,
   apiJson,
-  requireRole,
-  signupBase,
-  signupBusiness
+  requireRole
 } from "./users.js";
 
-import loginHandler from "./api/login.js";
-
 import {
-  signupBuyer,
   listTickets,
   createTicket,
   partnerWebhook,
@@ -38,7 +33,6 @@ import {
 } from "./business.js";
 
 import {
-  signupMusician,
   musicianDashboard,
   uploadTrack,
   listMusic,
@@ -66,7 +60,7 @@ function normalizePath(path) {
 }
 
 // ============================================================
-// MODULE WORKER ENTRYPOINT
+// MODULE WORKER ENTRYPOINT (AUTH HANDLED BY AUTH WORKER)
 // ============================================================
 export default {
   async fetch(request, env, ctx) {
@@ -80,61 +74,9 @@ export default {
       return new Response(null, { status: 204, headers: cors() });
     }
 
-    // Resolve auth upstream from env if provided, otherwise fallback to known dev URL
-    const AUTH_UPSTREAM =
-      (env && env.AUTH_UPSTREAM) ||
-      "https://rollshow-auth.boardwalkclay1.workers.dev";
-
-    // Proxy helper for auth worker (preserves body and content-type)
-    async function proxyAuth(pathSuffix) {
-      const upstreamUrl = `${AUTH_UPSTREAM}${pathSuffix}`;
-      const bodyText = await request.text();
-      const upstream = await fetch(upstreamUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: bodyText
-      });
-      const text = await upstream.text();
-      // Clone headers into a new Headers object to avoid frozen headers issues
-      const outHeaders = new Headers();
-      upstream.headers.forEach((v, k) => outHeaders.set(k, v));
-      const res = new Response(text, {
-        status: upstream.status,
-        headers: outHeaders
-      });
-      return withCORS(res);
-    }
-
     try {
-      // AUTH FORWARDING
-      if (path === "/api/auth/hash" && method === "POST") {
-        return await proxyAuth("/hash");
-      }
-      if (path === "/api/auth/verify" && method === "POST") {
-        return await proxyAuth("/verify");
-      }
-
-      // LOGIN
-      if (path === "/api/login" && method === "POST") {
-        return withCORS(await loginHandler(request.clone(), env));
-      }
-
-      // SIGNUP ROUTES
-      if (path === "/api/buyer/signup" && method === "POST") {
-        return withCORS(await signupBuyer(request.clone(), env));
-      }
-
-      if (path === "/api/skater/signup" && method === "POST") {
-        return withCORS(await signupBase(request.clone(), env, "skater"));
-      }
-
-      if (path === "/api/musician/signup" && method === "POST") {
-        return withCORS(await signupMusician(request.clone(), env));
-      }
-
-      if (path === "/api/business/signup" && method === "POST") {
-        return withCORS(await signupBusiness(request.clone(), env));
-      }
+      // NOTE: auth (login/signup/hash/verify) has been removed from this worker.
+      // Those endpoints should be served by the separate auth-worker.
 
       // Initialize Skaters API with DB binding
       const Skaters = makeSkatersApi(env.DB_roll);
