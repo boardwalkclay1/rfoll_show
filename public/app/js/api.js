@@ -1,6 +1,6 @@
-// /app/js/api.js — XHR-ONLY CLIENT (AUTH ROUTES DELEGATED TO AUTH WORKER)
-// --------------------------------------------------------------------
-// - Worker-first routing for /api/* except login/signup which go to AUTH_WORKER
+// /app/js/api.js — XHR-ONLY CLIENT (no auth routing)
+// -------------------------------------------------
+// - Worker-first routing for /api/*
 // - Proper JSON + FormData handling
 // - Safe JSON parsing
 // - Normalized response shape
@@ -9,8 +9,6 @@
 (function (global) {
   let API_BASE_PAGES = "https://roll-show.pages.dev";
   let API_BASE_WORKER = "https://rollshow.boardwalkclay1.workers.dev";
-  // Separate auth worker base (login/signup live here). Default to same worker base.
-  let AUTH_WORKER_BASE = API_BASE_WORKER;
   let DEFAULT_TIMEOUT_MS = 15000;
 
   /* -------------------------------------------------------
@@ -186,12 +184,7 @@
       }
     }
 
-    // Special-case: delegate login/signup to AUTH_WORKER_BASE
-    if (path === "/api/signup" || path === "/api/login") {
-      return await run(AUTH_WORKER_BASE + path);
-    }
-
-    // Worker-first for other /api/* requests (unless forcePages)
+    // Worker-first for /api/*
     if (path.startsWith("/api/") || opts.forceWorker) {
       return await run(API_BASE_WORKER + path);
     }
@@ -230,17 +223,15 @@
         return user ? { "x-user-id": user.id, "x-user-role": user.role } : {};
       },
 
-      init({ pagesBase, workerBase, authWorkerBase, defaultTimeoutMs } = {}) {
+      init({ pagesBase, workerBase, defaultTimeoutMs } = {}) {
         if (pagesBase) API_BASE_PAGES = pagesBase;
         if (workerBase) API_BASE_WORKER = workerBase;
-        if (authWorkerBase) AUTH_WORKER_BASE = authWorkerBase;
         if (defaultTimeoutMs > 0) DEFAULT_TIMEOUT_MS = defaultTimeoutMs;
       },
 
       _bases: {
         get pages() { return API_BASE_PAGES; },
         get worker() { return API_BASE_WORKER; },
-        get authWorker() { return AUTH_WORKER_BASE; },
         get timeoutMs() { return DEFAULT_TIMEOUT_MS; }
       },
 
