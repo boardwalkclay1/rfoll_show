@@ -1,4 +1,4 @@
-// /api/login.js — CLEAN REBUILT VERSION
+// /api/login.js — NEW CLEAN VERSION (FULLY FIXED)
 import { cors, apiJson, verify } from "../users.js";
 
 const SESSION_COOKIE_NAME = "rs_session";
@@ -14,16 +14,22 @@ function makeSetCookieHeader(value) {
 
 export default async function login(request, env) {
   try {
-    // -----------------------------
-    // Parse JSON body safely
-    // -----------------------------
-    const body = await request.json().catch(() => null);
+    // ----------------------------------------------------
+    // SAFE JSON PARSE (never throws)
+    // ----------------------------------------------------
+    let body = null;
+    try {
+      body = await request.json();
+    } catch {
+      body = null;
+    }
 
+    // If body is null, not an object, or missing fields → reject
     if (!body || typeof body !== "object") {
       return apiJson({ success: false, message: "Missing credentials" }, 400);
     }
 
-    const emailRaw = body.email?.trim() || "";
+    const emailRaw = (body.email || "").trim();
     const password = body.password || "";
 
     if (!emailRaw || !password) {
@@ -32,9 +38,9 @@ export default async function login(request, env) {
 
     const email = emailRaw.toLowerCase();
 
-    // -----------------------------
-    // Fetch user from D1
-    // -----------------------------
+    // ----------------------------------------------------
+    // FETCH USER FROM D1
+    // ----------------------------------------------------
     const row = await env.DB_roll
       .prepare("SELECT * FROM users WHERE email = ?")
       .bind(email)
@@ -53,9 +59,9 @@ export default async function login(request, env) {
 
     const iterations = Number(row.password_iterations) || 100000;
 
-    // -----------------------------
-    // Verify password via PBKDF2 worker
-    // -----------------------------
+    // ----------------------------------------------------
+    // VERIFY PASSWORD USING AUTH WORKER
+    // ----------------------------------------------------
     const isValid = await verify(
       password,
       row.password_hash,
@@ -68,9 +74,9 @@ export default async function login(request, env) {
       return apiJson({ success: false, message: "Invalid credentials" }, 401);
     }
 
-    // -----------------------------
-    // Normalize role + owner
-    // -----------------------------
+    // ----------------------------------------------------
+    // NORMALIZE ROLE + OWNER FLAG
+    // ----------------------------------------------------
     const role = row.role || "user";
 
     const is_owner =
@@ -88,16 +94,16 @@ export default async function login(request, env) {
       created_at: row.created_at
     };
 
-    // -----------------------------
-    // Create session cookie
-    // -----------------------------
+    // ----------------------------------------------------
+    // CREATE SESSION COOKIE
+    // ----------------------------------------------------
     const sessionPayload = { id: user.id, role: user.role, ts: Date.now() };
     const cookieValue = makeSessionCookieValue(sessionPayload);
     const setCookie = makeSetCookieHeader(cookieValue);
 
-    // -----------------------------
-    // Redirect map
-    // -----------------------------
+    // ----------------------------------------------------
+    // REDIRECT MAP
+    // ----------------------------------------------------
     const redirectMap = {
       owner: "/pages/owner/owner-dashboard.html",
       business: "/pages/business/business-dashboard.html",
@@ -109,10 +115,10 @@ export default async function login(request, env) {
 
     const redirect = redirectMap[user.role] || "/";
 
-    // -----------------------------
-    // Final response with CORS + cookie
-    // -----------------------------
-    const response = new Response(
+    // ----------------------------------------------------
+    // FINAL RESPONSE (CORS + COOKIE)
+    // ----------------------------------------------------
+    return new Response(
       JSON.stringify({ success: true, user, redirect }),
       {
         status: 200,
@@ -125,8 +131,6 @@ export default async function login(request, env) {
         }
       }
     );
-
-    return response;
 
   } catch (err) {
     console.error("Login handler error:", String(err));
