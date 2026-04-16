@@ -1,16 +1,20 @@
 // ============================================================
-// OWNER DASHBOARD JS — CLEAN, STABLE, NO EARLY CRASHES
+// OWNER DASHBOARD JS — CLEAN, STABLE, DEV-OWNER SAFE
 // ============================================================
 
 // Pull globals from app.js (already loaded in HTML)
 const API = window.API;
 const API_BASE = window.API_BASE;
 
+// In dev-owner mode, requireUser doesn't exist.
+// So we fallback to getUser() from dev-owner.js.
 let owner = null;
 
-// Wait until DOM + app.js are ready
 window.addEventListener("DOMContentLoaded", () => {
-  owner = requireUser(["owner"]);
+  owner = (typeof requireUser === "function")
+    ? requireUser(["owner"])
+    : getUser(); // <-- dev-owner fallback
+
   initOwnerDashboard();
 });
 
