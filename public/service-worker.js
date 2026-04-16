@@ -13,7 +13,7 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// FETCH — network only, no cache, no API/auth/dashboard interception
+// FETCH — network only, no cache, no interception of ANY app JS/HTML
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -30,8 +30,16 @@ self.addEventListener("fetch", (event) => {
     path.includes("verify")
   ) return;
 
-  // 3. Never touch dashboard or admin routes
-  if (path.startsWith("/dashboard") || path.startsWith("/admin")) return;
+  // 3. Never touch ANY dashboard or owner/skater/business/musician pages
+  if (
+    path.startsWith("/pages/owner") ||
+    path.startsWith("/pages/skater") ||
+    path.startsWith("/pages/business") ||
+    path.startsWith("/pages/musician") ||
+    path.startsWith("/pages/buyer") ||
+    path.startsWith("/dashboard") ||
+    path.startsWith("/admin")
+  ) return;
 
   // 4. Never touch service worker itself
   if (path.endsWith("service-worker.js")) return;
