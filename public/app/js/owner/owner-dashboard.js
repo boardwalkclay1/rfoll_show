@@ -1,14 +1,12 @@
 // ============================================================
-// OWNER DASHBOARD JS — NO API CALLS, NO LOADERS, NO ERRORS
+// OWNER DASHBOARD JS — ZERO DEPENDENCIES, ZERO API, ZERO AUTH
 // ============================================================
 
-let owner = null;
+// No requireUser, no getUser, no API, no authedGet.
+// Nothing runs except UI activation.
 
 window.addEventListener("DOMContentLoaded", () => {
-  owner = (typeof requireUser === "function")
-    ? requireUser(["owner"])
-    : getUser();
-
+  console.log("Owner dashboard loaded (safe mode)");
   initOwnerDashboard();
 });
 
@@ -32,37 +30,8 @@ navButtons.forEach(btn => {
 });
 
 // ============================================================
-// DISABLED FEATURES (NO API CALLS)
-// ============================================================
-
-async function loadBranding() {
-  // no-op
-}
-
-async function loadNotes() {
-  // no-op
-}
-
-async function loadAds() {
-  // no-op
-}
-
-async function loadSponsorships() {
-  // no-op
-}
-
-// disable all buttons so nothing fires API calls
-document.querySelectorAll("button").forEach(btn => {
-  btn.addEventListener("click", e => {
-    const id = btn.id || btn.className || "button";
-    console.log(`Button ${id} clicked — API disabled`);
-  });
-});
-
-// ============================================================
-// INIT — NOTHING CALLS ANYTHING
+// DISABLED LOADERS (NO API CALLS AT ALL)
 // ============================================================
 async function initOwnerDashboard() {
-  // no API calls
-  console.log("Owner dashboard loaded (API disabled)");
+  console.log("Safe mode: no API calls, no auth, no backend.");
 }
