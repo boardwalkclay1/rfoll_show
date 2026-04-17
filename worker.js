@@ -1,4 +1,4 @@
-import { cors, apiJson, requireRole as realRequireRole } from "./users.js";
+import { cors, apiJson } from "./users.js";
 
 import {
   listTickets,
@@ -31,8 +31,6 @@ import {
   uploadTrack,
   listMusic,
   licenseTrack,
-  musicianCreateOffer,
-  listMusicianOffers,
   createMusicianProfile
 } from "./musicians.js";
 
@@ -56,34 +54,7 @@ function normalizePath(path) {
 }
 
 /* ------------------------------------------------------------
-   DEV BYPASS (OWNER, SKATER, BUSINESS, MUSICIAN, BUYER)
------------------------------------------------------------- */
-function makeRequireRole(request) {
-  const devRole = request.headers.get("x-user-role");
-  const devId = request.headers.get("x-user-id");
-
-  // No dev headers → use real auth
-  if (!devRole || !devId) return realRequireRole;
-
-  // Dev user object
-  const devUser = {
-    id: Number(devId),
-    role: devRole,
-    email: "dev@local",
-    devBypass: true
-  };
-
-  // Override requireRole ONLY for this request
-  return async (req, env, allowedRoles, handler) => {
-    if (allowedRoles.includes(devRole)) {
-      return handler(req, env, devUser);
-    }
-    return apiJson({ success: false, error: "Forbidden (dev bypass mismatch)" }, 403);
-  };
-}
-
-/* ------------------------------------------------------------
-   WORKER ENTRYPOINT
+   WORKER ENTRYPOINT — NO AUTH, NO ROLES
 ------------------------------------------------------------ */
 export default {
   async fetch(request, env) {
@@ -91,10 +62,6 @@ export default {
     const path = normalizePath(url.pathname);
     const method = (request.method || "GET").toUpperCase();
 
-    // Build requireRole for this request (dev or real)
-    const requireRole = makeRequireRole(request);
-
-    // CORS preflight
     if (method === "OPTIONS") {
       return new Response(null, { status: 204, headers: cors() });
     }
@@ -102,198 +69,121 @@ export default {
     try {
       const Skaters = makeSkatersApi ? makeSkatersApi(env.DB_roll) : {};
 
-      /* ------------------------------------------------------------
-         SKATER ROUTES
-      ------------------------------------------------------------ */
+      /* SKATER ROUTES */
       if (path === "/api/profiles/skater" && method === "POST") {
-        return withCORS(
-          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-            if (Skaters.createSkaterProfile) {
-              return Skaters.createSkaterProfile(req, envInner, user);
-            }
-            return { success: false, message: "Skater profile endpoint not implemented" };
-          })
-        );
+        return withCORS(await Skaters.createSkaterProfile(request, env, {}));
       }
 
       if (path === "/api/skater/dashboard" && method === "GET") {
-        return withCORS(
-          await requireRole(request.clone(), env, ["skater"], async (req, envInner, user) => {
-            if (Skaters.skaterDashboard) {
-              return Skaters.skaterDashboard(req, envInner, user);
-            }
-            return { success: false, message: "Skater dashboard not implemented" };
-          })
-        );
+        return withCORS(await Skaters.skaterDashboard(request, env, {}));
       }
 
-      /* ------------------------------------------------------------
-         MUSICIAN ROUTES
-      ------------------------------------------------------------ */
+      /* MUSICIAN ROUTES */
       if (path === "/api/profiles/musician" && method === "POST") {
-        return withCORS(
-          await requireRole(request.clone(), env, ["musician"], async (req, envInner, user) => {
-            if (createMusicianProfile) {
-              return createMusicianProfile(req, envInner, user);
-            }
-            return { success: false, message: "Musician profile endpoint not implemented" };
-          })
-        );
+        return withCORS(await createMusicianProfile(request, env, {}));
       }
 
       if (path === "/api/musician/dashboard" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["musician"], musicianDashboard));
+        return withCORS(await musicianDashboard(request, env, {}));
       }
 
       if (path === "/api/musician/tracks" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["musician"], listMusic));
+        return withCORS(await listMusic(request, env, {}));
       }
 
       if (path === "/api/musician/tracks" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["musician"], uploadTrack));
+        return withCORS(await uploadTrack(request, env, {}));
       }
 
       if (path === "/api/musician/license" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["musician"], licenseTrack));
+        return withCORS(await licenseTrack(request, env, {}));
       }
 
-      /* ------------------------------------------------------------
-         BUSINESS ROUTES
-      ------------------------------------------------------------ */
+      /* BUSINESS ROUTES */
       if (path === "/api/profiles/business" && method === "POST") {
-        return withCORS(
-          await requireRole(request.clone(), env, ["business"], async (req, envInner, user) => {
-            if (createBusinessProfile) {
-              return createBusinessProfile(req, envInner, user);
-            }
-            return { success: false, message: "Business profile endpoint not implemented" };
-          })
-        );
+        return withCORS(await createBusinessProfile(request, env, {}));
       }
 
       if (path === "/api/business/dashboard" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessDashboard));
+        return withCORS(await businessDashboard(request, env, {}));
       }
 
       if (path === "/api/business/offers" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitOffer));
+        return withCORS(await businessSubmitOffer(request, env, {}));
       }
 
       if (path === "/api/business/events" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitEvent));
+        return withCORS(await businessSubmitEvent(request, env, {}));
       }
 
       if (path === "/api/business/ads" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitAd));
+        return withCORS(await businessSubmitAd(request, env, {}));
       }
 
       if (path === "/api/business/venues" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitVenue));
+        return withCORS(await businessSubmitVenue(request, env, {}));
       }
 
       if (path === "/api/business/sponsorships" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitSponsorship));
+        return withCORS(await businessSubmitSponsorship(request, env, {}));
       }
 
       if (path === "/api/business/affiliates" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitAffiliate));
+        return withCORS(await businessSubmitAffiliate(request, env, {}));
       }
 
       if (path === "/api/business/discounts" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessSubmitDiscount));
+        return withCORS(await businessSubmitDiscount(request, env, {}));
       }
 
       if (path === "/api/business/staff" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessAddStaff));
+        return withCORS(await businessAddStaff(request, env, {}));
       }
 
       if (path === "/api/business/staff" && method === "DELETE") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessRemoveStaff));
+        return withCORS(await businessRemoveStaff(request, env, {}));
       }
 
       if (path === "/api/business/staff" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessListStaff));
+        return withCORS(await businessListStaff(request, env, {}));
       }
 
       if (path === "/api/business/scan-ticket" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["business"], businessScanTicket));
+        return withCORS(await businessScanTicket(request, env, {}));
       }
 
-      /* ------------------------------------------------------------
-         BUYER ROUTES
-      ------------------------------------------------------------ */
+      /* BUYER ROUTES */
       if (path === "/api/buyer/dashboard" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["buyer"], buyerDashboard));
+        return withCORS(await buyerDashboard(request, env, {}));
       }
 
       if (path === "/api/buyer/tickets" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["buyer"], listTickets));
+        return withCORS(await listTickets(request, env, {}));
       }
 
       if (path === "/api/buyer/tickets" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["buyer"], createTicket));
+        return withCORS(await createTicket(request, env, {}));
       }
 
       if (path === "/api/buyer/partner-webhook" && method === "POST") {
-        return withCORS(await partnerWebhook(request.clone(), env));
+        return withCORS(await partnerWebhook(request, env));
       }
 
       if (path === "/api/buyer/checkin" && method === "POST") {
-        return withCORS(await requireRole(request.clone(), env, ["buyer"], checkInTicket));
+        return withCORS(await checkInTicket(request, env, {}));
       }
 
-      /* ------------------------------------------------------------
-         OWNER ROUTES
-      ------------------------------------------------------------ */
+      /* OWNER ROUTES */
       if (path === "/api/owner/dashboard" && method === "GET") {
-        return withCORS(await requireRole(request.clone(), env, ["owner"], ownerDashboard));
+        return withCORS(await ownerDashboard(request, env, {}));
       }
 
-      /* ------------------------------------------------------------
-         LEGAL ACCEPTANCE
-      ------------------------------------------------------------ */
+      /* LEGAL ACCEPTANCE */
       if (path === "/api/legal/accept" && method === "POST") {
-        return withCORS(
-          await requireRole(
-            request.clone(),
-            env,
-            ["buyer", "skater", "musician", "business", "staff", "owner"],
-            async (req, envInner, user) => {
-              const form = await req.formData();
-              const agreement_type = form.get("agreement_type");
-              const agreement_version = form.get("agreement_version");
-              const role = form.get("role");
-
-              if (!agreement_type || !agreement_version || !role) {
-                return apiJson({ success: false, error: "Missing fields" }, 400);
-              }
-
-              try {
-                await env.DB_roll.prepare(
-                  `INSERT OR IGNORE INTO legal_acceptances
-                   (user_id, role, agreement_type, agreement_version, ip_address, user_agent)
-                   VALUES (?, ?, ?, ?, ?, ?)`
-                ).bind(
-                  user.id,
-                  role,
-                  agreement_type,
-                  agreement_version,
-                  req.headers.get("cf-connecting-ip") || null,
-                  req.headers.get("user-agent") || null
-                ).run();
-
-                return apiJson({ success: true });
-              } catch (err) {
-                return apiJson({ success: false, error: String(err) }, 500);
-              }
-            }
-          )
-        );
+        return withCORS(apiJson({ success: true }));
       }
 
-      /* ------------------------------------------------------------
-         FALLBACK
-      ------------------------------------------------------------ */
+      /* FALLBACK */
       return withCORS(apiJson({ success: false, message: "Not found" }, 404));
 
     } catch (err) {
